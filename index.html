@@ -629,6 +629,14 @@ const MAX_DOC_CHARS = 8000;
 const MAX_DOC_SIZE  = 10 * 1024 * 1024;
 const SHARE_HASH_PREFIX = '#share=';
 
+/* Har model ka safe max output token limit */
+const MODEL_MAX_TOKENS = {
+  "openai/gpt-oss-120b": 900,
+  "openai/gpt-oss-20b": 900,
+  "qwen/qwen3.6-27b": 800,
+  "devtoolbox-coding": 2048
+};
+
 const IMAGE_STYLES = {
   realistic: "ultra realistic photograph, cinematic lighting, 8k, highly detailed, photorealistic, sharp focus",
   anime: "anime style, studio ghibli, vibrant colors, beautiful detailed anime art, key visual",
@@ -645,9 +653,9 @@ const IMAGE_STYLES = {
 const MODELS = [
   { id: "openai/gpt-oss-120b", name: "Smart", icon: "✨", desc: "Best for reasoning, analysis, general chat", provider: "groq" },
   { id: "openai/gpt-oss-20b", name: "Fast", icon: "⚡", desc: "Instant replies, simple sawaal", provider: "groq" },
-  { id: "qwen/qwen3.6-27b", name: "Balanced", icon: "⚖️", desc: "Good balance of speed & quality (Preview)", provider: "groq" },
+  { id: "openai/gpt-oss-120b", name: "Balanced", icon: "⚖️", desc: "Good balance of speed & quality", provider: "groq" },
   { id: "openai/gpt-oss-20b", name: "Compact", icon: "🌱", desc: "Fast reasoning, chhota model", provider: "groq" },
-  { id: "qwen/qwen3.6-27b", name: "Long Context", icon: "📚", desc: "Bada documents aur long chats ke liye (131K context)", provider: "groq" },
+  { id: "qwen/qwen3.6-27b", name: "Long Context", icon: "📚", desc: "Bada documents (131K) — slow", provider: "groq" },
   { id: "devtoolbox-coding", name: "Coding (Free)", icon: "💻", desc: "DevToolBox se free coding — no signup", provider: "devtoolbox" }
 ];
 
@@ -1604,7 +1612,8 @@ async function performTavilySearch(query) {
 
 /* ============ STREAMING GROQ ============ */
 async function streamGroqCompletion(apiMessages, model, bubble, textNode) {
-  const body = { model: model, messages: apiMessages, max_completion_tokens: 1024, stream: true };
+  const maxTokens = MODEL_MAX_TOKENS[model] || 800;
+  const body = { model: model, messages: apiMessages, max_completion_tokens: maxTokens, stream: true };
   if (model.startsWith('openai/gpt-oss')) body.reasoning_effort = "low";
 
   const res = await fetch(API_URL, {
