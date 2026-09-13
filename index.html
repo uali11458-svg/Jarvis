@@ -495,7 +495,8 @@ Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle m
         },
         body: JSON.stringify({
           model: image ? VISION_MODEL : MODEL,
-          messages: conversation
+          messages: conversation,
+          max_tokens: image ? 700 : 1024
         })
       });
 
