@@ -443,6 +443,15 @@ Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle m
     return bubble;
   }
 
+  function cleanMarkdown(text) {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '$1')   // **bold**
+      .replace(/\*(.*?)\*/g, '$1')       // *italic*
+      .replace(/^#{1,6}\s+/gm, '')       // # headings
+      .replace(/^[-•]\s+/gm, '• ')       // normalize bullets
+      .trim();
+  }
+
   async function sendMessage() {
     const text = userInput.value.trim();
     const image = pendingImage;
@@ -497,7 +506,7 @@ Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle m
           model: image ? VISION_MODEL : MODEL,
           messages: conversation,
           max_tokens: image ? 700 : 1024,
-          reasoning_effort: "none"
+          reasoning_effort: "low"
         })
       });
 
@@ -507,7 +516,7 @@ Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle m
         throw new Error(data.error.message || 'API error');
       }
 
-      const reply = data?.choices?.[0]?.message?.content || 'Koi response nahi mila.';
+      const reply = cleanMarkdown(data?.choices?.[0]?.message?.content || 'Koi response nahi mila.');
       thinkingMsg.innerText = reply;
       conversation.push({ role: 'assistant', content: reply });
     } catch (err) {
