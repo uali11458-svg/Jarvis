@@ -157,9 +157,14 @@
     margin-top: 6px;
   }
 
-  .copy-btn {
-    display: block;
+  .msg-actions {
+    display: flex;
+    gap: 12px;
     margin-top: 8px;
+    align-items: center;
+  }
+
+  .action-btn {
     background: transparent;
     border: none;
     color: var(--text-dim);
@@ -169,7 +174,23 @@
     font-family: inherit;
     transition: color 0.15s ease;
   }
-  .copy-btn:hover { color: var(--accent); }
+  .action-btn:hover { color: var(--accent); }
+
+  .speaker-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s ease;
+    font-family: inherit;
+  }
+  .speaker-btn:hover { color: var(--accent); }
+  .speaker-btn.speaking { color: var(--accent); }
 
   /* Input bar */
   .input-bar {
@@ -215,7 +236,7 @@
   button.send-btn:disabled { background: #33394a; cursor: not-allowed; }
   button.send-btn svg { width: 17px; height: 17px; }
 
-  button.attach-btn {
+  button.attach-btn, button.mic-btn {
     width: 36px; height: 36px;
     border-radius: 10px; border: none;
     background: transparent;
@@ -225,8 +246,19 @@
     flex-shrink: 0;
     transition: background 0.15s ease, color 0.15s ease;
   }
-  button.attach-btn:hover { background: var(--panel-2); color: var(--text); }
-  button.attach-btn svg { width: 18px; height: 18px; }
+  button.attach-btn:hover, button.mic-btn:hover { background: var(--panel-2); color: var(--text); }
+  button.attach-btn svg, button.mic-btn svg { width: 18px; height: 18px; }
+
+  button.mic-btn.listening {
+    background: var(--danger);
+    color: #fff;
+    animation: pulse 1.2s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(224, 122, 122, 0.6); }
+    70% { box-shadow: 0 0 0 8px rgba(224, 122, 122, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(224, 122, 122, 0); }
+  }
 
   .attachment-preview {
     display: none;
@@ -330,6 +362,14 @@ Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle m
           <path d="M21.44 11.05L12.25 20.24C10.01 22.48 6.37 22.48 4.13 20.24C1.89 18 1.89 14.36 4.13 12.12L13.32 2.93C14.81 1.44 17.22 1.44 18.71 2.93C20.2 4.42 20.2 6.83 18.71 8.32L10.36 16.67C9.62 17.41 8.42 17.41 7.68 16.67C6.94 15.93 6.94 14.73 7.68 13.99L15.16 6.51" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
+      <button class="mic-btn" id="micBtn" aria-label="Mic">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C10.34 2 9 3.34 9 5V12C9 13.66 10.34 15 12 15C13.66 15 15 13.66 15 12V5C15 3.34 13.66 2 12 2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M19 10V12C19 15.87 15.87 19 12 19C8.13 19 5 15.87 5 12V10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 19V22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M8 22H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
       <input type="text" id="userInput" placeholder="Apna sawaal likhein..." autocomplete="off">
       <button class="send-btn" id="sendBtn" onclick="sendMessage()" aria-label="Bhejein">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -337,7 +377,7 @@ Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle m
         </svg>
       </button>
     </div>
-    <div class="hint">Image ke liye <code>/image</code> se message shuru karo, ya 📎 se photo attach karo</div>
+    <div class="hint">Image ke liye <code>/image</code> se message shuru karo, ya 📎 se photo attach karo. 🎙️ se bol kar baat karo.</div>
   </div>
 
 <script>
@@ -367,14 +407,162 @@ const attachThumb   = document.getElementById('attachThumb');
 const attachName    = document.getElementById('attachName');
 const attachRemove  = document.getElementById('attachRemove');
 const clearBtn      = document.getElementById('clearBtn');
+const micBtn        = document.getElementById('micBtn');
 
 /* ---------------- State ---------------- */
 let pendingImage = null;      // { dataUrl, name }
 let isSending    = false;     // concurrent request lock
+let isListening  = false;
+let recognition  = null;
+let currentlySpeaking = null;
 
 const systemInstruction = 'Tumhara naam Jarvis hai. Tum ek helpful AI assistant ho. Agar koi tumhara naam pooche, to hamesha "Jarvis" bolna. Tum kisi company ke banaye hue nahi ho — tumhe user ne banaya hai. Hamesha seedha, saaf jawab do — apna internal soch-vichar (thinking/reasoning process) kabhi mat dikhana, sirf final jawab do. Natural tarike se baat karo jaise ek insaan karta hai — normal conversation mein har cheez ko numbered list, bullet points, ya bold text mein mat todo, seedhe paragraph mein baat karo. Sirf tab list use karo jab user steps ya multiple items specifically maange. Hamesha sirf Roman Urdu/Hindi aur English mein jawab do — kisi aur language (Chinese, Arabic script, etc) ka koi lafz kabhi mat likhna.';
 
 let conversation = [{ role: 'system', content: systemInstruction }];
+
+/* ================= VOICE RECOGNITION SETUP ================= */
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const SpeechSynthesis = window.speechSynthesis;
+
+if (SpeechRecognition) {
+  recognition = new SpeechRecognition();
+  recognition.continuous = false;      // single utterance mode (works better on mobile)
+  recognition.interimResults = true;   // show partial results as user speaks
+  recognition.lang = 'ur-PK';          // default language: Urdu (Pakistan). Can also be 'en-US' etc.
+  recognition.maxAlternatives = 1;
+} else {
+  console.warn('SpeechRecognition not supported in this browser.');
+  if (micBtn) {
+    micBtn.style.display = 'none';
+  }
+}
+
+function toggleListening() {
+  if (!recognition) return;
+  if (isListening) {
+    recognition.stop();
+    return;
+  }
+  try {
+    recognition.start();
+  } catch (e) {
+    console.error('Mic start error:', e);
+  }
+}
+
+if (recognition) {
+  recognition.onstart = () => {
+    isListening = true;
+    micBtn.classList.add('listening');
+  };
+
+  recognition.onend = () => {
+    isListening = false;
+    micBtn.classList.remove('listening');
+  };
+
+  recognition.onerror = (event) => {
+    console.error('Speech recognition error:', event.error);
+    isListening = false;
+    micBtn.classList.remove('listening');
+
+    let msg = 'Voice input mein error aaya.';
+    if (event.error === 'not-allowed') {
+      msg = 'Mic ki permission nahi mili. Browser settings se allow karein.';
+    } else if (event.error === 'no-speech') {
+      msg = 'Koi awaaz sunai nahi di. Dobara try karein.';
+    } else if (event.error === 'network') {
+      msg = 'Network error. Internet check karein.';
+    }
+    // Only show if user was trying to speak
+    if (event.error !== 'aborted') {
+      addPlainMessage('⚠️ ' + msg, false);
+    }
+  };
+
+  recognition.onresult = (event) => {
+    let finalTranscript = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const transcript = event.results[i][0].transcript;
+      if (event.results[i].isFinal) {
+        finalTranscript += transcript;
+      }
+    }
+    if (finalTranscript) {
+      userInput.value = finalTranscript;
+      // Auto-send after a short delay so user can see the text
+      setTimeout(() => {
+        if (userInput.value.trim() && !isSending) {
+          sendMessage();
+        }
+      }, 400);
+    }
+  };
+}
+
+micBtn.addEventListener('click', toggleListening);
+
+/* ================= SPEECH SYNTHESIS (TEXT-TO-SPEECH) ================= */
+function speakText(text, btn) {
+  if (!SpeechSynthesis) {
+    addPlainMessage('⚠️ Speech synthesis is browser mein supported nahi hai.', false);
+    return;
+  }
+
+  // If already speaking, stop
+  if (currentlySpeaking) {
+    SpeechSynthesis.cancel();
+    if (currentlySpeaking.btn) {
+      currentlySpeaking.btn.classList.remove('speaking');
+    }
+    currentlySpeaking = null;
+    if (btn === currentlySpeaking?.btn) return; // toggle off
+  }
+
+  // Clean text for speech (remove markdown remnants)
+  const cleanText = text
+    .replace(/[*_`~>#\-\[\]()]/g, '')
+    .replace(/\n+/g, '. ')
+    .trim();
+
+  if (!cleanText) return;
+
+  const utterance = new SpeechSynthesisUtterance(cleanText);
+  utterance.lang = 'ur-PK'; // Try Urdu; browser falls back to closest available voice
+  utterance.rate = 1.0;
+  utterance.pitch = 1.0;
+  utterance.volume = 1.0;
+
+  // Try to pick a voice matching the language, if available
+  const voices = SpeechSynthesis.getVoices();
+  const urduVoice = voices.find(v => v.lang.startsWith('ur') || v.lang.startsWith('hi') || v.lang.startsWith('en'));
+  if (urduVoice) utterance.voice = urduVoice;
+
+  utterance.onstart = () => {
+    if (btn) btn.classList.add('speaking');
+    currentlySpeaking = { utterance, btn };
+  };
+
+  utterance.onend = () => {
+    if (btn) btn.classList.remove('speaking');
+    currentlySpeaking = null;
+  };
+
+  utterance.onerror = (e) => {
+    console.error('Speech synthesis error:', e);
+    if (btn) btn.classList.remove('speaking');
+    currentlySpeaking = null;
+  };
+
+  // Cancel any ongoing speech before starting new
+  SpeechSynthesis.cancel();
+  SpeechSynthesis.speak(utterance);
+}
+
+// Preload voices (some browsers need this)
+if (SpeechSynthesis) {
+  SpeechSynthesis.onvoiceschanged = () => {};
+}
 
 /* ---------------- Attach handling ---------------- */
 attachBtn.addEventListener('click', () => fileInput.click());
@@ -408,7 +596,7 @@ attachRemove.addEventListener('click', () => {
   attachPreview.classList.remove('show');
 });
 
-/* ---------------- Enter key (Shift+Enter allows newline later) ---------------- */
+/* ---------------- Enter key ---------------- */
 userInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
@@ -462,24 +650,38 @@ function addStreamingMessage() {
   bubble.className = 'msg streaming';
   const textNode = document.createElement('div');
   bubble.appendChild(textNode);
+
+  // Action buttons container (copy + speaker)
+  const actions = document.createElement('div');
+  actions.className = 'msg-actions';
+
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'action-btn';
+  copyBtn.innerText = 'Copy';
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(textNode.innerText).then(() => {
+      copyBtn.innerText = 'Copied!';
+      setTimeout(() => copyBtn.innerText = 'Copy', 1500);
+    }).catch(() => {});
+  };
+
+  const speakerBtn = document.createElement('button');
+  speakerBtn.className = 'speaker-btn';
+  speakerBtn.title = 'Bol kar sunao';
+  speakerBtn.innerHTML = '🔊';
+  speakerBtn.onclick = () => {
+    speakText(textNode.innerText, speakerBtn);
+  };
+
+  actions.appendChild(copyBtn);
+  actions.appendChild(speakerBtn);
+  bubble.appendChild(actions);
+
   row.appendChild(avatar);
   row.appendChild(bubble);
   chatBox.appendChild(row);
   chatBox.scrollTop = chatBox.scrollHeight;
-  return { row, bubble, textNode };
-}
-
-function addCopyButton(bubble, text) {
-  const btn = document.createElement('button');
-  btn.className = 'copy-btn';
-  btn.innerText = 'Copy';
-  btn.onclick = () => {
-    navigator.clipboard.writeText(text).then(() => {
-      btn.innerText = 'Copied!';
-      setTimeout(() => btn.innerText = 'Copy', 1500);
-    }).catch(() => {});
-  };
-  bubble.appendChild(btn);
+  return { row, bubble, textNode, actions, speakerBtn };
 }
 
 function addImageMessage(prompt) {
@@ -538,7 +740,6 @@ function trimHistory() {
 
 function saveHistory() {
   try {
-    // save only from index 1 (skip system)
     localStorage.setItem(HISTORY_KEY, JSON.stringify(conversation.slice(1)));
   } catch (e) {}
 }
@@ -554,10 +755,10 @@ function loadHistory() {
         addPlainMessage(txt, true);
         conversation.push({ role: 'user', content: txt });
       } else if (m.role === 'assistant') {
-        const { bubble, textNode } = addStreamingMessage();
+        const { bubble, textNode, speakerBtn } = addStreamingMessage();
         bubble.classList.remove('streaming');
         textNode.innerText = m.content;
-        addCopyButton(bubble, m.content);
+        // Re-attach copy + speaker functionality is already in the bubble
         conversation.push({ role: 'assistant', content: m.content });
       }
     }
@@ -610,9 +811,9 @@ async function sendMessage() {
   isSending = true;
   sendBtn.disabled = true;
 
-  const { bubble, textNode } = addStreamingMessage();
+  const { bubble, textNode, speakerBtn } = addStreamingMessage();
 
-  // Build messages for API (do NOT mutate conversation yet)
+  // Build messages for API
   const apiMessages = [...conversation, { role: 'user', content: userContentForApi }];
 
   try {
@@ -622,7 +823,6 @@ async function sendMessage() {
       max_completion_tokens: image ? 700 : 1024,
       stream: true
     };
-    // reasoning_effort sirf gpt-oss models ke liye
     if (!image) body.reasoning_effort = "low";
 
     const res = await fetch(API_URL, {
@@ -678,9 +878,13 @@ async function sendMessage() {
     const clean = cleanMarkdown(fullText);
     textNode.innerText = clean;
     bubble.classList.remove('streaming');
-    addCopyButton(bubble, clean);
 
-    // Now safely push to conversation history
+    // Re-bind speaker button with the final text
+    speakerBtn.onclick = () => {
+      speakText(clean, speakerBtn);
+    };
+
+    // Save to conversation history
     const historyUserContent = image
       ? (text ? `${text} [user ne image attach ki thi]` : '[user ne image attach ki thi]')
       : text;
@@ -703,6 +907,14 @@ async function sendMessage() {
 
 /* ---------------- Init ---------------- */
 loadHistory();
+
+/* Show warning if browser lacks voice support */
+if (!SpeechRecognition) {
+  console.warn('Voice input is not supported in this browser. Chrome or Edge recommended.');
+}
+if (!SpeechSynthesis) {
+  console.warn('Speech synthesis is not supported in this browser.');
+}
 </script>
 
 <!--
@@ -725,7 +937,6 @@ loadHistory();
       body: JSON.stringify(req.body)
     });
 
-    // Stream forward
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     const reader = r.body.getReader();
