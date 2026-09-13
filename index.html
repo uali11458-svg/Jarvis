@@ -208,6 +208,67 @@
   button.send-btn:disabled { background: #33394a; cursor: not-allowed; }
   button.send-btn svg { width: 17px; height: 17px; }
 
+  button.attach-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  button.attach-btn:hover { background: var(--panel-2); color: var(--text); }
+  button.attach-btn svg { width: 18px; height: 18px; }
+
+  .attachment-preview {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+  }
+  .attachment-preview.show { display: flex; }
+  .attachment-preview img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 6px;
+  }
+  .attachment-preview .att-name {
+    flex: 1;
+    font-size: 13px;
+    color: var(--text-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .attachment-preview .att-remove {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 2px 6px;
+  }
+  .attachment-preview .att-remove:hover { color: var(--text); }
+
+  .attached-img-inline {
+    max-width: 220px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    display: block;
+    border: 1px solid var(--border);
+  }
+
   .hint {
     text-align: center;
     font-size: 12px;
@@ -247,7 +308,18 @@ Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle m
   </div>
 
   <div class="input-bar">
+    <div class="attachment-preview" id="attachPreview">
+      <img id="attachThumb" src="" alt="">
+      <div class="att-name" id="attachName"></div>
+      <button class="att-remove" id="attachRemove" aria-label="Hatao">×</button>
+    </div>
     <div class="input-shell">
+      <input type="file" id="fileInput" accept="image/*" style="display:none">
+      <button class="attach-btn" id="attachBtn" aria-label="Attach">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M21.44 11.05L12.25 20.24C10.01 22.48 6.37 22.48 4.13 20.24C1.89 18 1.89 14.36 4.13 12.12L13.32 2.93C14.81 1.44 17.22 1.44 18.71 2.93C20.2 4.42 20.2 6.83 18.71 8.32L10.36 16.67C9.62 17.41 8.42 17.41 7.68 16.67C6.94 15.93 6.94 14.73 7.68 13.99L15.16 6.51" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
       <input type="text" id="userInput" placeholder="Apna sawaal likhein..." onkeypress="if(event.key==='Enter') sendMessage()">
       <button class="send-btn" id="sendBtn" onclick="sendMessage()" aria-label="Bhejein">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -255,7 +327,7 @@ Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle m
         </svg>
       </button>
     </div>
-    <div class="hint">Image ke liye <code>/image</code> se message shuru karo</div>
+    <div class="hint">Image ke liye <code>/image</code> se message shuru karo, ya 📎 se photo attach karo</div>
   </div>
 
 <script>
@@ -265,11 +337,46 @@ Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle m
   const API_KEY = "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";
 
   const MODEL = "openai/gpt-oss-120b";
+  const VISION_MODEL = "qwen/qwen3.6-27b";
   const API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
   const chatBox = document.getElementById('chatBox');
   const userInput = document.getElementById('userInput');
   const sendBtn = document.getElementById('sendBtn');
+  const fileInput = document.getElementById('fileInput');
+  const attachBtn = document.getElementById('attachBtn');
+  const attachPreview = document.getElementById('attachPreview');
+  const attachThumb = document.getElementById('attachThumb');
+  const attachName = document.getElementById('attachName');
+  const attachRemove = document.getElementById('attachRemove');
+
+  let pendingImage = null; // { dataUrl, name }
+
+  attachBtn.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      addMessage('⚠️ Abhi sirf images attach ki ja sakti hain.', false);
+      fileInput.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      pendingImage = { dataUrl: e.target.result, name: file.name };
+      attachThumb.src = pendingImage.dataUrl;
+      attachName.innerText = file.name;
+      attachPreview.classList.add('show');
+    };
+    reader.readAsDataURL(file);
+  });
+
+  attachRemove.addEventListener('click', () => {
+    pendingImage = null;
+    fileInput.value = '';
+    attachPreview.classList.remove('show');
+  });
 
   // Yahan AI ki identity set hoti hai — naam change karna ho to sirf yahan badlo
   const systemInstruction = 'Tumhara naam Jarvis hai. Tum ek helpful AI assistant ho. Agar koi tumhara naam pooche, to hamesha "Jarvis" bolna. Tum kisi company ke banaye hue nahi ho — tumhe user ne banaya hai.';
@@ -279,7 +386,7 @@ Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle m
     { role: 'system', content: systemInstruction }
   ];
 
-  function addMessage(text, isUser) {
+  function addMessage(text, isUser, imageDataUrl) {
     const row = document.createElement('div');
     row.className = 'row ' + (isUser ? 'user' : 'ai');
 
@@ -289,13 +396,22 @@ Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle m
 
     const bubble = document.createElement('div');
     bubble.className = 'msg';
-    bubble.innerText = text;
+
+    if (imageDataUrl) {
+      const img = document.createElement('img');
+      img.className = 'attached-img-inline';
+      img.src = imageDataUrl;
+      bubble.appendChild(img);
+    }
+    const textNode = document.createElement('div');
+    textNode.innerText = text;
+    bubble.appendChild(textNode);
 
     row.appendChild(avatar);
     row.appendChild(bubble);
     chatBox.appendChild(row);
     chatBox.scrollTop = chatBox.scrollHeight;
-    return bubble;
+    return textNode;
   }
 
   function addImageMessage(prompt) {
@@ -329,10 +445,12 @@ Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle m
 
   async function sendMessage() {
     const text = userInput.value.trim();
-    if (!text) return;
+    const image = pendingImage;
+
+    if (!text && !image) return;
 
     // Image generation command: "/image <prompt>"
-    if (text.toLowerCase().startsWith('/image ')) {
+    if (!image && text.toLowerCase().startsWith('/image ')) {
       const prompt = text.slice(7).trim();
       addMessage(text, true);
       userInput.value = '';
@@ -344,11 +462,28 @@ Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle m
       return;
     }
 
-    addMessage(text, true);
-    conversation.push({ role: 'user', content: text });
-    userInput.value = '';
-    sendBtn.disabled = true;
+    // Show user's message (with attached image preview if present)
+    addMessage(text || '(image bheji)', true, image ? image.dataUrl : null);
 
+    // Build the message content for the API
+    let userContent;
+    if (image) {
+      userContent = [
+        { type: 'text', text: text || 'Is image mein kya hai? Explain karo.' },
+        { type: 'image_url', image_url: { url: image.dataUrl } }
+      ];
+    } else {
+      userContent = text;
+    }
+    conversation.push({ role: 'user', content: userContent });
+
+    // Clear input + attachment
+    userInput.value = '';
+    pendingImage = null;
+    fileInput.value = '';
+    attachPreview.classList.remove('show');
+
+    sendBtn.disabled = true;
     const thinkingMsg = addMessage('Soch raha hoon...', false);
 
     try {
@@ -359,7 +494,7 @@ Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle m
           'Authorization': `Bearer ${API_KEY}`
         },
         body: JSON.stringify({
-          model: MODEL,
+          model: image ? VISION_MODEL : MODEL,
           messages: conversation
         })
       });
