@@ -159,7 +159,7 @@
 
   .msg-actions {
     display: flex;
-    gap: 12px;
+    gap: 14px;
     margin-top: 8px;
     align-items: center;
   }
@@ -410,31 +410,30 @@ const clearBtn      = document.getElementById('clearBtn');
 const micBtn        = document.getElementById('micBtn');
 
 /* ---------------- State ---------------- */
-let pendingImage = null;      // { dataUrl, name }
-let isSending    = false;     // concurrent request lock
+let pendingImage = null;
+let isSending    = false;
 let isListening  = false;
 let recognition  = null;
-let currentlySpeaking = null;
+let currentAudio = null;
+let currentBtn   = null;
+let isStoppingTTS = false;
 
 const systemInstruction = 'Tumhara naam Jarvis hai. Tum ek helpful AI assistant ho. Agar koi tumhara naam pooche, to hamesha "Jarvis" bolna. Tum kisi company ke banaye hue nahi ho — tumhe user ne banaya hai. Hamesha seedha, saaf jawab do — apna internal soch-vichar (thinking/reasoning process) kabhi mat dikhana, sirf final jawab do. Natural tarike se baat karo jaise ek insaan karta hai — normal conversation mein har cheez ko numbered list, bullet points, ya bold text mein mat todo, seedhe paragraph mein baat karo. Sirf tab list use karo jab user steps ya multiple items specifically maange. Hamesha sirf Roman Urdu/Hindi aur English mein jawab do — kisi aur language (Chinese, Arabic script, etc) ka koi lafz kabhi mat likhna.';
 
 let conversation = [{ role: 'system', content: systemInstruction }];
 
-/* ================= VOICE RECOGNITION SETUP ================= */
+/* ================= VOICE RECOGNITION (Speech-to-Text) ================= */
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const SpeechSynthesis = window.speechSynthesis;
 
 if (SpeechRecognition) {
   recognition = new SpeechRecognition();
-  recognition.continuous = false;      // single utterance mode (works better on mobile)
-  recognition.interimResults = true;   // show partial results as user speaks
-  recognition.lang = 'ur-PK';          // default language: Urdu (Pakistan). Can also be 'en-US' etc.
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.lang = 'ur-PK';
   recognition.maxAlternatives = 1;
 } else {
   console.warn('SpeechRecognition not supported in this browser.');
-  if (micBtn) {
-    micBtn.style.display = 'none';
-  }
+  if (micBtn) micBtn.style.display = 'none';
 }
 
 function toggleListening() {
@@ -474,7 +473,6 @@ if (recognition) {
     } else if (event.error === 'network') {
       msg = 'Network error. Internet check karein.';
     }
-    // Only show if user was trying to speak
     if (event.error !== 'aborted') {
       addPlainMessage('⚠️ ' + msg, false);
     }
@@ -490,7 +488,6 @@ if (recognition) {
     }
     if (finalTranscript) {
       userInput.value = finalTranscript;
-      // Auto-send after a short delay so user can see the text
       setTimeout(() => {
         if (userInput.value.trim() && !isSending) {
           sendMessage();
@@ -502,66 +499,133 @@ if (recognition) {
 
 micBtn.addEventListener('click', toggleListening);
 
-/* ================= SPEECH SYNTHESIS (TEXT-TO-SPEECH) ================= */
+/* ================= TEXT-TO-SPEECH (Google Translate Urdu Voice) ================= */
 function speakText(text, btn) {
-  if (!SpeechSynthesis) {
-    addPlainMessage('⚠️ Speech synthesis is browser mein supported nahi hai.', false);
+  // Same button dobara click → stop (toggle)
+  if (currentBtn === btn && currentAudio) {
+    stopSpeaking();
     return;
   }
 
-  // If already speaking, stop
-  if (currentlySpeaking) {
-    SpeechSynthesis.cancel();
-    if (currentlySpeaking.btn) {
-      currentlySpeaking.btn.classList.remove('speaking');
-    }
-    currentlySpeaking = null;
-    if (btn === currentlySpeaking?.btn) return; // toggle off
-  }
+  stopSpeaking();
 
-  // Clean text for speech (remove markdown remnants)
   const cleanText = text
-    .replace(/[*_`~>#\-\[\]()]/g, '')
-    .replace(/\n+/g, '. ')
+    .replace(/[*_`~>#\[\]()]/g, '')
+    .replace(/\s+/g, ' ')
     .trim();
 
   if (!cleanText) return;
 
-  const utterance = new SpeechSynthesisUtterance(cleanText);
-  utterance.lang = 'ur-PK'; // Try Urdu; browser falls back to closest available voice
-  utterance.rate = 1.0;
-  utterance.pitch = 1.0;
-  utterance.volume = 1.0;
+  const chunks = splitIntoChunks(cleanText, 180);
 
-  // Try to pick a voice matching the language, if available
-  const voices = SpeechSynthesis.getVoices();
-  const urduVoice = voices.find(v => v.lang.startsWith('ur') || v.lang.startsWith('hi') || v.lang.startsWith('en'));
-  if (urduVoice) utterance.voice = urduVoice;
+  currentBtn = btn;
+  isStoppingTTS = false;
+  if (btn) btn.classList.add('speaking');
 
-  utterance.onstart = () => {
-    if (btn) btn.classList.add('speaking');
-    currentlySpeaking = { utterance, btn };
-  };
-
-  utterance.onend = () => {
-    if (btn) btn.classList.remove('speaking');
-    currentlySpeaking = null;
-  };
-
-  utterance.onerror = (e) => {
-    console.error('Speech synthesis error:', e);
-    if (btn) btn.classList.remove('speaking');
-    currentlySpeaking = null;
-  };
-
-  // Cancel any ongoing speech before starting new
-  SpeechSynthesis.cancel();
-  SpeechSynthesis.speak(utterance);
+  playChunksSequentially(chunks, btn, 0);
 }
 
-// Preload voices (some browsers need this)
-if (SpeechSynthesis) {
-  SpeechSynthesis.onvoiceschanged = () => {};
+function splitIntoChunks(text, maxLen) {
+  const chunks = [];
+  const sentences = text.split(/(?<=[.!?۔])\s+/);
+  let current = '';
+
+  for (const sentence of sentences) {
+    if ((current + ' ' + sentence).length <= maxLen) {
+      current = current ? current + ' ' + sentence : sentence;
+    } else {
+      if (current) chunks.push(current);
+      if (sentence.length <= maxLen) {
+        current = sentence;
+      } else {
+        const words = sentence.split(' ');
+        current = '';
+        for (const w of words) {
+          if ((current + ' ' + w).length <= maxLen) {
+            current = current ? current + ' ' + w : w;
+          } else {
+            if (current) chunks.push(current);
+            current = w;
+          }
+        }
+      }
+    }
+  }
+  if (current) chunks.push(current);
+  return chunks;
+}
+
+function playChunksSequentially(chunks, btn, index) {
+  if (isStoppingTTS || index >= chunks.length) {
+    if (btn) btn.classList.remove('speaking');
+    currentBtn = null;
+    currentAudio = null;
+    return;
+  }
+
+  const text = chunks[index];
+  const url = 'https://translate.googleapis.com/translate_tts?ie=UTF-8&q='
+    + encodeURIComponent(text)
+    + '&tl=ur&client=tw-ob';
+
+  const audio = new Audio(url);
+  currentAudio = audio;
+
+  audio.onended = () => {
+    if (isStoppingTTS) return;
+    setTimeout(() => playChunksSequentially(chunks, btn, index + 1), 120);
+  };
+
+  audio.onerror = (e) => {
+    console.error('Google TTS error:', e);
+    fallbackBrowserTTS(chunks.slice(index).join(' '), btn);
+  };
+
+  audio.play().catch(err => {
+    console.error('Audio play failed:', err);
+    fallbackBrowserTTS(chunks.slice(index).join(' '), btn);
+  });
+}
+
+function fallbackBrowserTTS(text, btn) {
+  if (!window.speechSynthesis) {
+    if (btn) btn.classList.remove('speaking');
+    currentBtn = null;
+    return;
+  }
+  const utt = new SpeechSynthesisUtterance(text);
+  const voices = speechSynthesis.getVoices();
+  const urdu = voices.find(v => v.lang.startsWith('ur'))
+            || voices.find(v => v.lang.startsWith('hi'))
+            || voices.find(v => v.lang.startsWith('en-IN'));
+  if (urdu) utt.voice = urdu;
+  utt.lang = urdu ? urdu.lang : 'en-US';
+  utt.onend = () => {
+    if (btn) btn.classList.remove('speaking');
+    currentBtn = null;
+  };
+  utt.onerror = () => {
+    if (btn) btn.classList.remove('speaking');
+    currentBtn = null;
+  };
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utt);
+}
+
+function stopSpeaking() {
+  isStoppingTTS = true;
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
+  if (window.speechSynthesis) {
+    speechSynthesis.cancel();
+  }
+  if (currentBtn) {
+    currentBtn.classList.remove('speaking');
+    currentBtn = null;
+  }
 }
 
 /* ---------------- Attach handling ---------------- */
@@ -607,6 +671,7 @@ userInput.addEventListener('keydown', (e) => {
 /* ---------------- Clear chat ---------------- */
 clearBtn.addEventListener('click', () => {
   if (!confirm('Poori chat clear karni hai?')) return;
+  stopSpeaking();
   chatBox.innerHTML = '';
   conversation = [{ role: 'system', content: systemInstruction }];
   try { localStorage.removeItem(HISTORY_KEY); } catch(e) {}
@@ -651,7 +716,6 @@ function addStreamingMessage() {
   const textNode = document.createElement('div');
   bubble.appendChild(textNode);
 
-  // Action buttons container (copy + speaker)
   const actions = document.createElement('div');
   actions.className = 'msg-actions';
 
@@ -755,10 +819,9 @@ function loadHistory() {
         addPlainMessage(txt, true);
         conversation.push({ role: 'user', content: txt });
       } else if (m.role === 'assistant') {
-        const { bubble, textNode, speakerBtn } = addStreamingMessage();
+        const { bubble, textNode } = addStreamingMessage();
         bubble.classList.remove('streaming');
         textNode.innerText = m.content;
-        // Re-attach copy + speaker functionality is already in the bubble
         conversation.push({ role: 'assistant', content: m.content });
       }
     }
@@ -798,22 +861,18 @@ async function sendMessage() {
     userContentForApi = text;
   }
 
-  // UI: show user message
   addPlainMessage(text || '(image bheji)', true, image ? image.dataUrl : null);
 
-  // Clear input UI immediately
   userInput.value = '';
   pendingImage = null;
   fileInput.value = '';
   attachPreview.classList.remove('show');
 
-  // Lock UI
   isSending = true;
   sendBtn.disabled = true;
 
   const { bubble, textNode, speakerBtn } = addStreamingMessage();
 
-  // Build messages for API
   const apiMessages = [...conversation, { role: 'user', content: userContentForApi }];
 
   try {
@@ -869,7 +928,7 @@ async function sendMessage() {
             textNode.innerText = cleanMarkdown(fullText);
             chatBox.scrollTop = chatBox.scrollHeight;
           }
-        } catch (e) { /* ignore malformed chunk */ }
+        } catch (e) {}
       }
     }
 
@@ -879,12 +938,10 @@ async function sendMessage() {
     textNode.innerText = clean;
     bubble.classList.remove('streaming');
 
-    // Re-bind speaker button with the final text
     speakerBtn.onclick = () => {
       speakText(clean, speakerBtn);
     };
 
-    // Save to conversation history
     const historyUserContent = image
       ? (text ? `${text} [user ne image attach ki thi]` : '[user ne image attach ki thi]')
       : text;
@@ -908,55 +965,13 @@ async function sendMessage() {
 /* ---------------- Init ---------------- */
 loadHistory();
 
-/* Show warning if browser lacks voice support */
 if (!SpeechRecognition) {
   console.warn('Voice input is not supported in this browser. Chrome or Edge recommended.');
 }
-if (!SpeechSynthesis) {
+if (!window.speechSynthesis) {
   console.warn('Speech synthesis is not supported in this browser.');
 }
 </script>
 
-<!--
-============================================================
-  BACKEND PROXY (RECOMMENDED FOR PRODUCTION)
-============================================================
-  Ye index.html Vercel par deploy karne ke baad, ek file
-  banayein:  /api/chat.js  (project root ke andar "api" folder)
-
-  ---------- api/chat.js ----------
-  export default async function handler(req, res) {
-    if (req.method !== 'POST') return res.status(405).end();
-
-    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
-      },
-      body: JSON.stringify(req.body)
-    });
-
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    const reader = r.body.getReader();
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      res.write(value);
-    }
-    res.end();
-  }
-  ---------------------------------
-
-  Phir Vercel dashboard → Settings → Environment Variables mein
-  GROQ_API_KEY set karein. Aur is HTML mein sirf 2 cheezein badlein:
-
-    const API_URL = "/api/chat";
-    // GROQ_KEY line hata dein
-    // fetch headers se "Authorization" hata dein
-
-  Bas. Ab key kabhi browser tak nahi pahunchegi.
--->
 </body>
 </html>
