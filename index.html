@@ -71,109 +71,58 @@
     padding: 1px 5px; border-radius: 8px;
     margin-left: 2px; vertical-align: middle;
   }
-
-  /* Model selector */
-  .model-selector {
-    position: relative;
-    display: inline-block;
-  }
+  .model-selector { position: relative; display: inline-block; }
   .model-btn {
-    background: var(--panel-2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 12.5px;
-    font-family: inherit;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.15s ease;
-    white-space: nowrap;
+    background: var(--panel-2); border: 1px solid var(--border);
+    color: var(--text); padding: 6px 12px; border-radius: 8px;
+    font-size: 12.5px; font-family: inherit; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    transition: all 0.15s ease; white-space: nowrap;
   }
   .model-btn:hover { border-color: var(--accent); }
   .model-btn .arrow {
-    font-size: 9px;
-    color: var(--text-dim);
+    font-size: 9px; color: var(--text-dim);
     transition: transform 0.2s ease;
   }
   .model-selector.open .model-btn .arrow { transform: rotate(180deg); }
   .model-btn .model-icon { font-size: 13px; }
-
   .model-dropdown {
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 6px;
-    min-width: 260px;
+    position: absolute; top: calc(100% + 6px); right: 0;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 6px; min-width: 260px;
     box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-    z-index: 300;
-    display: none;
-    max-height: 420px;
-    overflow-y: auto;
+    z-index: 300; display: none; max-height: 420px; overflow-y: auto;
   }
   .model-selector.open .model-dropdown { display: block; }
   .model-option {
-    padding: 8px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: background 0.15s ease;
-    font-size: 13px;
+    padding: 8px 10px; border-radius: 6px; cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    transition: background 0.15s ease; font-size: 13px;
   }
   .model-option:hover { background: var(--panel-2); }
   .model-option.active { background: var(--accent-dim); }
   .model-option .m-icon {
-    font-size: 16px;
-    width: 20px;
-    text-align: center;
-    flex-shrink: 0;
+    font-size: 16px; width: 20px; text-align: center; flex-shrink: 0;
   }
   .model-option .m-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    flex: 1;
-    min-width: 0;
+    display: flex; flex-direction: column; gap: 2px;
+    flex: 1; min-width: 0;
   }
-  .model-option .m-name {
-    font-weight: 500;
-    color: var(--text);
-    font-size: 13px;
-  }
-  .model-option .m-desc {
-    font-size: 11px;
-    color: var(--text-dim);
-  }
-  .model-option .m-check {
-    color: var(--online);
-    font-size: 14px;
-    flex-shrink: 0;
-  }
+  .model-option .m-name { font-weight: 500; color: var(--text); font-size: 13px; }
+  .model-option .m-desc { font-size: 11px; color: var(--text-dim); }
+  .model-option .m-check { color: var(--online); font-size: 14px; flex-shrink: 0; }
   .model-option .m-tag {
-    font-size: 9px;
-    padding: 1px 5px;
-    border-radius: 4px;
-    background: var(--panel-2);
-    color: var(--text-dim);
-    margin-left: 4px;
-    vertical-align: middle;
+    font-size: 9px; padding: 1px 5px; border-radius: 4px;
+    background: var(--panel-2); color: var(--text-dim);
+    margin-left: 4px; vertical-align: middle;
   }
-
   .chat-wrap {
     width: 100%; max-width: 720px; flex: 1;
     display: flex; flex-direction: column;
     padding: 0 20px; min-height: 0;
   }
   .chat-box {
-    flex: 1; overflow-y: auto;
-    padding: 6px 2px 20px;
+    flex: 1; overflow-y: auto; padding: 6px 2px 20px;
     display: flex; flex-direction: column; gap: 14px;
     min-height: 320px; max-height: 58vh;
   }
@@ -203,8 +152,8 @@
     border-top-right-radius: 4px;
   }
   .generated-img {
-    max-width: 100%; border-radius: 10px;
-    margin-top: 8px; display: block; border: 1px solid var(--border);
+    max-width: 100%; border-radius: 10px; margin-top: 8px;
+    display: block; border: 1px solid var(--border);
   }
   .img-caption { font-size: 13px; color: var(--text-dim); margin-bottom: 2px; }
   .img-error { color: var(--danger); font-size: 13px; margin-top: 6px; }
@@ -259,8 +208,7 @@
   .model-badge {
     display: inline-flex; align-items: center; gap: 4px;
     font-size: 10.5px; color: var(--text-dim);
-    background: var(--panel-2);
-    border: 1px solid var(--border);
+    background: var(--panel-2); border: 1px solid var(--border);
     padding: 2px 8px; border-radius: 6px; margin-bottom: 6px;
   }
   .model-badge.code { color: var(--code); border-color: rgba(167,139,250,0.3); background: rgba(167,139,250,0.1); }
@@ -487,7 +435,7 @@ Image: 📎 | File: 📄 | Voice: 🎙️ | Search: 🌐 | Image gen: /image</di
         </svg>
       </button>
     </div>
-    <div class="hint">Coding ke liye upar dropdown se <b>💻 Coding (Free)</b> select karo — unlimited aur bina signup. Search: 🌐 | File: 📄 | Voice: 🎙️</div>
+    <div class="hint">Coding ke liye upar dropdown se <b>💻 Coding (Free)</b> select karo. Search: 🌐 | File: 📄 | Voice: 🎙️</div>
   </div>
 
   <div class="mem-toast" id="memToast"><span class="dot"></span><span id="memToastText">Memory update ho gayi</span></div>
@@ -515,8 +463,7 @@ const FAST_MODEL    = "llama-3.1-8b-instant";
 const VISION_MODEL  = "meta-llama/llama-4-scout-17b-16e-instruct";
 const API_URL       = "https://api.groq.com/openai/v1/chat/completions";
 const TAVILY_URL    = "https://api.tavily.com/search";
-const KEYLESS_URL   = "https://keylessai.thryx.workers.dev/v1/chat/completions";
-const KEYLESS_KEY   = "not-needed";
+const POLLI_URL     = "https://text.pollinations.ai/openai";
 const HISTORY_KEY   = "jarvis_history_v1";
 const MEMORY_KEY    = "jarvis_memory_v1";
 const SEARCH_KEY    = "jarvis_search_enabled_v1";
@@ -568,11 +515,11 @@ const MODELS = [
     provider: "groq"
   },
   {
-    id: "gpt-4o",
+    id: "openai",
     name: "Coding (Free)",
     icon: "💻",
-    desc: "KeylessAI se free unlimited coding — no signup",
-    provider: "keyless"
+    desc: "Pollinations AI se free coding — no signup",
+    provider: "pollinations"
   }
 ];
 
@@ -639,27 +586,23 @@ function loadModelState() {
   updateModelBtnUI();
   renderModelDropdown();
 }
-
 function saveModelState() {
   try { localStorage.setItem(MODEL_KEY, currentModelId); } catch (e) {}
 }
-
 function getCurrentModel() {
   return MODELS.find(m => m.id === currentModelId) || MODELS[0];
 }
-
 function updateModelBtnUI() {
   const m = getCurrentModel();
   currentModelIcon.innerText = m.icon;
   currentModelName.innerText = m.name;
 }
-
 function renderModelDropdown() {
   modelDropdown.innerHTML = '';
   for (const m of MODELS) {
     const div = document.createElement('div');
     div.className = 'model-option' + (m.id === currentModelId ? ' active' : '');
-    const tag = m.provider === 'keyless' ? '<span class="m-tag">FREE</span>' : '';
+    const tag = m.provider === 'pollinations' ? '<span class="m-tag">FREE</span>' : '';
     div.innerHTML = `
       <span class="m-icon">${m.icon}</span>
       <div class="m-info">
@@ -679,12 +622,10 @@ function renderModelDropdown() {
     modelDropdown.appendChild(div);
   }
 }
-
 modelBtn.addEventListener('click', (e) => {
   e.stopPropagation();
   modelSelector.classList.toggle('open');
 });
-
 document.addEventListener('click', (e) => {
   if (!modelSelector.contains(e.target)) {
     modelSelector.classList.remove('open');
@@ -815,7 +756,6 @@ function showMemToast(text) {
   clearTimeout(showMemToast._t);
   showMemToast._t = setTimeout(() => memToast.classList.remove('show'), 2500);
 }
-
 async function extractFacts() {
   const recent = conversation.slice(-6).filter(m => m.role !== 'system');
   if (recent.length < 2) return;
@@ -875,7 +815,6 @@ Rules:
     }
   } catch (e) { console.warn('Memory extraction failed:', e); }
 }
-
 function renderMemoryModal() {
   if (!memory.length) {
     memModalBody.innerHTML = '<div class="mem-empty">Abhi tak kuch yaad nahi hai.<br>Jarvis se baat karo, wo khud yaad rakhega.</div>';
@@ -1369,23 +1308,23 @@ async function streamGroqCompletion(apiMessages, model, bubble, textNode) {
   return clean;
 }
 
-/* ============ STREAMING (KeylessAI) ============ */
-async function streamKeylessCompletion(apiMessages, bubble, textNode) {
-  const res = await fetch(KEYLESS_URL, {
+/* ============ STREAMING (Pollinations AI - Coding) ============ */
+async function streamPollinationsCompletion(apiMessages, bubble, textNode) {
+  const res = await fetch(POLLI_URL, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${KEYLESS_KEY}`
+      'Content-Type': 'application/json'
+      // Koi Authorization header nahi — bilkul keyless
     },
     body: JSON.stringify({
-      model: "gpt-4o",
+      model: "openai",
       messages: apiMessages,
       stream: true
     })
   });
 
   if (!res.ok) {
-    let errMsg = `KeylessAI HTTP ${res.status}`;
+    let errMsg = `Pollinations HTTP ${res.status}`;
     try { const j = await res.json(); errMsg = j?.error?.message || errMsg; } catch (e) {}
     throw new Error(errMsg);
   }
@@ -1465,12 +1404,12 @@ async function sendMessage() {
   isSending = true;
   sendBtn.disabled = true;
 
-  const curModel  = getCurrentModel();
-  const isKeyless = curModel.provider === 'keyless';
-  const isCode    = isKeyless;
+  const curModel   = getCurrentModel();
+  const isPolli    = curModel.provider === 'pollinations';
+  const isCode     = isPolli;
 
-  const useSearch = !image && !file && !isKeyless && searchEnabled;
-  const useFile   = !!file;
+  const useSearch  = !image && !file && !isPolli && searchEnabled;
+  const useFile    = !!file;
 
   const { bubble, textNode, speakerBtn, badge } = addStreamingMessage({
     withSearch: useSearch,
@@ -1507,15 +1446,15 @@ Instructions:
         { role: 'user', content: filePrompt }
       ];
 
-      if (isKeyless) {
-        clean = await streamKeylessCompletion(apiMessages, bubble, textNode);
+      if (isPolli) {
+        clean = await streamPollinationsCompletion(apiMessages, bubble, textNode);
       } else {
         clean = await streamGroqCompletion(apiMessages, currentModelId, bubble, textNode);
       }
 
-    } else if (isKeyless) {
-      // === KeylessAI coding model ===
-      clean = await streamKeylessCompletion(apiMessages, bubble, textNode);
+    } else if (isPolli) {
+      // === Pollinations coding model ===
+      clean = await streamPollinationsCompletion(apiMessages, bubble, textNode);
 
     } else if (useSearch) {
       const searchResults = await performTavilySearch(text);
