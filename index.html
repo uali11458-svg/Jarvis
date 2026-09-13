@@ -1,3 +1,1226 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jarvis — AI Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #12141a;
+    --panel: #191c24;
+    --panel-2: #20232d;
+    --border: #2a2e39;
+    --text: #e9eaee;
+    --text-dim: #8b91a3;
+    --accent: #4f9dde;
+    --accent-dim: #2c4b64;
+    --online: #3fbfa0;
+    --danger: #e07a7a;
+    --search: #c9a84c;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: 'Inter', -apple-system, Segoe UI, Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .app-header {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 20px 16px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-mark {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--online));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-weight: 600; font-size: 17px;
+    color: #0d0f14;
+    flex-shrink: 0;
+  }
+  .brand-text h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600; font-style: italic;
+    font-size: 22px; margin: 0; line-height: 1.1;
+    color: var(--text);
+  }
+  .status-line {
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 3px;
+    font-size: 12.5px; color: var(--text-dim);
+  }
+  .status-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--online);
+    box-shadow: 0 0 0 3px rgba(63, 191, 160, 0.15);
+  }
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .clear-btn, .memory-btn, .search-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .clear-btn:hover { color: var(--text); border-color: var(--accent); }
+  .memory-btn:hover { color: var(--text); border-color: var(--online); }
+  .search-btn:hover { color: var(--text); border-color: var(--search); }
+  .search-btn.active {
+    background: var(--search);
+    color: #0d0f14;
+    border-color: var(--search);
+    font-weight: 600;
+  }
+  .search-btn.active:hover {
+    background: #d4b65c;
+    border-color: #d4b65c;
+  }
+  .memory-btn .mem-count {
+    display: inline-block;
+    background: var(--online);
+    color: #0d0f14;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 8px;
+    margin-left: 2px;
+    vertical-align: middle;
+  }
+
+  /* Chat area */
+  .chat-wrap {
+    width: 100%;
+    max-width: 720px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0 20px;
+    min-height: 0;
+  }
+  .chat-box {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px 2px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 320px;
+    max-height: 58vh;
+  }
+  .chat-box::-webkit-scrollbar { width: 6px; }
+  .chat-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .row { display: flex; gap: 10px; max-width: 88%; }
+  .row.user { align-self: flex-end; flex-direction: row-reverse; }
+  .row.ai { align-self: flex-start; }
+
+  .avatar {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+    margin-top: 2px;
+  }
+  .avatar.ai { background: var(--accent-dim); color: var(--accent); }
+  .avatar.user { background: #2a2e39; color: var(--text-dim); }
+
+  .msg {
+    padding: 11px 15px;
+    border-radius: 14px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    font-size: 15px;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+  }
+  .row.ai .msg {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top-left-radius: 4px;
+  }
+  .row.user .msg {
+    background: var(--accent-dim);
+    color: #eaf3fb;
+    border-top-right-radius: 4px;
+  }
+
+  .generated-img {
+    max-width: 100%;
+    border-radius: 10px;
+    margin-top: 8px;
+    display: block;
+    border: 1px solid var(--border);
+  }
+  .img-caption {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 2px;
+  }
+  .img-error {
+    color: var(--danger);
+    font-size: 13px;
+    margin-top: 6px;
+  }
+
+  .msg-actions {
+    display: flex;
+    gap: 14px;
+    margin-top: 8px;
+    align-items: center;
+  }
+
+  .action-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit;
+    transition: color 0.15s ease;
+  }
+  .action-btn:hover { color: var(--accent); }
+
+  .speaker-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s ease;
+    font-family: inherit;
+  }
+  .speaker-btn:hover { color: var(--accent); }
+  .speaker-btn.speaking { color: var(--accent); }
+
+  .search-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--search);
+    background: rgba(201, 168, 76, 0.12);
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    padding: 2px 8px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+  }
+  .search-badge .pulse {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--search);
+    animation: searchPulse 1s infinite;
+  }
+  @keyframes searchPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .sources-block {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+  .sources-title {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .source-item {
+    display: block;
+    font-size: 12.5px;
+    color: var(--accent);
+    text-decoration: none;
+    padding: 3px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .source-item:hover { text-decoration: underline; }
+
+  /* Input bar */
+  .input-bar {
+    width: 100%;
+    max-width: 720px;
+    padding: 14px 20px 22px;
+  }
+  .input-shell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 6px 6px 6px 16px;
+    transition: border-color 0.15s ease;
+  }
+  .input-shell:focus-within { border-color: var(--accent); }
+  input[type="text"] {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 15px;
+    font-family: inherit;
+    padding: 10px 0;
+  }
+  input[type="text"]:focus { outline: none; }
+  input[type="text"]::placeholder { color: var(--text-dim); }
+  input[type="text"]:disabled { opacity: 0.5; }
+
+  button.send-btn {
+    width: 38px; height: 38px;
+    border-radius: 10px; border: none;
+    background: var(--accent);
+    color: #0d0f14;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s ease;
+  }
+  button.send-btn:hover:not(:disabled) { background: #6bb0e8; }
+  button.send-btn:disabled { background: #33394a; cursor: not-allowed; }
+  button.send-btn svg { width: 17px; height: 17px; }
+
+  button.attach-btn, button.mic-btn {
+    width: 36px; height: 36px;
+    border-radius: 10px; border: none;
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  button.attach-btn:hover, button.mic-btn:hover { background: var(--panel-2); color: var(--text); }
+  button.attach-btn svg, button.mic-btn svg { width: 18px; height: 18px; }
+
+  button.mic-btn.listening {
+    background: var(--danger);
+    color: #fff;
+    animation: pulse 1.2s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(224, 122, 122, 0.6); }
+    70% { box-shadow: 0 0 0 8px rgba(224, 122, 122, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(224, 122, 122, 0); }
+  }
+
+  .attachment-preview {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+  }
+  .attachment-preview.show { display: flex; }
+  .attachment-preview img {
+    width: 40px; height: 40px;
+    object-fit: cover;
+    border-radius: 6px;
+  }
+  .attachment-preview .att-name {
+    flex: 1;
+    font-size: 13px;
+    color: var(--text-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .attachment-preview .att-remove {
+    background: none; border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 18px; line-height: 1;
+    padding: 2px 6px;
+  }
+  .attachment-preview .att-remove:hover { color: var(--text); }
+
+  .attached-img-inline {
+    max-width: 220px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    display: block;
+    border: 1px solid var(--border);
+  }
+
+  .hint {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 10px;
+  }
+  .hint code {
+    background: var(--panel-2);
+    padding: 1px 6px;
+    border-radius: 5px;
+    color: var(--accent);
+    font-family: monospace;
+  }
+
+  /* typing cursor */
+  .streaming::after {
+    content: '▍';
+    color: var(--accent);
+    animation: blink 1s steps(2) infinite;
+    margin-left: 1px;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* Memory toast notification */
+  .mem-toast {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--panel-2);
+    border: 1px solid var(--online);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+  .mem-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .mem-toast .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--online);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  /* Memory modal */
+  .mem-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .mem-modal.show { display: flex; }
+  .mem-modal-inner {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .mem-modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .mem-modal-header h3 {
+    margin: 0;
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .mem-modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 22px;
+    cursor: pointer;
+    padding: 0 6px;
+    line-height: 1;
+  }
+  .mem-modal-close:hover { color: var(--text); }
+  .mem-modal-body {
+    padding: 16px 20px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .mem-item {
+    display: flex;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    line-height: 1.5;
+    align-items: flex-start;
+  }
+  .mem-item:last-child { border-bottom: none; }
+  .mem-item .mem-dot {
+    color: var(--online);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .mem-item .mem-text { flex: 1; color: var(--text); }
+  .mem-empty {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 14px;
+    padding: 30px 10px;
+  }
+  .mem-modal-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .mem-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .mem-btn:hover { color: var(--text); border-color: var(--text); }
+  .mem-btn.danger:hover { color: var(--danger); border-color: var(--danger); }
+</style>
+</head>
+<body>
+
+  <div class="app-header">
+    <div class="brand">
+      <div class="brand-mark">J</div>
+      <div class="brand-text">
+        <h1>Jarvis</h1>
+        <div class="status-line"><span class="status-dot"></span>Online</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="search-btn" id="searchBtn" title="Web search on/off">🌐 Search</button>
+      <button class="memory-btn" id="memoryBtn">🧠 Memory<span class="mem-count" id="memCount">0</span></button>
+      <button class="clear-btn" id="clearBtn">Clear</button>
+    </div>
+  </div>
+
+  <div class="chat-wrap">
+    <div class="chat-box" id="chatBox">
+      <div class="row ai">
+        <div class="avatar ai">J</div>
+        <div class="msg">Assalam-o-Alaikum! Main Jarvis hoon. Kuch bhi pooch sakte hain.
+
+Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle mein baitha hai
+
+Web search on karne ke liye 🌐 Search button dabao — phir latest news, weather, scores sab pooch sakte ho.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-bar">
+    <div class="attachment-preview" id="attachPreview">
+      <img id="attachThumb" src="" alt="">
+      <div class="att-name" id="attachName"></div>
+      <button class="att-remove" id="attachRemove" aria-label="Hatao">×</button>
+    </div>
+    <div class="input-shell">
+      <input type="file" id="fileInput" accept="image/*" style="display:none">
+      <button class="attach-btn" id="attachBtn" aria-label="Attach">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M21.44 11.05L12.25 20.24C10.01 22.48 6.37 22.48 4.13 20.24C1.89 18 1.89 14.36 4.13 12.12L13.32 2.93C14.81 1.44 17.22 1.44 18.71 2.93C20.2 4.42 20.2 6.83 18.71 8.32L10.36 16.67C9.62 17.41 8.42 17.41 7.68 16.67C6.94 15.93 6.94 14.73 7.68 13.99L15.16 6.51" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <button class="mic-btn" id="micBtn" aria-label="Mic">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C10.34 2 9 3.34 9 5V12C9 13.66 10.34 15 12 15C13.66 15 15 13.66 15 12V5C15 3.34 13.66 2 12 2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M19 10V12C19 15.87 15.87 19 12 19C8.13 19 5 15.87 5 12V10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 19V22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M8 22H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <input type="text" id="userInput" placeholder="Apna sawaal likhein..." autocomplete="off">
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()" aria-label="Bhejein">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 12L20 4L14 20L11 13L4 12Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    <div class="hint">Image ke liye <code>/image</code> se message shuru karo, ya 📎 se photo attach karo. 🎙️ se bol kar baat karo. 🌐 se web search on/off.</div>
+  </div>
+
+  <div class="mem-toast" id="memToast"><span class="dot"></span><span id="memToastText">Memory update ho gayi</span></div>
+
+  <div class="mem-modal" id="memModal">
+    <div class="mem-modal-inner">
+      <div class="mem-modal-header">
+        <h3>🧠 Jarvis ki Memory</h3>
+        <button class="mem-modal-close" id="memModalClose">×</button>
+      </div>
+      <div class="mem-modal-body" id="memModalBody"></div>
+      <div class="mem-modal-footer">
+        <button class="mem-btn danger" id="memClearBtn">Sab bhula do</button>
+        <button class="mem-btn" id="memCloseBtn">Band karo</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* =========================================================
+   ⚠️ API key BROWSER mein expose hai — production ke liye
+   backend proxy zaroor lagayein.
+   ========================================================= */
+const GROQ_KEY = "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";
+
+const TEXT_MODEL    = "openai/gpt-oss-120b";
+const VISION_MODEL  = "meta-llama/llama-4-scout-17b-16e-instruct";
+const FAST_MODEL    = "llama-3.1-8b-instant";
+const SEARCH_MODEL  = "groq/compound";
+const API_URL       = "https://api.groq.com/openai/v1/chat/completions";
+const HISTORY_KEY   = "jarvis_history_v1";
+const MEMORY_KEY    = "jarvis_memory_v1";
+const SEARCH_KEY    = "jarvis_search_enabled_v1";
+const MAX_HISTORY   = 20;
+const MEM_EXTRACT_EVERY = 6;
+const MAX_FACTS     = 25;
+
+/* ---------------- DOM refs ---------------- */
+const chatBox       = document.getElementById('chatBox');
+const userInput     = document.getElementById('userInput');
+const sendBtn       = document.getElementById('sendBtn');
+const fileInput     = document.getElementById('fileInput');
+const attachBtn     = document.getElementById('attachBtn');
+const attachPreview = document.getElementById('attachPreview');
+const attachThumb   = document.getElementById('attachThumb');
+const attachName    = document.getElementById('attachName');
+const attachRemove  = document.getElementById('attachRemove');
+const clearBtn      = document.getElementById('clearBtn');
+const micBtn        = document.getElementById('micBtn');
+const memoryBtn     = document.getElementById('memoryBtn');
+const memCount      = document.getElementById('memCount');
+const memModal      = document.getElementById('memModal');
+const memModalBody  = document.getElementById('memModalBody');
+const memModalClose = document.getElementById('memModalClose');
+const memCloseBtn   = document.getElementById('memCloseBtn');
+const memClearBtn   = document.getElementById('memClearBtn');
+const memToast      = document.getElementById('memToast');
+const memToastText  = document.getElementById('memToastText');
+const searchBtn     = document.getElementById('searchBtn');
+
+/* ---------------- State ---------------- */
+let pendingImage = null;
+let isSending    = false;
+let isListening  = false;
+let recognition  = null;
+let currentAudio = null;
+let currentBtn   = null;
+let isStoppingTTS = false;
+let messagesSinceExtract = 0;
+let memory = [];
+let searchEnabled = false;
+
+const baseInstruction = 'Tumhara naam Jarvis hai. Tum ek helpful AI assistant ho. Agar koi tumhara naam pooche, to hamesha "Jarvis" bolna. Tum kisi company ke banaye hue nahi ho — tumhe user ne banaya hai. Hamesha seedha, saaf jawab do — apna internal soch-vichar (thinking/reasoning process) kabhi mat dikhana, sirf final jawab do. Natural tarike se baat karo jaise ek insaan karta hai — normal conversation mein har cheez ko numbered list, bullet points, ya bold text mein mat todo, seedhe paragraph mein baat karo. Sirf tab list use karo jab user steps ya multiple items specifically maange. Hamesha sirf Roman Urdu/Hindi aur English mein jawab do — kisi aur language (Chinese, Arabic script, etc) ka koi lafz kabhi mat likhna.';
+
+let conversation = [{ role: 'system', content: baseInstruction }];
+
+/* ============ WEB SEARCH TOGGLE ============ */
+function loadSearchState() {
+  try { searchEnabled = localStorage.getItem(SEARCH_KEY) === 'true'; } catch (e) { searchEnabled = false; }
+  updateSearchBtnUI();
+}
+
+function saveSearchState() {
+  try { localStorage.setItem(SEARCH_KEY, searchEnabled ? 'true' : 'false'); } catch (e) {}
+}
+
+function updateSearchBtnUI() {
+  if (searchEnabled) {
+    searchBtn.classList.add('active');
+    searchBtn.title = 'Web search ON — click to disable';
+  } else {
+    searchBtn.classList.remove('active');
+    searchBtn.title = 'Web search OFF — click to enable';
+  }
+}
+
+searchBtn.addEventListener('click', () => {
+  searchEnabled = !searchEnabled;
+  saveSearchState();
+  updateSearchBtnUI();
+  showMemToast(searchEnabled ? '🌐 Web search ON' : 'Web search OFF');
+});
+
+/* ============ MEMORY SYSTEM ============ */
+function loadMemory() {
+  try {
+    const raw = localStorage.getItem(MEMORY_KEY);
+    memory = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(memory)) memory = [];
+  } catch (e) { memory = []; }
+  updateMemCount();
+}
+
+function saveMemory() {
+  try { localStorage.setItem(MEMORY_KEY, JSON.stringify(memory)); } catch (e) {}
+  updateMemCount();
+}
+
+function updateMemCount() { memCount.innerText = memory.length; }
+
+function buildSystemPrompt() {
+  if (!memory.length) return baseInstruction;
+  const facts = memory.map(f => '- ' + f).join('\n');
+  return baseInstruction + '\n\nUser ke baare mein tumhe ye facts yaad hain (inhe natural tarike se use karo, har baar repeat mat karo):\n' + facts;
+}
+
+function refreshSystemPrompt() {
+  conversation[0] = { role: 'system', content: buildSystemPrompt() };
+}
+
+function showMemToast(text) {
+  memToastText.innerText = text;
+  memToast.classList.add('show');
+  clearTimeout(showMemToast._t);
+  showMemToast._t = setTimeout(() => memToast.classList.remove('show'), 2500);
+}
+
+async function extractFacts() {
+  const recent = conversation.slice(-8).filter(m => m.role !== 'system');
+  if (recent.length < 2) return;
+
+  const chatLog = recent.map(m => {
+    const role = m.role === 'user' ? 'User' : 'Jarvis';
+    const content = typeof m.content === 'string' ? m.content : '(image)';
+    return role + ': ' + content;
+  }).join('\n');
+
+  const existingFacts = memory.length
+    ? 'Pehle se ye facts memory mein hain (inhe repeat mat karo):\n' + memory.map(f => '- ' + f).join('\n')
+    : 'Memory abhi khali hai.';
+
+  const extractionPrompt = `Neeche ek conversation hai. Isme se user ke baare mein IMPORTANT, LONG-TERM facts nikaalo — jaise user ka naam, pasand/na-pasand, kaam, sheher, goals, family, hobbies, important preferences, ya koi bhi cheez jo future conversations mein kaam aaye.
+
+${existingFacts}
+
+Conversation:
+${chatLog}
+
+Instructions:
+- Sirf user ke baare mein facts nikaalo, Jarvis ke baare mein nahi.
+- Har fact ek chhoti si line honi chahiye (max 15 words).
+- Sirf wo facts jo long-term useful hain.
+- Agar koi naya fact nahi mila, to sirf "NONE" likho.
+- Warna har naya fact ek nayi line mein likho, koi bullet ya numbering ke bina.
+- Sirf Roman Urdu/English mein likho.`;
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` },
+      body: JSON.stringify({
+        model: FAST_MODEL,
+        messages: [{ role: 'user', content: extractionPrompt }],
+        max_completion_tokens: 300,
+        temperature: 0.3
+      })
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    const raw = (data?.choices?.[0]?.message?.content || '').trim();
+    if (!raw || raw.toUpperCase() === 'NONE') return;
+
+    const newFacts = raw.split('\n')
+      .map(l => l.replace(/^[-•*\d.\s]+/, '').trim())
+      .filter(f => f.length > 3 && f.length < 200);
+
+    if (!newFacts.length) return;
+
+    let added = 0;
+    for (const fact of newFacts) {
+      const lower = fact.toLowerCase();
+      const exists = memory.some(m => {
+        const ml = m.toLowerCase();
+        return ml === lower || ml.includes(lower) || lower.includes(ml);
+      });
+      if (!exists && memory.length < MAX_FACTS) { memory.push(fact); added++; }
+    }
+    if (added > 0) {
+      saveMemory();
+      refreshSystemPrompt();
+      showMemToast(`${added} nayi baat yaad kar li`);
+    }
+  } catch (e) { console.warn('Memory extraction failed:', e); }
+}
+
+/* -------- Memory modal -------- */
+function renderMemoryModal() {
+  if (!memory.length) {
+    memModalBody.innerHTML = '<div class="mem-empty">Abhi tak kuch yaad nahi hai.<br>Jarvis se baat karo, wo khud yaad rakhega.</div>';
+    return;
+  }
+  memModalBody.innerHTML = memory.map(f =>
+    '<div class="mem-item"><span class="mem-dot">●</span><span class="mem-text">' + escapeHtml(f) + '</span></div>'
+  ).join('');
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+memoryBtn.addEventListener('click', () => { renderMemoryModal(); memModal.classList.add('show'); });
+function closeMemModal() { memModal.classList.remove('show'); }
+memModalClose.addEventListener('click', closeMemModal);
+memCloseBtn.addEventListener('click', closeMemModal);
+memModal.addEventListener('click', (e) => { if (e.target === memModal) closeMemModal(); });
+
+memClearBtn.addEventListener('click', () => {
+  if (!memory.length) { closeMemModal(); return; }
+  if (!confirm('Saari memory bhula deni hai?')) return;
+  memory = [];
+  saveMemory();
+  refreshSystemPrompt();
+  renderMemoryModal();
+  showMemToast('Memory clear ho gayi');
+});
+
+/* ================= VOICE RECOGNITION ================= */
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (SpeechRecognition) {
+  recognition = new SpeechRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.lang = 'ur-PK';
+  recognition.maxAlternatives = 1;
+} else {
+  console.warn('SpeechRecognition not supported in this browser.');
+  if (micBtn) micBtn.style.display = 'none';
+}
+
+function toggleListening() {
+  if (!recognition) return;
+  if (isListening) { recognition.stop(); return; }
+  try { recognition.start(); } catch (e) { console.error('Mic start error:', e); }
+}
+
+if (recognition) {
+  recognition.onstart = () => { isListening = true; micBtn.classList.add('listening'); };
+  recognition.onend = () => { isListening = false; micBtn.classList.remove('listening'); };
+  recognition.onerror = (event) => {
+    console.error('Speech recognition error:', event.error);
+    isListening = false; micBtn.classList.remove('listening');
+    let msg = 'Voice input mein error aaya.';
+    if (event.error === 'not-allowed') msg = 'Mic ki permission nahi mili.';
+    else if (event.error === 'no-speech') msg = 'Koi awaaz sunai nahi di.';
+    else if (event.error === 'network') msg = 'Network error.';
+    if (event.error !== 'aborted') addPlainMessage('⚠️ ' + msg, false);
+  };
+  recognition.onresult = (event) => {
+    let finalTranscript = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+    }
+    if (finalTranscript) {
+      userInput.value = finalTranscript;
+      setTimeout(() => { if (userInput.value.trim() && !isSending) sendMessage(); }, 400);
+    }
+  };
+}
+micBtn.addEventListener('click', toggleListening);
+
+/* ================= TEXT-TO-SPEECH ================= */
+function speakText(text, btn) {
+  if (currentBtn === btn && currentAudio) { stopSpeaking(); return; }
+  stopSpeaking();
+  const cleanText = text.replace(/[*_`~>#\[\]()]/g, '').replace(/\s+/g, ' ').trim();
+  if (!cleanText) return;
+  const chunks = splitIntoChunks(cleanText, 180);
+  currentBtn = btn; isStoppingTTS = false;
+  if (btn) btn.classList.add('speaking');
+  playChunksSequentially(chunks, btn, 0);
+}
+
+function splitIntoChunks(text, maxLen) {
+  const chunks = [];
+  const sentences = text.split(/(?<=[.!?۔])\s+/);
+  let current = '';
+  for (const sentence of sentences) {
+    if ((current + ' ' + sentence).length <= maxLen) {
+      current = current ? current + ' ' + sentence : sentence;
+    } else {
+      if (current) chunks.push(current);
+      if (sentence.length <= maxLen) { current = sentence; }
+      else {
+        const words = sentence.split(' ');
+        current = '';
+        for (const w of words) {
+          if ((current + ' ' + w).length <= maxLen) { current = current ? current + ' ' + w : w; }
+          else { if (current) chunks.push(current); current = w; }
+        }
+      }
+    }
+  }
+  if (current) chunks.push(current);
+  return chunks;
+}
+
+function playChunksSequentially(chunks, btn, index) {
+  if (isStoppingTTS || index >= chunks.length) {
+    if (btn) btn.classList.remove('speaking');
+    currentBtn = null; currentAudio = null; return;
+  }
+  const url = 'https://translate.googleapis.com/translate_tts?ie=UTF-8&q='
+    + encodeURIComponent(chunks[index]) + '&tl=ur&client=tw-ob';
+  const audio = new Audio(url);
+  currentAudio = audio;
+  audio.onended = () => { if (isStoppingTTS) return; setTimeout(() => playChunksSequentially(chunks, btn, index + 1), 120); };
+  audio.onerror = () => fallbackBrowserTTS(chunks.slice(index).join(' '), btn);
+  audio.play().catch(() => fallbackBrowserTTS(chunks.slice(index).join(' '), btn));
+}
+
+function fallbackBrowserTTS(text, btn) {
+  if (!window.speechSynthesis) { if (btn) btn.classList.remove('speaking'); currentBtn = null; return; }
+  const utt = new SpeechSynthesisUtterance(text);
+  const voices = speechSynthesis.getVoices();
+  const urdu = voices.find(v => v.lang.startsWith('ur')) || voices.find(v => v.lang.startsWith('hi')) || voices.find(v => v.lang.startsWith('en-IN'));
+  if (urdu) utt.voice = urdu;
+  utt.lang = urdu ? urdu.lang : 'en-US';
+  utt.onend = () => { if (btn) btn.classList.remove('speaking'); currentBtn = null; };
+  utt.onerror = () => { if (btn) btn.classList.remove('speaking'); currentBtn = null; };
+  speechSynthesis.cancel(); speechSynthesis.speak(utt);
+}
+
+function stopSpeaking() {
+  isStoppingTTS = true;
+  if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; currentAudio = null; }
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  if (currentBtn) { currentBtn.classList.remove('speaking'); currentBtn = null; }
+}
+
+/* ---------------- Attach handling ---------------- */
+attachBtn.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', () => {
+  const file = fileInput.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { addPlainMessage('⚠️ Abhi sirf images attach ki ja sakti hain.', false); fileInput.value = ''; return; }
+  if (file.size > 5 * 1024 * 1024) { addPlainMessage('⚠️ Image 5MB se choti honi chahiye.', false); fileInput.value = ''; return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    pendingImage = { dataUrl: e.target.result, name: file.name };
+    attachThumb.src = pendingImage.dataUrl;
+    attachName.innerText = file.name;
+    attachPreview.classList.add('show');
+  };
+  reader.readAsDataURL(file);
+});
+attachRemove.addEventListener('click', () => { pendingImage = null; fileInput.value = ''; attachPreview.classList.remove('show'); });
+
+/* ---------------- Enter key ---------------- */
+userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+
+/* ---------------- Clear chat ---------------- */
+clearBtn.addEventListener('click', () => {
+  if (!confirm('Poori chat clear karni hai? (Memory save rahegi)')) return;
+  stopSpeaking();
+  chatBox.innerHTML = '';
+  conversation = [{ role: 'system', content: buildSystemPrompt() }];
+  messagesSinceExtract = 0;
+  try { localStorage.removeItem(HISTORY_KEY); } catch(e) {}
+  addPlainMessage('Chat clear ho gayi. Memory save hai. Naya sawaal poochein.', false);
+});
+
+/* ---------------- UI helpers ---------------- */
+function addPlainMessage(text, isUser, imageDataUrl) {
+  const row = document.createElement('div');
+  row.className = 'row ' + (isUser ? 'user' : 'ai');
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar ' + (isUser ? 'user' : 'ai');
+  avatar.innerText = isUser ? 'Y' : 'J';
+  const bubble = document.createElement('div');
+  bubble.className = 'msg';
+  if (imageDataUrl) {
+    const img = document.createElement('img');
+    img.className = 'attached-img-inline';
+    img.src = imageDataUrl;
+    bubble.appendChild(img);
+  }
+  const textNode = document.createElement('div');
+  textNode.innerText = text;
+  bubble.appendChild(textNode);
+  row.appendChild(avatar); row.appendChild(bubble);
+  chatBox.appendChild(row);
+  chatBox.scrollTop = chatBox.scrollHeight;
+  return { row, bubble, textNode };
+}
+
+function addStreamingMessage(opts = {}) {
+  const { withSearch = false } = opts;
+  const row = document.createElement('div');
+  row.className = 'row ai';
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar ai';
+  avatar.innerText = 'J';
+  const bubble = document.createElement('div');
+  bubble.className = 'msg streaming';
+
+  if (withSearch) {
+    const badge = document.createElement('div');
+    badge.className = 'search-badge';
+    badge.innerHTML = '<span class="pulse"></span> Web search...';
+    bubble.appendChild(badge);
+  }
+
+  const textNode = document.createElement('div');
+  bubble.appendChild(textNode);
+
+  const actions = document.createElement('div');
+  actions.className = 'msg-actions';
+
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'action-btn';
+  copyBtn.innerText = 'Copy';
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(textNode.innerText).then(() => {
+      copyBtn.innerText = 'Copied!';
+      setTimeout(() => copyBtn.innerText = 'Copy', 1500);
+    }).catch(() => {});
+  };
+
+  const speakerBtn = document.createElement('button');
+  speakerBtn.className = 'speaker-btn';
+  speakerBtn.title = 'Bol kar sunao';
+  speakerBtn.innerHTML = '🔊';
+  speakerBtn.onclick = () => speakText(textNode.innerText, speakerBtn);
+
+  actions.appendChild(copyBtn);
+  actions.appendChild(speakerBtn);
+  bubble.appendChild(actions);
+
+  row.appendChild(avatar); row.appendChild(bubble);
+  chatBox.appendChild(row);
+  chatBox.scrollTop = chatBox.scrollHeight;
+  return { row, bubble, textNode, actions, speakerBtn, badge: withSearch ? bubble.querySelector('.search-badge') : null };
+}
+
+function addSourcesBlock(bubble, sources) {
+  if (!sources || !sources.length) return;
+  const block = document.createElement('div');
+  block.className = 'sources-block';
+  const title = document.createElement('div');
+  title.className = 'sources-title';
+  title.innerText = 'Sources';
+  block.appendChild(title);
+
+  const seen = new Set();
+  let count = 0;
+  for (const s of sources) {
+    if (!s.url || seen.has(s.url) || count >= 6) continue;
+    seen.add(s.url);
+    const a = document.createElement('a');
+    a.className = 'source-item';
+    a.href = s.url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.innerText = '↗ ' + (s.title || s.url);
+    block.appendChild(a);
+    count++;
+  }
+  if (count > 0) bubble.appendChild(block);
+}
+
+function addImageMessage(prompt) {
+  const row = document.createElement('div');
+  row.className = 'row ai';
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar ai';
+  avatar.innerText = 'J';
+  const bubble = document.createElement('div');
+  bubble.className = 'msg';
+  const caption = document.createElement('div');
+  caption.className = 'img-caption';
+  caption.innerText = '🎨 "' + prompt + '"';
+  const img = document.createElement('img');
+  img.className = 'generated-img';
+  const url = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(prompt)
+            + '?width=512&height=512&nologo=true&seed=' + Math.floor(Math.random() * 100000);
+  img.src = url;
+  img.alt = prompt;
+  img.onerror = () => {
+    img.style.display = 'none';
+    const err = document.createElement('div');
+    err.className = 'img-error';
+    err.innerText = '⚠️ Image load nahi ho saki. Internet ya service check karein.';
+    bubble.appendChild(err);
+  };
+  bubble.appendChild(caption); bubble.appendChild(img);
+  row.appendChild(avatar); row.appendChild(bubble);
+  chatBox.appendChild(row);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function cleanMarkdown(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^[-•]\s+/gm, '• ')
+    .trim();
+}
+
+/* ---------------- History helpers ---------------- */
+function trimHistory() {
+  const system = conversation[0];
+  const rest = conversation.slice(1);
+  if (rest.length > MAX_HISTORY) conversation = [system, ...rest.slice(-MAX_HISTORY)];
+}
+
+function saveHistory() {
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(conversation.slice(1))); } catch (e) {}
+}
+
+function loadHistory() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    if (!Array.isArray(saved) || !saved.length) return;
+    for (const m of saved) {
+      if (m.role === 'user') {
+        const txt = typeof m.content === 'string' ? m.content : '(message)';
+        addPlainMessage(txt, true);
+        conversation.push({ role: 'user', content: txt });
+      } else if (m.role === 'assistant') {
+        const { bubble, textNode } = addStreamingMessage();
+        bubble.classList.remove('streaming');
+        textNode.innerText = m.content;
+        conversation.push({ role: 'assistant', content: m.content });
+      }
+    }
+    chatBox.scrollTop = chatBox.scrollHeight;
+  } catch (e) {}
+}
+
+/* ---------------- Main send ---------------- */
+async function sendMessage() {
+  if (isSending) return;
+
+  const text  = userInput.value.trim();
+  const image = pendingImage;
+  if (!text && !image) return;
+
+  /* ----- /image command ----- */
+  if (!image && text.toLowerCase().startsWith('/image ')) {
+    const prompt = text.slice(7).trim();
+    addPlainMessage(text, true);
+    userInput.value = '';
+    if (!prompt) { addPlainMessage('Image ke liye kuch description bhi likho, jaise: /image ek sher jungle mein', false); return; }
+    addImageMessage(prompt);
+    return;
+  }
+
+  /* ----- build API content ----- */
+  let userContentForApi;
+  if (image) {
+    userContentForApi = [
+      { type: 'text', text: text || 'Is image mein kya hai? Explain karo.' },
+      { type: 'image_url', image_url: { url: image.dataUrl } }
+    ];
+  } else {
+    userContentForApi = text;
+  }
+
+  addPlainMessage(text || '(image bheji)', true, image ? image.dataUrl : null);
+
+  userInput.value = '';
+  pendingImage = null;
+  fileInput.value = '';
+  attachPreview.classList.remove('show');
+
+  isSending = true;
+  sendBtn.disabled = true;
+
+  let model, withSearch = false;
+  if (image) {
+    model = VISION_MODEL;
+  } else if (searchEnabled) {
+    model = SEARCH_MODEL;
+    withSearch = true;
+  } else {
+    model = TEXT_MODEL;
+  }
+
+  const { bubble, textNode, speakerBtn, badge } = addStreamingMessage({ withSearch });
+
+  refreshSystemPrompt();
+  const apiMessages = [...conversation, { role: 'user', content: userContentForApi }];
+
+  try {
+    const body = {
+      model: model,
+      messages: apiMessages,
+      max_completion_tokens: image ? 700 : 1024,
+      stream: true
+    };
+    if (model === TEXT_MODEL) body.reasoning_effort = "low";
+
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      let errMsg = `HTTP ${res.status}`;
+      try { const j = await res.json(); errMsg = j?.error?.message || errMsg; } catch (e) {}
+      throw new Error(errMsg);
+    }
+
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer   = '';
+    let fullText = '';
+    const collectedSources = [];
+
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -15,12 +1238,10 @@
           const json = JSON.parse(payload);
           const choice = json?.choices?.[0];
 
-          // Content dono jagah se try karo: delta (normal streaming) aur message (compound final)
           let newText = '';
           if (choice?.delta?.content) {
             newText = choice.delta.content;
           } else if (choice?.message?.content && choice?.finish_reason) {
-            // Compound sometimes sends full content in final message object
             newText = choice.message.content;
           } else if (choice?.text) {
             newText = choice.text;
@@ -32,7 +1253,6 @@
             chatBox.scrollTop = chatBox.scrollHeight;
           }
 
-          // Collect search results from both delta and message
           const execTools = choice?.delta?.executed_tools
                          || choice?.message?.executed_tools
                          || json?.x_groq?.usage?.executed_tools;
@@ -49,3 +1269,56 @@
         } catch (e) {}
       }
     }
+
+    if (!fullText.trim()) fullText = 'Koi response nahi mila.';
+
+    const clean = cleanMarkdown(fullText);
+    textNode.innerText = clean;
+    bubble.classList.remove('streaming');
+    if (badge) badge.remove();
+
+    if (collectedSources.length) addSourcesBlock(bubble, collectedSources);
+
+    speakerBtn.onclick = () => speakText(clean, speakerBtn);
+
+    const historyUserContent = image
+      ? (text ? `${text} [user ne image attach ki thi]` : '[user ne image attach ki thi]')
+      : text;
+    conversation.push({ role: 'user', content: historyUserContent });
+    conversation.push({ role: 'assistant', content: clean });
+
+    trimHistory();
+    saveHistory();
+
+    if (!image) {
+      messagesSinceExtract++;
+      if (messagesSinceExtract >= MEM_EXTRACT_EVERY) {
+        messagesSinceExtract = 0;
+        extractFacts();
+      }
+    }
+
+  } catch (err) {
+    console.error(err);
+    bubble.classList.remove('streaming');
+    if (badge) badge.remove();
+    textNode.innerText = 'Error: ' + (err.message || 'kuch ghalat ho gaya, dobara try karein.');
+  } finally {
+    isSending = false;
+    sendBtn.disabled = false;
+    userInput.focus();
+  }
+}
+
+/* ---------------- Init ---------------- */
+loadMemory();
+loadSearchState();
+refreshSystemPrompt();
+loadHistory();
+
+if (!SpeechRecognition) console.warn('Voice input is not supported in this browser.');
+if (!window.speechSynthesis) console.warn('Speech synthesis is not supported in this browser.');
+</script>
+
+</body>
+</html>
