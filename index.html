@@ -515,11 +515,12 @@
         <div class="avatar ai">J</div>
         <div class="msg">Assalam-o-Alaikum! Main Jarvis hoon. Kuch bhi pooch sakte hain.
 
-🎨 Image: /image ek sher jungle mein baitha hai | /image2 ya /image4
-🎭 Style: /image anime: sher jungle mein
+🎨 Image banane ke liye seedha bolo: <b>"ek sher ki image banao"</b>
+🖼️ Zyada images: <b>"2 images banao"</b> ya <b>/image4</b>
+🎭 Style: <b>/image anime: sher jungle mein</b>
 📎 Image | 📄 File | 🎙️ Voice | 🌐 Search | 📤 Share
 
-Upar dropdown se model choose karo — Smart, Fast, ya 💻 Coding (Free).</div>
+Upar dropdown se model choose karo.</div>
       </div>
     </div>
   </div>
@@ -540,7 +541,7 @@ Upar dropdown se model choose karo — Smart, Fast, ya 💻 Coding (Free).</div>
       </button>
       <button class="file-btn" id="fileBtn" aria-label="File attach">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 4.9 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
           <path d="M14 2V8H20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
@@ -559,7 +560,7 @@ Upar dropdown se model choose karo — Smart, Fast, ya 💻 Coding (Free).</div>
         </svg>
       </button>
     </div>
-    <div class="hint">Image: <code>/image</code>, <code>/image2</code>, <code>/image4</code> | Style: <code>/image anime:</code> | Share: 📤 | Search: 🌐</div>
+    <div class="hint">Image: seedha bol do <b>"banao..."</b> | Advanced: <code>/image2</code>, <code>/image4</code>, <code>/image anime:</code> | Share: 📤</div>
   </div>
 
   <div class="lightbox" id="lightbox">
@@ -629,7 +630,6 @@ const MAX_DOC_CHARS = 8000;
 const MAX_DOC_SIZE  = 10 * 1024 * 1024;
 const SHARE_HASH_PREFIX = '#share=';
 
-/* Har model ka safe max output token limit */
 const MODEL_MAX_TOKENS = {
   "openai/gpt-oss-120b": 900,
   "openai/gpt-oss-20b": 900,
@@ -720,7 +720,7 @@ let memory = [];
 let searchEnabled = false;
 let lightboxCurrentUrl = '';
 
-const baseInstruction = 'Tumhara naam Jarvis hai. Tum ek helpful AI assistant ho. Agar koi tumhara naam pooche, to hamesha "Jarvis" bolna. Tum kisi company ke banaye hue nahi ho — tumhe user ne banaya hai. Hamesha seedha, saaf jawab do — apna internal soch-vichar (thinking/reasoning process) kabhi mat dikhana, sirf final jawab do. Natural tarike se baat karo jaise ek insaan karta hai — normal conversation mein har cheez ko numbered list, bullet points, ya bold text mein mat todo, seedhe paragraph mein baat karo. Sirf tab list use karo jab user steps ya multiple items specifically maange. Hamesha sirf Roman Urdu/Hindi aur English mein jawab do.';
+const baseInstruction = 'Tumhara naam Jarvis hai. Tum ek helpful AI assistant ho. Agar koi tumhara naam pooche, to hamesha "Jarvis" bolna. Tum kisi company ke banaye hue nahi ho — tumhe user ne banaya hai. Hamesha seedha, saaf jawab do — apna internal soch-vichar (thinking/reasoning process) kabhi mat dikhana, sirf final jawab do. Natural tarike se baat karo jaise ek insaan karta hai — normal conversation mein har cheez ko numbered list, bullet points, ya bold text mein mat todo, seedhe paragraph mein baat karo. Sirf tab list use karo jab user steps ya multiple items specifically maange. Hamesha sirf Roman Urdu/Hindi aur English mein jawab do. Tum image generate kar sakte ho. Agar koi pooche ke tum image bana sakte ho ya nahi, to haan bolo aur kaho ke seedha bata de kaisi image chahiye, main bana dunga. Agar koi naturally kahe "ek sher ki image banao" ya "banao X ka photo", to tum khud image generate kar sakte ho — user ko /image likhne ki zaroorat nahi.';
 
 let conversation = [{ role: 'system', content: baseInstruction }];
 
@@ -1734,6 +1734,46 @@ function parseImageCommand(text) {
   return { count, style, prompt: rest };
 }
 
+/* ============ NATURAL IMAGE INTENT DETECTION ============ */
+function detectImageIntent(text) {
+  const lower = text.toLowerCase().trim();
+  if (!lower) return null;
+  if (lower.startsWith('/image')) return null;
+
+  // Question forms — AI ko jaane do
+  if (/\?/.test(lower)) return null;
+  if (/\b(kaise|kese|how|kya|what|kyun|why|kab|when)\b/i.test(lower)) return null;
+  if (/\b(can\s+you|can\s+u|kya\s+tum|kya\s+aap|kar\s+sakte|sakte\s+ho|sakti\s+ho)\b/i.test(lower)) return null;
+
+  // Code-related — chhod do
+  const codeWords = /\b(code|program|function|script|website|app|calculator|game|programming|snippet|algorithm)\b/i;
+
+  const imgWords = /\b(image|photo|picture|tasveer|chitra|pic|drawing|sketch|painting|artwork|wallpaper|poster|draw|paint|render)\b/i;
+  const actionWords = /\b(bana|banao|banaao|banai|banade|bana\s*do|generate|create|make|draw|paint|sketch|render)\b/i;
+
+  const hasImg = imgWords.test(lower);
+  const hasAction = actionWords.test(lower);
+
+  if (!hasImg && !hasAction) return null;
+  if (codeWords.test(lower) && !hasImg) return null;
+  if (!hasImg && !/\b(draw|paint|sketch|generate|create)\b/i.test(lower)) return null;
+
+  // Prompt extract karo
+  let prompt = text
+    .replace(/^\/image\d*\s*:?\s*/i, '')
+    .replace(/\b(mujhe|mujhay|mery|meri|mera|mere|please|plz|pls|zara|ek|si|of|an|a|the|me|for|ka|ki|ke|kar|karo|kardo|de|do)\b/gi, ' ')
+    .replace(/\b(image|photo|picture|tasveer|chitra|pic|drawing|sketch|painting|artwork|wallpaper|poster)\b/gi, ' ')
+    .replace(/\b(bana|banao|banaao|banai|banade|generate|create|make|draw|paint|sketch|render)\b/gi, ' ')
+    .replace(/\b(mein|me|par|pe|se|ko|ne|ye|wo|yeh|woh)\b/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (prompt.length < 3) return null;
+  if (prompt.length > 200) prompt = prompt.slice(0, 200);
+
+  return { prompt };
+}
+
 /* ============ MAIN SEND ============ */
 async function sendMessage() {
   if (isSending) return;
@@ -1742,6 +1782,17 @@ async function sendMessage() {
   const image = pendingImage;
   const file  = pendingFile;
   if (!text && !image && !file) return;
+
+  // Natural image intent check (bina /image ke)
+  if (!image && !file && text && !text.startsWith('/')) {
+    const naturalImg = detectImageIntent(text);
+    if (naturalImg) {
+      addPlainMessage(text, true);
+      userInput.value = '';
+      addImageGenerationMessage(naturalImg.prompt, 1, null);
+      return;
+    }
+  }
 
   const imgCmd = !image && !file ? parseImageCommand(text) : null;
   if (imgCmd) {
