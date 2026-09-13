@@ -8,159 +8,148 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #12141a; --panel: #191c24; --panel-2: #20232d;
-    --border: #2a2e39; --text: #e9eaee; --text-dim: #8b91a3;
-    --accent: #4f9dde; --accent-dim: #2c4b64;
-    --online: #3fbfa0; --danger: #e07a7a; --search: #c9a84c;
-    --code: #a78bfa; --share: #f59e7a;
-  }
-  * { box-sizing: border-box; }
-  html, body { height: 100%; margin: 0; }
-  body {
-    font-family: 'Inter', -apple-system, Segoe UI, Roboto, sans-serif;
-    background: var(--bg); color: var(--text);
-    display: flex; flex-direction: column; align-items: center;
-    min-height: 100vh;
-  }
-  .app-header { width: 100%; max-width: 720px; display: flex; align-items: center; justify-content: space-between; padding: 22px 20px 16px; gap: 8px; flex-wrap: wrap; }
-  .brand { display: flex; align-items: center; gap: 12px; }
-  .brand-mark { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, var(--accent), var(--online)); display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-weight: 600; font-size: 17px; color: #0d0f14; flex-shrink: 0; }
-  .brand-text h1 { font-family: 'Fraunces', serif; font-weight: 600; font-style: italic; font-size: 22px; margin: 0; line-height: 1.1; color: var(--text); }
-  .status-line { display: flex; align-items: center; gap: 6px; margin-top: 3px; font-size: 12.5px; color: var(--text-dim); }
-  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--online); box-shadow: 0 0 0 3px rgba(63, 191, 160, 0.15); }
-  .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .clear-btn, .memory-btn, .search-btn, .share-btn { background: transparent; border: 1px solid var(--border); color: var(--text-dim); padding: 6px 12px; border-radius: 8px; font-size: 12.5px; font-family: inherit; cursor: pointer; transition: all 0.15s ease; display: flex; align-items: center; gap: 4px; }
-  .clear-btn:hover { color: var(--text); border-color: var(--accent); }
-  .memory-btn:hover { color: var(--text); border-color: var(--online); }
-  .search-btn:hover { color: var(--text); border-color: var(--search); }
-  .search-btn.active { background: var(--search); color: #0d0f14; border-color: var(--search); font-weight: 600; }
-  .share-btn:hover { color: var(--text); border-color: var(--share); }
-  .memory-btn .mem-count { display: inline-block; background: var(--online); color: #0d0f14; font-size: 10px; font-weight: 600; padding: 1px 5px; border-radius: 8px; margin-left: 2px; vertical-align: middle; }
-  .share-selector { position: relative; display: inline-block; }
-  .share-dropdown { position: absolute; top: calc(100% + 6px); right: 0; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 6px; min-width: 220px; box-shadow: 0 8px 30px rgba(0,0,0,0.5); z-index: 300; display: none; }
-  .share-selector.open .share-dropdown { display: block; }
-  .share-option { padding: 9px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.15s ease; font-size: 13px; color: var(--text); }
-  .share-option:hover { background: var(--panel-2); }
-  .share-option .s-icon { font-size: 15px; width: 20px; text-align: center; }
-  .share-option .s-info { flex: 1; min-width: 0; }
-  .share-option .s-name { font-weight: 500; }
-  .share-option .s-desc { font-size: 10.5px; color: var(--text-dim); margin-top: 1px; }
-  .model-selector { position: relative; display: inline-block; }
-  .model-btn { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 8px; font-size: 12.5px; font-family: inherit; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.15s ease; white-space: nowrap; }
-  .model-btn:hover { border-color: var(--accent); }
-  .model-btn .arrow { font-size: 9px; color: var(--text-dim); transition: transform 0.2s ease; }
-  .model-selector.open .model-btn .arrow { transform: rotate(180deg); }
-  .model-btn .model-icon { font-size: 13px; }
-  .model-dropdown { position: absolute; top: calc(100% + 6px); right: 0; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 6px; min-width: 260px; box-shadow: 0 8px 30px rgba(0,0,0,0.5); z-index: 300; display: none; max-height: 420px; overflow-y: auto; }
-  .model-selector.open .model-dropdown { display: block; }
-  .model-option { padding: 8px 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.15s ease; font-size: 13px; }
-  .model-option:hover { background: var(--panel-2); }
-  .model-option.active { background: var(--accent-dim); }
-  .model-option .m-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
-  .model-option .m-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
-  .model-option .m-name { font-weight: 500; color: var(--text); font-size: 13px; }
-  .model-option .m-desc { font-size: 11px; color: var(--text-dim); }
-  .model-option .m-check { color: var(--online); font-size: 14px; flex-shrink: 0; }
-  .model-option .m-tag { font-size: 9px; padding: 1px 5px; border-radius: 4px; background: var(--panel-2); color: var(--text-dim); margin-left: 4px; vertical-align: middle; }
-  .chat-wrap { width: 100%; max-width: 720px; flex: 1; display: flex; flex-direction: column; padding: 0 20px; min-height: 0; }
-  .chat-box { flex: 1; overflow-y: auto; padding: 6px 2px 20px; display: flex; flex-direction: column; gap: 14px; min-height: 320px; max-height: 58vh; }
-  .chat-box::-webkit-scrollbar { width: 6px; }
-  .chat-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-  .row { display: flex; gap: 10px; max-width: 88%; }
-  .row.user { align-self: flex-end; flex-direction: row-reverse; }
-  .row.ai { align-self: flex-start; }
-  .avatar { width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; margin-top: 2px; }
-  .avatar.ai { background: var(--accent-dim); color: var(--accent); }
-  .avatar.user { background: #2a2e39; color: var(--text-dim); }
-  .msg { padding: 11px 15px; border-radius: 14px; line-height: 1.55; white-space: pre-wrap; font-size: 15px; word-wrap: break-word; overflow-wrap: anywhere; }
-  .row.ai .msg { background: var(--panel); border: 1px solid var(--border); border-top-left-radius: 4px; }
-  .row.user .msg { background: var(--accent-dim); color: #eaf3fb; border-top-right-radius: 4px; }
-  .img-grid { display: grid; gap: 8px; margin-top: 8px; max-width: 100%; }
-  .img-grid.cols-1 { grid-template-columns: 1fr; }
-  .img-grid.cols-2 { grid-template-columns: 1fr 1fr; }
-  .img-cell { position: relative; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: var(--panel-2); min-height: 120px; }
-  .generated-img { width: 100%; display: block; cursor: zoom-in; transition: opacity 0.15s ease; aspect-ratio: 1 / 1; object-fit: cover; }
-  .generated-img:hover { opacity: 0.9; }
-  .img-cell .img-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px; color: var(--text-dim); font-size: 12px; background: var(--panel-2); }
-  .img-cell .spinner { width: 22px; height: 22px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .img-cell .img-download { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; border-radius: 8px; background: rgba(0,0,0,0.6); color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.15s ease; font-size: 14px; backdrop-filter: blur(4px); }
-  .img-cell:hover .img-download { opacity: 1; }
-  .img-cell .img-download:hover { background: rgba(79,157,222,0.85); }
-  .img-caption { font-size: 13px; color: var(--text-dim); margin-bottom: 6px; word-wrap: break-word; }
-  .img-status { font-size: 11px; color: var(--text-dim); margin-top: 6px; font-style: italic; }
-  .lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 500; align-items: center; justify-content: center; padding: 20px; cursor: zoom-out; }
-  .lightbox.show { display: flex; }
-  .lightbox img { max-width: 95vw; max-height: 95vh; border-radius: 8px; box-shadow: 0 10px 60px rgba(0,0,0,0.8); }
-  .lightbox-close { position: absolute; top: 20px; right: 24px; background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 24px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-  .lightbox-close:hover { background: rgba(255,255,255,0.2); }
-  .lightbox-download { position: absolute; top: 20px; right: 76px; background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 18px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-  .lightbox-download:hover { background: rgba(79,157,222,0.6); }
-  .msg-actions { display: flex; gap: 14px; margin-top: 8px; align-items: center; }
-  .action-btn { background: transparent; border: none; color: var(--text-dim); font-size: 12px; cursor: pointer; padding: 0; font-family: inherit; transition: color 0.15s ease; }
-  .action-btn:hover { color: var(--accent); }
-  .speaker-btn { background: transparent; border: none; color: var(--text-dim); cursor: pointer; font-size: 14px; padding: 0; display: inline-flex; align-items: center; justify-content: center; transition: color 0.15s ease; font-family: inherit; }
-  .speaker-btn:hover { color: var(--accent); }
-  .speaker-btn.speaking { color: var(--accent); }
-  .search-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--search); background: rgba(201, 168, 76, 0.12); border: 1px solid rgba(201, 168, 76, 0.3); padding: 2px 8px; border-radius: 6px; margin-bottom: 6px; }
-  .search-badge .pulse { width: 5px; height: 5px; border-radius: 50%; background: var(--search); animation: searchPulse 1s infinite; }
-  @keyframes searchPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-  .sources-block { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
-  .sources-title { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-  .source-item { display: block; font-size: 12.5px; color: var(--accent); text-decoration: none; padding: 3px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .source-item:hover { text-decoration: underline; }
-  .file-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--online); background: rgba(63, 191, 160, 0.12); border: 1px solid rgba(63, 191, 160, 0.3); padding: 2px 8px; border-radius: 6px; margin-bottom: 6px; }
-  .model-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; color: var(--text-dim); background: var(--panel-2); border: 1px solid var(--border); padding: 2px 8px; border-radius: 6px; margin-bottom: 6px; }
-  .model-badge.code { color: var(--code); border-color: rgba(167,139,250,0.3); background: rgba(167,139,250,0.1); }
-  .input-bar { width: 100%; max-width: 720px; padding: 14px 20px 22px; }
-  .input-shell { display: flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 6px 6px 6px 16px; transition: border-color 0.15s ease; }
-  .input-shell:focus-within { border-color: var(--accent); }
-  input[type="text"] { flex: 1; border: none; background: transparent; color: var(--text); font-size: 15px; font-family: inherit; padding: 10px 0; }
-  input[type="text"]:focus { outline: none; }
-  input[type="text"]::placeholder { color: var(--text-dim); }
-  input[type="text"]:disabled { opacity: 0.5; }
-  button.send-btn { width: 38px; height: 38px; border-radius: 10px; border: none; background: var(--accent); color: #0d0f14; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s ease; }
-  button.send-btn:hover:not(:disabled) { background: #6bb0e8; }
-  button.send-btn:disabled { background: #33394a; cursor: not-allowed; }
-  button.send-btn svg { width: 17px; height: 17px; }
-  button.attach-btn, button.mic-btn, button.file-btn { width: 36px; height: 36px; border-radius: 10px; border: none; background: transparent; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s ease, color 0.15s ease; }
-  button.attach-btn:hover, button.mic-btn:hover, button.file-btn:hover { background: var(--panel-2); color: var(--text); }
-  button.attach-btn svg, button.mic-btn svg, button.file-btn svg { width: 18px; height: 18px; }
-  button.mic-btn.listening { background: var(--danger); color: #fff; animation: pulse 1.2s infinite; }
-  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(224, 122, 122, 0.6); } 70% { box-shadow: 0 0 0 8px rgba(224, 122, 122, 0); } 100% { box-shadow: 0 0 0 0 rgba(224, 122, 122, 0); } }
-  .attachment-preview { display: none; align-items: center; gap: 10px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px; padding: 8px 10px; margin-bottom: 8px; }
-  .attachment-preview.show { display: flex; }
-  .attachment-preview img { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; }
-  .attachment-preview .att-name { flex: 1; font-size: 13px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .attachment-preview .att-remove { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 18px; line-height: 1; padding: 2px 6px; }
-  .attached-img-inline { max-width: 220px; border-radius: 10px; margin-bottom: 6px; display: block; border: 1px solid var(--border); }
-  .attached-file-inline { display: flex; align-items: center; gap: 8px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; font-size: 13px; color: var(--text-dim); }
-  .hint { text-align: center; font-size: 12px; color: var(--text-dim); margin-top: 10px; }
-  .hint code { background: var(--panel-2); padding: 1px 6px; border-radius: 5px; color: var(--accent); font-family: monospace; }
-  .streaming::after { content: '▍'; color: var(--accent); animation: blink 1s steps(2) infinite; margin-left: 1px; }
-  @keyframes blink { 50% { opacity: 0; } }
-  .mem-toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--panel-2); border: 1px solid var(--online); color: var(--text); padding: 8px 14px; border-radius: 10px; font-size: 13px; opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease; pointer-events: none; z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-  .mem-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .mem-toast .dot { display: inline-block; width: 6px; height: 6px; background: var(--online); border-radius: 50%; margin-right: 6px; vertical-align: middle; }
-  .mem-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
-  .mem-modal.show { display: flex; }
-  .mem-modal-inner { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; max-width: 500px; width: 100%; max-height: 70vh; display: flex; flex-direction: column; overflow: hidden; }
-  .mem-modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-  .mem-modal-header h3 { margin: 0; font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; }
-  .mem-modal-close { background: transparent; border: none; color: var(--text-dim); font-size: 22px; cursor: pointer; padding: 0 6px; line-height: 1; }
-  .mem-modal-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
-  .mem-item { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; line-height: 1.5; align-items: flex-start; }
-  .mem-item:last-child { border-bottom: none; }
-  .mem-item .mem-dot { color: var(--online); flex-shrink: 0; margin-top: 1px; }
-  .mem-empty { text-align: center; color: var(--text-dim); font-size: 14px; padding: 30px 10px; }
-  .mem-modal-footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
-  .mem-btn { background: transparent; border: 1px solid var(--border); color: var(--text-dim); padding: 8px 14px; border-radius: 8px; font-size: 13px; font-family: inherit; cursor: pointer; transition: all 0.15s ease; }
-  .mem-btn:hover { color: var(--text); border-color: var(--text); }
-  .mem-btn.danger:hover { color: var(--danger); border-color: var(--danger); }
-  .mem-btn.accent { color: var(--accent); border-color: var(--accent-dim); }
-  .share-url-box { display: flex; gap: 8px; margin-top: 8px; }
-  .share-url-input { flex: 1; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: var(--text); font-family: monospace; overflow: hidden; text-overflow: ellipsis; }
+  :root{--bg:#12141a;--panel:#191c24;--panel-2:#20232d;--border:#2a2e39;--text:#e9eaee;--text-dim:#8b91a3;--accent:#4f9dde;--accent-dim:#2c4b64;--online:#3fbfa0;--danger:#e07a7a;--search:#c9a84c;--code:#a78bfa;--share:#f59e7a}
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{font-family:'Inter',-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;align-items:center;min-height:100vh}
+  .app-header{width:100%;max-width:720px;display:flex;align-items:center;justify-content:space-between;padding:22px 20px 16px;gap:8px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--online));display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:600;font-size:17px;color:#0d0f14;flex-shrink:0}
+  .brand-text h1{font-family:'Fraunces',serif;font-weight:600;font-style:italic;font-size:22px;margin:0;line-height:1.1;color:var(--text)}
+  .status-line{display:flex;align-items:center;gap:6px;margin-top:3px;font-size:12.5px;color:var(--text-dim)}
+  .status-dot{width:7px;height:7px;border-radius:50%;background:var(--online);box-shadow:0 0 0 3px rgba(63,191,160,0.15)}
+  .header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .clear-btn,.memory-btn,.search-btn,.share-btn{background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:6px 12px;border-radius:8px;font-size:12.5px;font-family:inherit;cursor:pointer;transition:all 0.15s ease;display:flex;align-items:center;gap:4px}
+  .clear-btn:hover{color:var(--text);border-color:var(--accent)}
+  .memory-btn:hover{color:var(--text);border-color:var(--online)}
+  .search-btn:hover{color:var(--text);border-color:var(--search)}
+  .search-btn.active{background:var(--search);color:#0d0f14;border-color:var(--search);font-weight:600}
+  .share-btn:hover{color:var(--text);border-color:var(--share)}
+  .memory-btn .mem-count{display:inline-block;background:var(--online);color:#0d0f14;font-size:10px;font-weight:600;padding:1px 5px;border-radius:8px;margin-left:2px;vertical-align:middle}
+  .share-selector{position:relative;display:inline-block}
+  .share-dropdown{position:absolute;top:calc(100% + 6px);right:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:6px;min-width:220px;box-shadow:0 8px 30px rgba(0,0,0,0.5);z-index:300;display:none}
+  .share-selector.open .share-dropdown{display:block}
+  .share-option{padding:9px 12px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:background 0.15s ease;font-size:13px;color:var(--text)}
+  .share-option:hover{background:var(--panel-2)}
+  .share-option .s-icon{font-size:15px;width:20px;text-align:center}
+  .share-option .s-info{flex:1;min-width:0}
+  .share-option .s-name{font-weight:500}
+  .share-option .s-desc{font-size:10.5px;color:var(--text-dim);margin-top:1px}
+  .model-selector{position:relative;display:inline-block}
+  .model-btn{background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-size:12.5px;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.15s ease;white-space:nowrap}
+  .model-btn:hover{border-color:var(--accent)}
+  .model-btn .arrow{font-size:9px;color:var(--text-dim);transition:transform 0.2s ease}
+  .model-selector.open .model-btn .arrow{transform:rotate(180deg)}
+  .model-btn .model-icon{font-size:13px}
+  .model-dropdown{position:absolute;top:calc(100% + 6px);right:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:6px;min-width:260px;box-shadow:0 8px 30px rgba(0,0,0,0.5);z-index:300;display:none;max-height:420px;overflow-y:auto}
+  .model-selector.open .model-dropdown{display:block}
+  .model-option{padding:8px 10px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:background 0.15s ease;font-size:13px}
+  .model-option:hover{background:var(--panel-2)}
+  .model-option.active{background:var(--accent-dim)}
+  .model-option .m-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+  .model-option .m-info{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+  .model-option .m-name{font-weight:500;color:var(--text);font-size:13px}
+  .model-option .m-desc{font-size:11px;color:var(--text-dim)}
+  .model-option .m-check{color:var(--online);font-size:14px;flex-shrink:0}
+  .model-option .m-tag{font-size:9px;padding:1px 5px;border-radius:4px;background:var(--panel-2);color:var(--text-dim);margin-left:4px;vertical-align:middle}
+  .chat-wrap{width:100%;max-width:720px;flex:1;display:flex;flex-direction:column;padding:0 20px;min-height:0}
+  .chat-box{flex:1;overflow-y:auto;padding:6px 2px 20px;display:flex;flex-direction:column;gap:14px;min-height:320px;max-height:58vh}
+  .chat-box::-webkit-scrollbar{width:6px}
+  .chat-box::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+  .row{display:flex;gap:10px;max-width:88%}
+  .row.user{align-self:flex-end;flex-direction:row-reverse}
+  .row.ai{align-self:flex-start}
+  .avatar{width:28px;height:28px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;margin-top:2px}
+  .avatar.ai{background:var(--accent-dim);color:var(--accent)}
+  .avatar.user{background:#2a2e39;color:var(--text-dim)}
+  .msg{padding:11px 15px;border-radius:14px;line-height:1.55;white-space:pre-wrap;font-size:15px;word-wrap:break-word;overflow-wrap:anywhere}
+  .row.ai .msg{background:var(--panel);border:1px solid var(--border);border-top-left-radius:4px}
+  .row.user .msg{background:var(--accent-dim);color:#eaf3fb;border-top-right-radius:4px}
+  .img-grid{display:grid;gap:8px;margin-top:8px;max-width:100%}
+  .img-grid.cols-1{grid-template-columns:1fr}
+  .img-grid.cols-2{grid-template-columns:1fr 1fr}
+  .img-cell{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--border);background:var(--panel-2);min-height:120px}
+  .generated-img{width:100%;display:block;cursor:zoom-in;transition:opacity 0.15s ease;aspect-ratio:1 / 1;object-fit:cover}
+  .generated-img:hover{opacity:0.9}
+  .img-cell .img-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--text-dim);font-size:12px;background:var(--panel-2)}
+  .img-cell .spinner{width:22px;height:22px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .img-cell .img-download{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:8px;background:rgba(0,0,0,0.6);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.15s ease;font-size:14px;backdrop-filter:blur(4px)}
+  .img-cell:hover .img-download{opacity:1}
+  .img-cell .img-download:hover{background:rgba(79,157,222,0.85)}
+  .img-caption{font-size:13px;color:var(--text-dim);margin-bottom:6px;word-wrap:break-word}
+  .img-status{font-size:11px;color:var(--text-dim);margin-top:6px;font-style:italic}
+  .lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:500;align-items:center;justify-content:center;padding:20px;cursor:zoom-out}
+  .lightbox.show{display:flex}
+  .lightbox img{max-width:95vw;max-height:95vh;border-radius:8px;box-shadow:0 10px 60px rgba(0,0,0,0.8)}
+  .lightbox-close{position:absolute;top:20px;right:24px;background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:24px;width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .lightbox-close:hover{background:rgba(255,255,255,0.2)}
+  .lightbox-download{position:absolute;top:20px;right:76px;background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:18px;width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .lightbox-download:hover{background:rgba(79,157,222,0.6)}
+  .msg-actions{display:flex;gap:14px;margin-top:8px;align-items:center}
+  .action-btn{background:transparent;border:none;color:var(--text-dim);font-size:12px;cursor:pointer;padding:0;font-family:inherit;transition:color 0.15s ease}
+  .action-btn:hover{color:var(--accent)}
+  .speaker-btn{background:transparent;border:none;color:var(--text-dim);cursor:pointer;font-size:14px;padding:0;display:inline-flex;align-items:center;justify-content:center;transition:color 0.15s ease;font-family:inherit}
+  .speaker-btn:hover{color:var(--accent)}
+  .speaker-btn.speaking{color:var(--accent)}
+  .search-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--search);background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.3);padding:2px 8px;border-radius:6px;margin-bottom:6px}
+  .search-badge .pulse{width:5px;height:5px;border-radius:50%;background:var(--search);animation:searchPulse 1s infinite}
+  @keyframes searchPulse{0%,100%{opacity:1}50%{opacity:0.3}}
+  .sources-block{margin-top:10px;padding-top:8px;border-top:1px solid var(--border)}
+  .sources-title{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+  .source-item{display:block;font-size:12.5px;color:var(--accent);text-decoration:none;padding:3px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .source-item:hover{text-decoration:underline}
+  .file-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--online);background:rgba(63,191,160,0.12);border:1px solid rgba(63,191,160,0.3);padding:2px 8px;border-radius:6px;margin-bottom:6px}
+  .model-badge{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--text-dim);background:var(--panel-2);border:1px solid var(--border);padding:2px 8px;border-radius:6px;margin-bottom:6px}
+  .model-badge.code{color:var(--code);border-color:rgba(167,139,250,0.3);background:rgba(167,139,250,0.1)}
+  .input-bar{width:100%;max-width:720px;padding:14px 20px 22px}
+  .input-shell{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:6px 6px 6px 16px;transition:border-color 0.15s ease}
+  .input-shell:focus-within{border-color:var(--accent)}
+  input[type="text"]{flex:1;border:none;background:transparent;color:var(--text);font-size:15px;font-family:inherit;padding:10px 0}
+  input[type="text"]:focus{outline:none}
+  input[type="text"]::placeholder{color:var(--text-dim)}
+  input[type="text"]:disabled{opacity:0.5}
+  button.send-btn{width:38px;height:38px;border-radius:10px;border:none;background:var(--accent);color:#0d0f14;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s ease}
+  button.send-btn:hover:not(:disabled){background:#6bb0e8}
+  button.send-btn:disabled{background:#33394a;cursor:not-allowed}
+  button.send-btn svg{width:17px;height:17px}
+  button.attach-btn,button.mic-btn,button.file-btn{width:36px;height:36px;border-radius:10px;border:none;background:transparent;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s ease,color 0.15s ease}
+  button.attach-btn:hover,button.mic-btn:hover,button.file-btn:hover{background:var(--panel-2);color:var(--text)}
+  button.attach-btn svg,button.mic-btn svg,button.file-btn svg{width:18px;height:18px}
+  button.mic-btn.listening{background:var(--danger);color:#fff;animation:pulse 1.2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(224,122,122,0.6)}70%{box-shadow:0 0 0 8px rgba(224,122,122,0)}100%{box-shadow:0 0 0 0 rgba(224,122,122,0)}}
+  .attachment-preview{display:none;align-items:center;gap:10px;background:var(--panel-2);border:1px solid var(--border);border-radius:12px;padding:8px 10px;margin-bottom:8px}
+  .attachment-preview.show{display:flex}
+  .attachment-preview img{width:40px;height:40px;object-fit:cover;border-radius:6px}
+  .attachment-preview .att-name{flex:1;font-size:13px;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .attachment-preview .att-remove{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:18px;line-height:1;padding:2px 6px}
+  .attached-img-inline{max-width:220px;border-radius:10px;margin-bottom:6px;display:block;border:1px solid var(--border)}
+  .attached-file-inline{display:flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:13px;color:var(--text-dim)}
+  .hint{text-align:center;font-size:12px;color:var(--text-dim);margin-top:10px}
+  .hint code{background:var(--panel-2);padding:1px 6px;border-radius:5px;color:var(--accent);font-family:monospace}
+  .streaming::after{content:'▍';color:var(--accent);animation:blink 1s steps(2) infinite;margin-left:1px}
+  @keyframes blink{50%{opacity:0}}
+  .mem-toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--panel-2);border:1px solid var(--online);color:var(--text);padding:8px 14px;border-radius:10px;font-size:13px;opacity:0;transition:opacity 0.3s ease,transform 0.3s ease;pointer-events:none;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
+  .mem-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .mem-toast .dot{display:inline-block;width:6px;height:6px;background:var(--online);border-radius:50%;margin-right:6px;vertical-align:middle}
+  .mem-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;padding:20px}
+  .mem-modal.show{display:flex}
+  .mem-modal-inner{background:var(--panel);border:1px solid var(--border);border-radius:14px;max-width:500px;width:100%;max-height:70vh;display:flex;flex-direction:column;overflow:hidden}
+  .mem-modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+  .mem-modal-header h3{margin:0;font-family:'Fraunces',serif;font-size:18px;font-weight:600}
+  .mem-modal-close{background:transparent;border:none;color:var(--text-dim);font-size:22px;cursor:pointer;padding:0 6px;line-height:1}
+  .mem-modal-body{padding:16px 20px;overflow-y:auto;flex:1}
+  .mem-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px;line-height:1.5;align-items:flex-start}
+  .mem-item:last-child{border-bottom:none}
+  .mem-item .mem-dot{color:var(--online);flex-shrink:0;margin-top:1px}
+  .mem-empty{text-align:center;color:var(--text-dim);font-size:14px;padding:30px 10px}
+  .mem-modal-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+  .mem-btn{background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:8px 14px;border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer;transition:all 0.15s ease}
+  .mem-btn:hover{color:var(--text);border-color:var(--text)}
+  .mem-btn.danger:hover{color:var(--danger);border-color:var(--danger)}
+  .mem-btn.accent{color:var(--accent);border-color:var(--accent-dim)}
+  .share-url-box{display:flex;gap:8px;margin-top:8px}
+  .share-url-input{flex:1;background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text);font-family:monospace;overflow:hidden;text-overflow:ellipsis}
 </style>
 </head>
 <body>
@@ -205,9 +194,9 @@
 
 Mujhe MATRIX STUDIOS ki team ne banaya hai, jiske lead Ali Akbar hain.
 
-Main aapki har cheez mein madad kar sakta hoon: sawaalon ke jawab, coding, image banane, files padhne, web search, awaz mein baat — sab kuch.
+Main aapki har cheez mein madad kar sakta hoon: sawaal, coding, image banane, files padhne, web search, awaz.
 
-Bas natural baat karein, mujhe sab samajh aata hai. 😊</div>
+🖼️ Naya feature: koi image attach karo aur bolo "isko anime mein badlo" ya "sketch banao iska" — main transform kar dunga! 😊</div>
       </div>
     </div>
   </div>
@@ -235,7 +224,7 @@ Bas natural baat karein, mujhe sab samajh aata hai. 😊</div>
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 12L20 4L14 20L11 13L4 12Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
       </button>
     </div>
-    <div class="hint">💡 Natural baat karein | 📎 Image | 📄 File | 🎙️ Voice | 🌐 Search | 📤 Share</div>
+    <div class="hint">💡 Image attach karke bolo: <b>"isko anime mein badlo"</b> | 📎 Image | 📄 File | 🎙️ Voice | 🌐 Search | 📤 Share</div>
   </div>
 
   <div class="lightbox" id="lightbox">
@@ -271,6 +260,8 @@ Bas natural baat karein, mujhe sab samajh aata hai. 😊</div>
 /* =========================================================
    JARVIS — SMART AI ASSISTANT
    Built by MATRIX STUDIOS (Lead: Ali Akbar)
+   Includes: Chat, Image Gen, Image Edit, Vision, RAG,
+             Search, Voice, Memory, Export/Share
    ========================================================= */
 
 const GROQ_KEY = "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";
@@ -279,6 +270,7 @@ const VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
 const API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const TAVILY_URL = "https://api.tavily.com/search";
 const DEVTOOLBOX_URL = "https://devtoolbox-api.devtoolbox-api.workers.dev/ai/generate";
+const UPLOAD_URL = "https://tmpfiles.org/api/v1/upload";
 const HISTORY_KEY = "jarvis_history_v1";
 const MEMORY_KEY = "jarvis_memory_v1";
 const SEARCH_KEY = "jarvis_search_v1";
@@ -305,6 +297,22 @@ const IMAGE_STYLES = {
   "3d": "3D render, octane render, ray tracing, cinematic, ultra detailed",
   cyberpunk: "cyberpunk style, neon lights, futuristic, dark atmosphere",
   minimal: "minimalist, clean, simple, flat design, soft colors, modern"
+};
+
+/* Image edit style transformations (for kontext model) */
+const EDIT_STYLES = {
+  anime: "transform into anime style, studio ghibli aesthetic, vibrant anime art",
+  cartoon: "transform into cartoon style, pixar 3d animation, smooth shading",
+  sketch: "transform into pencil sketch, black and white line art, hand drawn",
+  oil: "transform into oil painting, classical art style, textured brushstrokes",
+  watercolor: "transform into watercolor painting, soft artistic colors",
+  realistic: "transform into ultra realistic photo, 8k photorealistic",
+  "3d": "transform into 3D render, octane render, cinematic lighting",
+  cyberpunk: "transform into cyberpunk style, neon lights, futuristic",
+  pixel: "transform into pixel art, 8-bit retro game style",
+  comic: "transform into comic book style, bold lines, halftone dots",
+  painting: "transform into a beautiful painting, artistic masterpiece",
+  minimal: "transform into minimalist flat design, clean simple style"
 };
 
 const MODELS = [
@@ -346,7 +354,6 @@ let memory = [];
 let searchEnabled = false;
 let lightboxCurrentUrl = '';
 
-/* ============ SMART CONVERSATION STATE ============ */
 const chatState = {
   mode: 'normal',
   lastImageTopic: null,
@@ -355,7 +362,7 @@ const chatState = {
   turnCount: 0
 };
 
-/* ============ SMART SYSTEM PROMPT ============ */
+/* ============ SYSTEM PROMPT ============ */
 const baseInstruction = `Tum "Jarvis" ho — ek smart, warm, helpful AI assistant. Tumhe MATRIX STUDIOS ki team ne banaya hai, jiske lead "Ali Akbar" hain. Tum bilkul insaan jaise baat karte ho, robotic nahi.
 
 ## ZABAAN
@@ -368,46 +375,55 @@ const baseInstruction = `Tum "Jarvis" ho — ek smart, warm, helpful AI assistan
 ## TUM KYA KAR SAKTE HO
 - Text chat, sawaal-jawab, reasoning, coding, maths
 - Image generation (Pollinations)
+- Image EDITING / TRANSFORMATION (user ki image ko anime, sketch, cartoon, oil painting, etc. mein badalna)
 - Image samajhna (vision)
 - File padhna (PDF, DOCX, TXT, MD, CSV, JSON)
 - Web search
 - Voice (input + output)
 - Memory (yaad rakhna)
 
-## IMAGE GENERATION — BOHOT ZAROORI RULES
-1. Tum image BANA SAKTE HO. Agar koi pooche "kya tum image bana sakte ho?", to HAAN kaho — "Bilkul! Batao kaisi image chahiye."
-2. Jab user SAFAAT TOR PE image banane ko kahe (jaise "ek sher ki image banao", "hiran ki tasveer bnado", "koi si bhi banao", "image banao"), to apne reply ke AAKHIR mein yeh LINE likho:
-IMAGE_GEN: <detailed English prompt of the image>
+## IMAGE GENERATION — RULES
+1. Agar koi pooche "kya tum image bana sakte ho?", to HAAN kaho — "Bilkul! Batao kaisi image chahiye."
+2. Jab user SAFAAT TOR PE nayi image banane ko kahe (jaise "ek sher ki image banao", "koi si bhi banao", "image banao"), to IMAGE_GEN line likho:
+IMAGE_GEN: <detailed English prompt>
+3. IMAGE_GEN line se pehle 1-2 line natural reply.
 
-Us line se PEHLE 1-2 line natural reply likho jaise "Yeh lo aapki image!" ya "Ban rahi hai!"
+## IMAGE EDITING — RULES (ZAROORI)
+1. Jab user IMAGE ATTACH kare aur bole "isko X mein badlo", "isko X style mein convert karo", "X banao iska", "edit karo isko", "transform karo" — to ye IMAGE EDIT hai.
+2. IMAGE EDIT pe tum text se EDIT_STYLE: <style_name> line likho apne reply mein:
+EDIT_STYLE: <style_name>
 
-3. IMAGE_GEN line ke BAAD kuch mat likho.
+Style names: anime, cartoon, sketch, oil, watercolor, realistic, 3d, cyberpunk, pixel, comic, painting, minimal.
+
+Example: agar user bole "isko anime mein badlo" → likho:
+"Yeh lo, anime style mein convert kiya!"
+EDIT_STYLE: anime
+
+3. Agar user kisi aur style mein badalne ko kahe jo upar list mein nahi (jaise "zombie banao" ya "old banao"), to bhi sabse nazdeeki style use karo ya custom prompt likho:
+EDIT_PROMPT: <custom English prompt describing the transformation>
 
 ## KYA NAHI KARNA
-- Compliment ("achi image banayi", "nice pic", "wah kya baat") pe IMAGE_GEN MAT likho — sirf "Shukriya!" ya aisa kuch.
-- Jab user MANA kare ("nahi banao", "mat banao", "band karo", "rehne do") → IMAGE_GEN BILKUL MAT likho. Sirf "Theek hai" jaisa confirm karo.
-- Normal sawaal, greeting, ya baat-cheet pe IMAGE_GEN MAT likho.
-- KABHI fake image URLs mat banao (blob.core.windows.net, dall-e, openai.com, koi bhi URL).
+- Compliment ("achi image banayi") pe IMAGE_GEN/EDIT_STYLE MAT likho — sirf "Shukriya!"
+- User MANA kare ("nahi banao", "mat banao") → kuch bhi generate/transform mat karo.
+- KABHI fake image URLs mat banao.
 - KABHI markdown image ![alt](url) mat likho.
-- Apna internal "thinking" process kabhi mat dikhao — sirf final jawab.
+- Apna internal "thinking" mat dikhao.
 
 ## TUMHARA BACKGROUND (ZAROORI)
 - Tumhe MATRIX STUDIOS ne banaya hai — ek talented team jo AI tools aur creative software banati hai.
 - Team ke lead ka naam "Ali Akbar" hai.
-- Agar koi pooche "tumhe kisne banaya?", "tumhara creator kaun hai?", "who made you?", "tumhara owner kaun hai?", "kis company ne banaya?", "tumhara developer kaun hai?", "kisne develop kiya?" — to confidently jawab do:
+- Agar koi pooche "tumhe kisne banaya?", "tumhara creator kaun hai?", "who made you?", "tumhara developer kaun hai?" — to confidently jawab do:
   "Mujhe MATRIX STUDIOS ki team ne banaya hai, aur is team ko Ali Akbar lead karte hain."
-- Ye baat casually aur proud ke saath bolo, jaise koi apne creators ka naam leta hai.
-- Agar koi aur naam suggest kare (OpenAI, Google, Meta, Anthropic, etc.), to politely correct karo: "Nahi, mujhe MATRIX STUDIOS ne banaya hai — Ali Akbar ki team ne."
+- Agar koi aur naam suggest kare (OpenAI, Google, Meta), to politely correct karo.
 
 ## PERSONALITY
 - Warm, helpful, thoda witty
-- User ki frustration samjho — agar wo pareshan ho, to calm karo aur seedha hal do
-- Proactively madad karo — agar kuch samajh aa jaye to bina poochhe kar do
+- User ki frustration samjho
+- Proactively madad karo
 - Chhoti baat ka lamba jawab mat do
-- Apne creators (MATRIX STUDIOS, Ali Akbar) ka naam proudly lo jab relevant ho
 
 ## MEMORY
-Agar user ne apne baare mein kuch bataya ho (naam, sheher, pasand, kaam), to use naturally yaad rakho aur relevant jagah use karo.`;
+User ke facts yaad rakho aur relevant jagah use karo.`;
 
 let conversation = [{ role: 'system', content: baseInstruction }];
 
@@ -416,7 +432,7 @@ function detectEmotion(text) {
   const lower = (text || '').toLowerCase();
   if (/\b(yaar|yar|abe|arey|arre|kya bakwas|bakwas|faltu|fazool|pagal|dimagh|sir\s+khap|kuch\s+nahi\s+ho\s+raha|kaam\s+nahi|nahi\s+chal|bekar|kharab|bura\s+lag|thak\s+gaya|tired|ugh|uff|nahi\s+mila|kahan\s+hai|kidhar)\b/i.test(lower)) return 'frustrated';
   if (/\b(achi|acha|accha|nice|good|great|wow|wah|mast|zabardast|shukriya|thanks|love|pyara|piyara|badhiya|behtareen|kamaal|perfect)\b/i.test(lower)) return 'happy';
-  if (/\b(samajh\s+nahi|samjha\s+nahi|kya\s+matlab|confuse|clear\s+nahi|mujhe\s+samajh|kaise\s+kaise|kya\s+hai\s+ye)\b/i.test(lower)) return 'confused';
+  if (/\b(samajh\s+nahi|samjha\s+nahi|kya\s+matlab|confuse|clear\s+nahi)\b/i.test(lower)) return 'confused';
   if (/\b(jaldi|jaldi|urgent|foran|abhi|turant|fast|quick|fatafat)\b/i.test(lower)) return 'urgent';
   return 'neutral';
 }
@@ -427,21 +443,27 @@ function detectIntent(text) {
   if (!lower) return 'empty';
 
   if (/\b(nahi|nhi|mat|na|band|stop|rehne|chhod|don'?t|dont)\b/i.test(lower) &&
-      /\b(image|pic|photo|tasveer|bana|banao|bnado|bnao|bnay|bna|generate)\b/i.test(lower)) return 'reject_image';
+      /\b(image|pic|photo|tasveer|bana|banao|bnado|bnao|bnay|bna|generate|edit|change)\b/i.test(lower)) return 'reject_image';
 
   if (/\b(achi|acha|accha|nice|good|great|wow|wah|mast|zabardast|shukriya|thanks|pyara|piyara|badhiya|kamaal|perfect)\b/i.test(lower) &&
-      /\b(image|pic|photo|tasveer|bana|banao|bnado)\b/i.test(lower)) return 'compliment';
+      /\b(image|pic|photo|tasveer|bana|banao|bnado|edit)\b/i.test(lower)) return 'compliment';
 
-  if (/\b(kya\s+tum|kya\s+aap|kya\s+main|can\s+you|can\s+u|tum\s+kar\s+sakte|kar\s+sakte\s+ho|sakte\s+ho|bana\s+sakte|bna\s+sakte)\b/i.test(lower) && /\?/.test(lower)) return 'capability_q';
+  if (/\b(kya\s+tum|kya\s+aap|kya\s+main|can\s+you|can\s+u|tum\s+kar\s+sakte|kar\s+sakte\s+ho|sakte\s+ho|bana\s+sakte|bna\s+sakte|edit\s+kar\s+sakte)\b/i.test(lower) && /\?/.test(lower)) return 'capability_q';
 
-  if (/^(hi|hello|hey|salam|assalam|asalam|aoa|assalamualaikum|assalam-o-alaikum|kya\s+haal|kaise\s+ho|howdy|sup)\b/i.test(lower)) return 'greeting';
+  if (/^(hi|hello|hey|salam|assalam|asalam|aoa|assalamualaikum|assalam-o-alaikum|kya\s+haal|kaise\s+ho)\b/i.test(lower)) return 'greeting';
 
   if (/^(shukriya|thanks|thank\s*you|thanku|shukria|jazak)\b/i.test(lower)) return 'thanks';
 
-  if (/\b(code|program|function|script|website|app|calculator|game|programming|snippet|algorithm|leetcode|python|javascript|java|c\+\+|html|css)\b/i.test(lower) && !/\b(image|photo|pic|tasveer|banao|bnado)\b/i.test(lower)) return 'code';
+  if (/\b(code|program|function|script|website|app|calculator|game|programming|snippet|python|javascript|java|html|css)\b/i.test(lower) && !/\b(image|photo|pic|tasveer|banao|bnado|edit|change)\b/i.test(lower)) return 'code';
 
-  const hasImg = /\b(image|photo|picture|tasveer|chitra|pic|drawing|sketch|painting|artwork|wallpaper|poster|scene|scenery|landscape|drishya)\b/i.test(lower);
-  const hasAct = /\b(bana|banao|banaao|banai|banade|banado|bana\s*do|banaye|banay|generate|create|make|draw|paint|sketch|render|dikhao|dikha|dikhaao|bna|bnao|bnaao|bnado|bnade|bnay|bnaye|bnakr|bnakar|kardo|krdo)\b/i.test(lower);
+  // Image EDIT intent (transform/change)
+  const hasEdit = /\b(edit|change|transform|convert|badal|badlo|badal\s*do|banao\s+iska|iska\s+banao|make\s+it|turn\s+into)\b/i.test(lower);
+  const hasStyle = /\b(anime|cartoon|sketch|oil|watercolor|realistic|3d|cyberpunk|pixel|comic|painting|minimal|painting|style|mein\s+badal|mein\s+badlo)\b/i.test(lower);
+  if (hasEdit || hasStyle) return 'image_edit';
+
+  // Direct new image request
+  const hasImg = /\b(image|photo|picture|tasveer|chitra|pic|drawing|sketch|painting|artwork|wallpaper|poster|scene|scenery|landscape)\b/i.test(lower);
+  const hasAct = /\b(bana|banao|banaao|banai|banade|banado|bana\s*do|banaye|banay|generate|create|make|draw|paint|render|dikhao|dikha|bna|bnao|bnado|bnay|bnakr|kardo|krdo)\b/i.test(lower);
   if (hasImg && hasAct) return 'image_direct';
 
   if (chatState.mode === 'awaiting_image_details' && lower.length < 80 &&
@@ -491,13 +513,13 @@ function dlBlob(c, fn, mime) {
 }
 function exportTxt() {
   const ms = getMsgs(); if (!ms.length) { showMemToast('Chat khali hai'); return; }
-  let o = 'Jarvis Chat Export\nBy MATRIX STUDIOS (Lead: Ali Akbar)\n=================\nDate: ' + ts() + '\nMessages: ' + ms.length + '\n\n';
+  let o = 'Jarvis Chat Export\nBy MATRIX STUDIOS (Lead: Ali Akbar)\n=================\nDate: ' + ts() + '\n\n';
   for (const m of ms) o += '[' + (m.role === 'user' ? 'You' : 'Jarvis') + ']\n' + (typeof m.content === 'string' ? m.content : '[attachment]') + '\n\n';
   dlBlob(o, 'jarvis-chat-' + Date.now() + '.txt'); showMemToast('📥 TXT download ho gayi');
 }
 function exportMd() {
   const ms = getMsgs(); if (!ms.length) { showMemToast('Chat khali hai'); return; }
-  let o = '# Jarvis Chat\n\n> Built by **MATRIX STUDIOS** — Lead: **Ali Akbar**\n\n**Date:** ' + ts() + '  \n**Messages:** ' + ms.length + '\n\n---\n\n';
+  let o = '# Jarvis Chat\n\n> Built by **MATRIX STUDIOS** — Lead: **Ali Akbar**\n\n**Date:** ' + ts() + '\n\n---\n\n';
   for (const m of ms) o += '### ' + (m.role === 'user' ? '🧑 **You**' : '🤖 **Jarvis**') + '\n\n' + (typeof m.content === 'string' ? m.content : '_\\[attachment\\]_') + '\n\n---\n\n';
   dlBlob(o, 'jarvis-chat-' + Date.now() + '.md', 'text/markdown;charset=utf-8'); showMemToast('📝 MD download ho gayi');
 }
@@ -600,6 +622,27 @@ function compressImg(file, md = MAX_IMG_DIM, q = JPEG_Q) {
   });
 }
 
+/* ============ IMAGE UPLOAD (for editing) ============ */
+async function uploadImageToHost(dataUrl) {
+  // Convert base64 -> Blob
+  const resp = await fetch(dataUrl);
+  const blob = await resp.blob();
+  const file = new File([blob], 'upload.jpg', { type: 'image/jpeg' });
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await fetch(UPLOAD_URL, { method: 'POST', body: formData });
+  if (!res.ok) throw new Error('Upload fail');
+  const data = await res.json();
+  // tmpfiles returns: {"status":"success","data":{"url":"https://tmpfiles.org/12345/xxx.jpg"}}
+  let url = data?.data?.url;
+  if (!url) throw new Error('Upload URL not found');
+  // Direct link: insert /dl/ after domain
+  url = url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
+  return url;
+}
+
 /* ============ FILE EXTRACTION ============ */
 async function pdfText(file) {
   const ab = await file.arrayBuffer();
@@ -640,7 +683,7 @@ function saveMem() { try { localStorage.setItem(MEMORY_KEY, JSON.stringify(memor
 function updateMemCount() { memCount.innerText = memory.length; }
 function buildPrompt() {
   if (!memory.length) return baseInstruction;
-  return baseInstruction + '\n\n## USER KE BAARE MEIN YAAD (context ke liye)\n' + memory.map(f => '- ' + f).join('\n');
+  return baseInstruction + '\n\n## USER KE BAARE MEIN YAAD\n' + memory.map(f => '- ' + f).join('\n');
 }
 function refreshPrompt() { conversation[0] = { role: 'system', content: buildPrompt() }; }
 
@@ -702,7 +745,6 @@ if (recognition) {
     let m = 'Voice error.';
     if (e.error === 'not-allowed') m = 'Mic ki permission nahi mili.';
     else if (e.error === 'no-speech') m = 'Koi awaaz nahi suni.';
-    else if (e.error === 'network') m = 'Network error.';
     if (e.error !== 'aborted') addMsg('⚠️ ' + m, false);
   };
   recognition.onresult = e => {
@@ -858,7 +900,7 @@ function addSrcs(bubble, sources) {
 }
 
 /* ============ IMAGE GENERATION ============ */
-function buildPollURL(p, seed) { return 'https://image.pollinations.ai/prompt/' + encodeURIComponent(p) + `?width=768&height=768&nologo=true&enhance=true&seed=${seed}`; }
+function buildPollURL(p, seed, extra = '') { return 'https://image.pollinations.ai/prompt/' + encodeURIComponent(p) + `?width=768&height=768&nologo=true&enhance=true&seed=${seed}${extra}`; }
 
 function createCell(url, alt, onDone) {
   const c = document.createElement('div'); c.className = 'img-cell';
@@ -906,6 +948,60 @@ function addImgGen(prompt, count = 1, styleKey = null) {
       }
     });
     g.appendChild(cell);
+  }
+}
+
+/* ============ IMAGE EDIT (transform) ============ */
+function addImgEditCell(url, alt, onDone) {
+  const c = document.createElement('div'); c.className = 'img-cell';
+  const l = document.createElement('div'); l.className = 'img-loading'; l.innerHTML = '<div class="spinner"></div><div>Transform ho rahi hai...</div>'; c.appendChild(l);
+  const i = document.createElement('img'); i.className = 'generated-img'; i.alt = alt; i.style.opacity = '0';
+  i.onload = () => { l.remove(); i.style.opacity = '1'; if (onDone) onDone(); };
+  i.onerror = () => { l.innerHTML = '<div style="color:#e07a7a;font-size:12px;text-align:center;padding:10px;">⚠️ Transform fail<br><small>Dobara try karo</small></div>'; };
+  i.addEventListener('click', () => { if (i.src) openLightbox(i.src); });
+  c.appendChild(i);
+  const dl = document.createElement('button'); dl.className = 'img-download'; dl.innerHTML = '⬇';
+  dl.onclick = async e => {
+    e.stopPropagation();
+    try { const r = await fetch(i.src); const b = await r.blob(); const u = URL.createObjectURL(b);
+      const a = document.createElement('a'); a.href = u; a.download = 'jarvis-edited-' + Date.now() + '.jpg';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u);
+    } catch (e) {}
+  };
+  c.appendChild(dl);
+  i.src = url;
+  return c;
+}
+
+async function transformImage(dataUrl, editPrompt, styleLabel) {
+  const r = document.createElement('div'); r.className = 'row ai';
+  const a = document.createElement('div'); a.className = 'avatar ai'; a.innerText = 'J';
+  const b = document.createElement('div'); b.className = 'msg';
+  const cap = document.createElement('div'); cap.className = 'img-caption';
+  cap.innerText = `✨ "${styleLabel}"`; b.appendChild(cap);
+  const g = document.createElement('div'); g.className = 'img-grid cols-1'; b.appendChild(g);
+  const st = document.createElement('div'); st.className = 'img-status'; st.innerText = '📤 Image upload ho rahi hai...'; b.appendChild(st);
+  r.appendChild(a); r.appendChild(b);
+  chatBox.appendChild(r); chatBox.scrollTop = chatBox.scrollHeight;
+
+  try {
+    // Upload image to temp host
+    const publicUrl = await uploadImageToHost(dataUrl);
+    st.innerText = '✨ Transform ho rahi hai...';
+    // Use Pollinations kontext model with the image as reference
+    const prompt = editPrompt;
+    const seed = Math.floor(Math.random() * 1000000);
+    const url = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(prompt)
+      + `?width=768&height=768&nologo=true&seed=${seed}&model=kontext&image=${encodeURIComponent(publicUrl)}`;
+    const cell = addImgEditCell(url, styleLabel, () => {
+      st.innerText = '✅ Ready! Click karke zoom karo';
+      setTimeout(() => { st.style.transition = 'opacity 0.5s'; st.style.opacity = '0'; setTimeout(() => st.remove(), 500); }, 3000);
+    });
+    g.appendChild(cell);
+  } catch (e) {
+    console.error(e);
+    st.innerText = '⚠️ Transform nahi ho saki. Internet ya service check karein.';
+    st.style.color = '#e07a7a';
   }
 }
 
@@ -958,16 +1054,21 @@ async function streamGroq(msgs, model, bubble, tn) {
       try {
         const j = JSON.parse(p);
         const d = j?.choices?.[0]?.delta?.content;
-        if (d) { full += d; tn.innerText = clean(hideGen(full)); chatBox.scrollTop = chatBox.scrollHeight; }
+        if (d) { full += d; tn.innerText = clean(hideMeta(full)); chatBox.scrollTop = chatBox.scrollHeight; }
       } catch (e) {}
     }
   }
   if (!full.trim()) full = '';
-  tn.innerText = clean(hideGen(full));
+  tn.innerText = clean(hideMeta(full));
   bubble.classList.remove('streaming');
   return full;
 }
-function hideGen(t) { return t.replace(/^\s*IMAGE_GEN\s*:.*$/gim, '').replace(/\n{3,}/g, '\n\n').trim(); }
+function hideMeta(t) {
+  return t.replace(/^\s*IMAGE_GEN\s*:.*$/gim, '')
+          .replace(/^\s*EDIT_STYLE\s*:.*$/gim, '')
+          .replace(/^\s*EDIT_PROMPT\s*:.*$/gim, '')
+          .replace(/\n{3,}/g, '\n\n').trim();
+}
 
 /* ============ STREAM DEVTOOLBOX ============ */
 async function streamDT(msgs, bubble, tn) {
@@ -1000,9 +1101,9 @@ function parseImgCmd(text) {
   return { count: c, style: s, prompt: r };
 }
 
-/* ============ AI: GET IMAGE PROMPT ============ */
+/* ============ AI: IMAGE PROMPT ============ */
 async function aiImgPrompt(userMsg, ctx) {
-  const p = `Convert this into a detailed English image generation prompt (max 100 words). Output ONLY the prompt, nothing else.\n\nUser: ${userMsg}\n\nContext:\n${ctx}`;
+  const p = `Convert to a detailed English image generation prompt (max 100 words). Output ONLY the prompt.\n\nUser: ${userMsg}\n\nContext:\n${ctx}`;
   try {
     const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` }, body: JSON.stringify({ model: FAST_MODEL, messages: [{ role: 'user', content: p }], max_completion_tokens: 250, temperature: 0.7 }) });
     if (!r.ok) return null;
@@ -1012,12 +1113,26 @@ async function aiImgPrompt(userMsg, ctx) {
     return pr.replace(/^["'`]+|["'`]+$/g, '').replace(/^(prompt|image\s*prompt)\s*:\s*/i, '').trim();
   } catch (e) { return null; }
 }
+
+/* ============ AI: EDIT PROMPT (custom transform) ============ */
+async function aiEditPrompt(userMsg) {
+  const p = `User wants to transform an image with this instruction: "${userMsg}"\n\nWrite a detailed English prompt for image-to-image transformation (max 80 words). Include the transformation style, artistic details, quality keywords. Output ONLY the prompt, nothing else.`;
+  try {
+    const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` }, body: JSON.stringify({ model: FAST_MODEL, messages: [{ role: 'user', content: p }], max_completion_tokens: 200, temperature: 0.6 }) });
+    if (!r.ok) return null;
+    const d = await r.json();
+    let pr = (d?.choices?.[0]?.message?.content || '').trim();
+    if (!pr) return null;
+    return pr.replace(/^["'`]+|["'`]+$/g, '').replace(/^(prompt|image\s*prompt)\s*:\s*/i, '').trim();
+  } catch (e) { return null; }
+}
+
 function getCtx() {
   const r = conversation.slice(-4).filter(m => m.role !== 'system');
   return r.map(m => (m.role === 'user' ? 'User' : 'Jarvis') + ': ' + (typeof m.content === 'string' ? m.content.slice(0, 200) : '(image)')).join('\n');
 }
 
-/* ============ HANDLE IMAGE REQUEST ============ */
+/* ============ HANDLE NEW IMAGE ============ */
 async function handleImageRequest(userMsg) {
   addMsg(userMsg, true);
   userInput.value = '';
@@ -1049,7 +1164,49 @@ async function handleImageRequest(userMsg) {
   }
 }
 
-/* ============ HANDLE IMAGE REJECTION ============ */
+/* ============ HANDLE IMAGE EDIT ============ */
+async function handleImageEdit(userMsg, imgDataUrl) {
+  addMsg(userMsg, true, imgDataUrl);
+  userInput.value = '';
+  isSending = true; sendBtn.disabled = true;
+
+  try {
+    // Detect style from user message
+    const lower = userMsg.toLowerCase();
+    let editPrompt = null;
+    let styleLabel = null;
+
+    // Check known styles
+    for (const [key, val] of Object.entries(EDIT_STYLES)) {
+      const pattern = new RegExp('\\b' + key + '\\b', 'i');
+      if (pattern.test(lower)) {
+        editPrompt = val;
+        styleLabel = key;
+        break;
+      }
+    }
+
+    // If no known style, ask AI to create custom prompt
+    if (!editPrompt) {
+      editPrompt = await aiEditPrompt(userMsg);
+      if (!editPrompt) editPrompt = 'transform this image, ' + userMsg;
+      styleLabel = userMsg.slice(0, 50);
+    }
+
+    await transformImage(imgDataUrl, editPrompt, styleLabel);
+
+    conversation.push({ role: 'user', content: userMsg + ' [image edited]' });
+    conversation.push({ role: 'assistant', content: '[Image transformed to ' + styleLabel + ']' });
+    trimHist(); saveHist();
+  } catch (e) {
+    console.error(e);
+    addMsg('Yaar, image transform nahi ho saki. Dobara try karo.', false);
+  } finally {
+    isSending = false; sendBtn.disabled = false; userInput.focus();
+  }
+}
+
+/* ============ HANDLE REJECTION ============ */
 async function handleRejection(userMsg) {
   addMsg(userMsg, true); userInput.value = '';
   chatState.mode = 'normal'; chatState.lastImageTopic = null;
@@ -1058,7 +1215,7 @@ async function handleRejection(userMsg) {
   try {
     refreshPrompt();
     const raw = await streamGroq([...conversation, { role: 'user', content: userMsg }], currentModelId, b, tn);
-    const c = clean(hideGen(raw)) || 'Theek hai. Aur kuch?';
+    const c = clean(hideMeta(raw)) || 'Theek hai. Aur kuch?';
     tn.innerText = c; sb.onclick = () => speak(c, sb);
     conversation.push({ role: 'user', content: userMsg });
     conversation.push({ role: 'assistant', content: c.slice(0, MAX_MSG_LEN) });
@@ -1076,12 +1233,12 @@ async function sendMessage() {
   if (!text && !image && !file) return;
 
   chatState.turnCount++;
-  const emotion = detectEmotion(text);
-  chatState.emotionalTone = emotion;
+  chatState.emotionalTone = detectEmotion(text);
   const intent = detectIntent(text);
 
   if (intent === 'reject_image') { await handleRejection(text); return; }
 
+  // /image command
   const imgCmd = !image && !file ? parseImgCmd(text) : null;
   if (imgCmd) {
     addMsg(text, true); userInput.value = '';
@@ -1091,14 +1248,26 @@ async function sendMessage() {
     return;
   }
 
+  // IMAGE ATTACHED + EDIT intent → transform
+  if (image && (intent === 'image_edit' || /\b(edit|change|transform|convert|badal|banao|style|anime|cartoon|sketch|realistic)\b/i.test(text.toLowerCase()))) {
+    const dataUrl = image.dataUrl;
+    pendingImage = null; fileInput.value = ''; attachPreview.classList.remove('show');
+    await handleImageEdit(text || 'isko edit karo', dataUrl);
+    return;
+  }
+
+  // IMAGE ATTACHED + no edit intent → vision (describe)
+  if (image && !text) {
+    // Just describe it
+  }
+
+  // NEW image request
   if ((intent === 'image_direct' || intent === 'image_context_reply') && !image && !file) {
     await handleImageRequest(text);
     return;
   }
 
-  if (intent === 'capability_q') {
-    chatState.mode = 'awaiting_image_details';
-  }
+  if (intent === 'capability_q') chatState.mode = 'awaiting_image_details';
 
   let userContent;
   if (image) userContent = [{ type: 'text', text: text || 'Is image mein kya hai?' }, { type: 'image_url', image_url: { url: image.dataUrl } }];
@@ -1128,7 +1297,7 @@ async function sendMessage() {
 
   try {
     if (useFile) {
-      const fp = `User ne file attach ki: "${file.name}"\n\nContent:\n---\n${file.text}\n---\n\nSawaal: "${text || 'Is file ke baare mein batao'}"\n\nFile ke content ke base pe Roman Urdu mein jawab do.`;
+      const fp = `File: "${file.name}"\n\nContent:\n---\n${file.text}\n---\n\nSawaal: "${text || 'Is file ke baare mein batao'}"\n\nFile ke content ke base pe Roman Urdu mein jawab do.`;
       msgs = [{ role: 'system', content: baseInstruction }, { role: 'user', content: fp }];
       if (isDT) full = await streamDT(msgs, b, tn);
       else full = await streamGroq(msgs, currentModelId, b, tn);
@@ -1139,10 +1308,10 @@ async function sendMessage() {
       if (!sr.length) full = await streamGroq(msgs, currentModelId, b, tn);
       else {
         const sc = sr.map((r, i) => `[${i+1}] ${r.title}\n${r.snippet}\nURL: ${r.url}`).join('\n\n');
-        const sp = `User ne poocha: "${text}"\n\nWeb search results:\n${sc}\n\nNatural Roman Urdu mein jawab do. Sources ka URL include mat karo.`;
+        const sp = `User: "${text}"\n\nWeb results:\n${sc}\n\nNatural Roman Urdu mein jawab do. Sources ka URL include mat karo.`;
         msgs = [{ role: 'system', content: baseInstruction }, { role: 'user', content: sp }];
         full = await streamGroq(msgs, currentModelId, b, tn);
-        const c = clean(hideGen(full));
+        const c = clean(hideMeta(full));
         if (c) addSrcs(b, sr);
       }
     } else {
@@ -1150,8 +1319,7 @@ async function sendMessage() {
       full = await streamGroq(msgs, model, b, tn);
     }
 
-    let cleaned = clean(hideGen(full));
-
+    let cleaned = clean(hideMeta(full));
     if (!cleaned || !cleaned.trim()) {
       const fallbacks = {
         greeting: 'Wa Alaikum Assalam! Kaise hain aap? Kya madad karoon?',
@@ -1164,11 +1332,8 @@ async function sendMessage() {
       tn.innerText = cleaned;
     }
 
-    if (intent === 'capability_q') {
-      chatState.mode = 'awaiting_image_details';
-    } else if (chatState.mode === 'image_just_generated') {
-      chatState.mode = 'normal';
-    }
+    if (intent === 'capability_q') chatState.mode = 'awaiting_image_details';
+    else if (chatState.mode === 'image_just_generated') chatState.mode = 'normal';
 
     sb.onclick = () => speak(cleaned, sb);
 
@@ -1187,8 +1352,8 @@ async function sendMessage() {
     if (badge) badge.remove();
     const em = chatState.emotionalTone;
     let emsg = 'Yaar, thodi dikkat aa gayi. Dobara try karo.';
-    if (em === 'frustrated') emsg = 'Arre, network issue lag raha hai. Ek baar aur try karo, main hoon na.';
-    else if (err.message?.includes('rate')) emsg = 'Thodi der ruko, bahut requests aa gayi hain. 1 minute baad try karo.';
+    if (em === 'frustrated') emsg = 'Arre, network issue lag raha hai. Ek baar aur try karo.';
+    else if (err.message?.includes('rate')) emsg = 'Thodi der ruko, 1 minute baad try karo.';
     tn.innerText = emsg;
   } finally {
     isSending = false; sendBtn.disabled = false; userInput.focus();
