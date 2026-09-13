@@ -19,6 +19,7 @@
     --accent-dim: #2c4b64;
     --online: #3fbfa0;
     --danger: #e07a7a;
+    --search: #c9a84c;
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
@@ -40,6 +41,8 @@
     align-items: center;
     justify-content: space-between;
     padding: 22px 20px 16px;
+    gap: 8px;
+    flex-wrap: wrap;
   }
   .brand { display: flex; align-items: center; gap: 12px; }
   .brand-mark {
@@ -73,7 +76,7 @@
     gap: 8px;
     align-items: center;
   }
-  .clear-btn, .memory-btn {
+  .clear-btn, .memory-btn, .search-btn {
     background: transparent;
     border: 1px solid var(--border);
     color: var(--text-dim);
@@ -82,11 +85,24 @@
     font-size: 12.5px;
     font-family: inherit;
     cursor: pointer;
-    transition: color 0.15s ease, border-color 0.15s ease;
-    position: relative;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
   .clear-btn:hover { color: var(--text); border-color: var(--accent); }
   .memory-btn:hover { color: var(--text); border-color: var(--online); }
+  .search-btn:hover { color: var(--text); border-color: var(--search); }
+  .search-btn.active {
+    background: var(--search);
+    color: #0d0f14;
+    border-color: var(--search);
+    font-weight: 600;
+  }
+  .search-btn.active:hover {
+    background: #d4b65c;
+    border-color: #d4b65c;
+  }
   .memory-btn .mem-count {
     display: inline-block;
     background: var(--online);
@@ -95,7 +111,7 @@
     font-weight: 600;
     padding: 1px 5px;
     border-radius: 8px;
-    margin-left: 4px;
+    margin-left: 2px;
     vertical-align: middle;
   }
 
@@ -210,6 +226,53 @@
   .speaker-btn:hover { color: var(--accent); }
   .speaker-btn.speaking { color: var(--accent); }
 
+  .search-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--search);
+    background: rgba(201, 168, 76, 0.12);
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    padding: 2px 8px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+  }
+  .search-badge .pulse {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--search);
+    animation: searchPulse 1s infinite;
+  }
+  @keyframes searchPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .sources-block {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+  .sources-title {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .source-item {
+    display: block;
+    font-size: 12.5px;
+    color: var(--accent);
+    text-decoration: none;
+    padding: 3px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .source-item:hover { text-decoration: underline; }
+
   /* Input bar */
   .input-bar {
     width: 100%;
@@ -227,7 +290,7 @@
     transition: border-color 0.15s ease;
   }
   .input-shell:focus-within { border-color: var(--accent); }
-  input {
+  input[type="text"] {
     flex: 1;
     border: none;
     background: transparent;
@@ -236,9 +299,9 @@
     font-family: inherit;
     padding: 10px 0;
   }
-  input:focus { outline: none; }
-  input::placeholder { color: var(--text-dim); }
-  input:disabled { opacity: 0.5; }
+  input[type="text"]:focus { outline: none; }
+  input[type="text"]::placeholder { color: var(--text-dim); }
+  input[type="text"]:disabled { opacity: 0.5; }
 
   button.send-btn {
     width: 38px; height: 38px;
@@ -479,6 +542,7 @@
       </div>
     </div>
     <div class="header-actions">
+      <button class="search-btn" id="searchBtn" title="Web search on/off">🌐 Search</button>
       <button class="memory-btn" id="memoryBtn">🧠 Memory<span class="mem-count" id="memCount">0</span></button>
       <button class="clear-btn" id="clearBtn">Clear</button>
     </div>
@@ -490,7 +554,9 @@
         <div class="avatar ai">J</div>
         <div class="msg">Assalam-o-Alaikum! Main Jarvis hoon. Kuch bhi pooch sakte hain.
 
-Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle mein baitha hai</div>
+Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle mein baitha hai
+
+Web search on karne ke liye 🌐 Search button dabao — phir latest news, weather, scores sab pooch sakte ho.</div>
       </div>
     </div>
   </div>
@@ -523,7 +589,7 @@ Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle m
         </svg>
       </button>
     </div>
-    <div class="hint">Image ke liye <code>/image</code> se message shuru karo, ya 📎 se photo attach karo. 🎙️ se bol kar baat karo.</div>
+    <div class="hint">Image ke liye <code>/image</code> se message shuru karo, ya 📎 se photo attach karo. 🎙️ se bol kar baat karo. 🌐 se web search on/off.</div>
   </div>
 
   <div class="mem-toast" id="memToast"><span class="dot"></span><span id="memToastText">Memory update ho gayi</span></div>
@@ -549,15 +615,17 @@ Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle m
    ========================================================= */
 const GROQ_KEY = "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";
 
-const TEXT_MODEL   = "openai/gpt-oss-120b";
-const VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
-const FAST_MODEL   = "llama-3.1-8b-instant";   // memory extraction ke liye
-const API_URL      = "https://api.groq.com/openai/v1/chat/completions";
-const HISTORY_KEY  = "jarvis_history_v1";
-const MEMORY_KEY   = "jarvis_memory_v1";
-const MAX_HISTORY  = 20;
-const MEM_EXTRACT_EVERY = 6;   // har 6 messages ke baad extraction
-const MAX_FACTS    = 25;        // max memory facts
+const TEXT_MODEL    = "openai/gpt-oss-120b";
+const VISION_MODEL  = "meta-llama/llama-4-scout-17b-16e-instruct";
+const FAST_MODEL    = "llama-3.1-8b-instant";
+const SEARCH_MODEL  = "groq/compound";              // built-in web search
+const API_URL       = "https://api.groq.com/openai/v1/chat/completions";
+const HISTORY_KEY   = "jarvis_history_v1";
+const MEMORY_KEY    = "jarvis_memory_v1";
+const SEARCH_KEY    = "jarvis_search_enabled_v1";
+const MAX_HISTORY   = 20;
+const MEM_EXTRACT_EVERY = 6;
+const MAX_FACTS     = 25;
 
 /* ---------------- DOM refs ---------------- */
 const chatBox       = document.getElementById('chatBox');
@@ -580,6 +648,7 @@ const memCloseBtn   = document.getElementById('memCloseBtn');
 const memClearBtn   = document.getElementById('memClearBtn');
 const memToast      = document.getElementById('memToast');
 const memToastText  = document.getElementById('memToastText');
+const searchBtn     = document.getElementById('searchBtn');
 
 /* ---------------- State ---------------- */
 let pendingImage = null;
@@ -590,11 +659,43 @@ let currentAudio = null;
 let currentBtn   = null;
 let isStoppingTTS = false;
 let messagesSinceExtract = 0;
-let memory = [];   // array of fact strings
+let memory = [];
+let searchEnabled = false;
 
 const baseInstruction = 'Tumhara naam Jarvis hai. Tum ek helpful AI assistant ho. Agar koi tumhara naam pooche, to hamesha "Jarvis" bolna. Tum kisi company ke banaye hue nahi ho — tumhe user ne banaya hai. Hamesha seedha, saaf jawab do — apna internal soch-vichar (thinking/reasoning process) kabhi mat dikhana, sirf final jawab do. Natural tarike se baat karo jaise ek insaan karta hai — normal conversation mein har cheez ko numbered list, bullet points, ya bold text mein mat todo, seedhe paragraph mein baat karo. Sirf tab list use karo jab user steps ya multiple items specifically maange. Hamesha sirf Roman Urdu/Hindi aur English mein jawab do — kisi aur language (Chinese, Arabic script, etc) ka koi lafz kabhi mat likhna.';
 
 let conversation = [{ role: 'system', content: baseInstruction }];
+
+/* ============ WEB SEARCH TOGGLE ============ */
+function loadSearchState() {
+  try {
+    searchEnabled = localStorage.getItem(SEARCH_KEY) === 'true';
+  } catch (e) { searchEnabled = false; }
+  updateSearchBtnUI();
+}
+
+function saveSearchState() {
+  try {
+    localStorage.setItem(SEARCH_KEY, searchEnabled ? 'true' : 'false');
+  } catch (e) {}
+}
+
+function updateSearchBtnUI() {
+  if (searchEnabled) {
+    searchBtn.classList.add('active');
+    searchBtn.title = 'Web search ON — click to disable';
+  } else {
+    searchBtn.classList.remove('active');
+    searchBtn.title = 'Web search OFF — click to enable';
+  }
+}
+
+searchBtn.addEventListener('click', () => {
+  searchEnabled = !searchEnabled;
+  saveSearchState();
+  updateSearchBtnUI();
+  showMemToast(searchEnabled ? '🌐 Web search ON' : 'Web search OFF');
+});
 
 /* ============ MEMORY SYSTEM ============ */
 function loadMemory() {
@@ -607,15 +708,11 @@ function loadMemory() {
 }
 
 function saveMemory() {
-  try {
-    localStorage.setItem(MEMORY_KEY, JSON.stringify(memory));
-  } catch (e) {}
+  try { localStorage.setItem(MEMORY_KEY, JSON.stringify(memory)); } catch (e) {}
   updateMemCount();
 }
 
-function updateMemCount() {
-  memCount.innerText = memory.length;
-}
+function updateMemCount() { memCount.innerText = memory.length; }
 
 function buildSystemPrompt() {
   if (!memory.length) return baseInstruction;
@@ -635,7 +732,6 @@ function showMemToast(text) {
 }
 
 async function extractFacts() {
-  // Sirf last few messages se facts nikaalo
   const recent = conversation.slice(-8).filter(m => m.role !== 'system');
   if (recent.length < 2) return;
 
@@ -659,7 +755,7 @@ ${chatLog}
 Instructions:
 - Sirf user ke baare mein facts nikaalo, Jarvis ke baare mein nahi.
 - Har fact ek chhoti si line honi chahiye (max 15 words).
-- Sirf wo facts jo long-term useful hain — chhoti baatein (jaise "user ne salam kaha") skip karo.
+- Sirf wo facts jo long-term useful hain.
 - Agar koi naya fact nahi mila, to sirf "NONE" likho.
 - Warna har naya fact ek nayi line mein likho, koi bullet ya numbering ke bina.
 - Sirf Roman Urdu/English mein likho.`;
@@ -667,10 +763,7 @@ Instructions:
   try {
     const res = await fetch(API_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GROQ_KEY}`
-      },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` },
       body: JSON.stringify({
         model: FAST_MODEL,
         messages: [{ role: 'user', content: extractionPrompt }],
@@ -678,15 +771,12 @@ Instructions:
         temperature: 0.3
       })
     });
-
     if (!res.ok) return;
     const data = await res.json();
     const raw = (data?.choices?.[0]?.message?.content || '').trim();
-
     if (!raw || raw.toUpperCase() === 'NONE') return;
 
-    const newFacts = raw
-      .split('\n')
+    const newFacts = raw.split('\n')
       .map(l => l.replace(/^[-•*\d.\s]+/, '').trim())
       .filter(f => f.length > 3 && f.length < 200);
 
@@ -694,26 +784,19 @@ Instructions:
 
     let added = 0;
     for (const fact of newFacts) {
-      // Simple dedupe: check if similar fact already exists
       const lower = fact.toLowerCase();
       const exists = memory.some(m => {
         const ml = m.toLowerCase();
         return ml === lower || ml.includes(lower) || lower.includes(ml);
       });
-      if (!exists && memory.length < MAX_FACTS) {
-        memory.push(fact);
-        added++;
-      }
+      if (!exists && memory.length < MAX_FACTS) { memory.push(fact); added++; }
     }
-
     if (added > 0) {
       saveMemory();
       refreshSystemPrompt();
       showMemToast(`${added} nayi baat yaad kar li`);
     }
-  } catch (e) {
-    console.warn('Memory extraction failed:', e);
-  }
+  } catch (e) { console.warn('Memory extraction failed:', e); }
 }
 
 /* -------- Memory modal -------- */
@@ -723,30 +806,19 @@ function renderMemoryModal() {
     return;
   }
   memModalBody.innerHTML = memory.map(f =>
-    '<div class="mem-item"><span class="mem-dot">●</span><span class="mem-text">' +
-    escapeHtml(f) + '</span></div>'
+    '<div class="mem-item"><span class="mem-dot">●</span><span class="mem-text">' + escapeHtml(f) + '</span></div>'
   ).join('');
 }
 
 function escapeHtml(s) {
-  return s.replace(/[&<>"']/g, c => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  }[c]));
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-memoryBtn.addEventListener('click', () => {
-  renderMemoryModal();
-  memModal.classList.add('show');
-});
-
-function closeMemModal() {
-  memModal.classList.remove('show');
-}
+memoryBtn.addEventListener('click', () => { renderMemoryModal(); memModal.classList.add('show'); });
+function closeMemModal() { memModal.classList.remove('show'); }
 memModalClose.addEventListener('click', closeMemModal);
 memCloseBtn.addEventListener('click', closeMemModal);
-memModal.addEventListener('click', (e) => {
-  if (e.target === memModal) closeMemModal();
-});
+memModal.addEventListener('click', (e) => { if (e.target === memModal) closeMemModal(); });
 
 memClearBtn.addEventListener('click', () => {
   if (!memory.length) { closeMemModal(); return; }
@@ -760,7 +832,6 @@ memClearBtn.addEventListener('click', () => {
 
 /* ================= VOICE RECOGNITION ================= */
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
 if (SpeechRecognition) {
   recognition = new SpeechRecognition();
   recognition.continuous = false;
@@ -783,12 +854,11 @@ if (recognition) {
   recognition.onend = () => { isListening = false; micBtn.classList.remove('listening'); };
   recognition.onerror = (event) => {
     console.error('Speech recognition error:', event.error);
-    isListening = false;
-    micBtn.classList.remove('listening');
+    isListening = false; micBtn.classList.remove('listening');
     let msg = 'Voice input mein error aaya.';
-    if (event.error === 'not-allowed') msg = 'Mic ki permission nahi mili. Browser settings se allow karein.';
-    else if (event.error === 'no-speech') msg = 'Koi awaaz sunai nahi di. Dobara try karein.';
-    else if (event.error === 'network') msg = 'Network error. Internet check karein.';
+    if (event.error === 'not-allowed') msg = 'Mic ki permission nahi mili.';
+    else if (event.error === 'no-speech') msg = 'Koi awaaz sunai nahi di.';
+    else if (event.error === 'network') msg = 'Network error.';
     if (event.error !== 'aborted') addPlainMessage('⚠️ ' + msg, false);
   };
   recognition.onresult = (event) => {
@@ -798,26 +868,20 @@ if (recognition) {
     }
     if (finalTranscript) {
       userInput.value = finalTranscript;
-      setTimeout(() => {
-        if (userInput.value.trim() && !isSending) sendMessage();
-      }, 400);
+      setTimeout(() => { if (userInput.value.trim() && !isSending) sendMessage(); }, 400);
     }
   };
 }
-
 micBtn.addEventListener('click', toggleListening);
 
-/* ================= TEXT-TO-SPEECH (Google Translate Urdu) ================= */
+/* ================= TEXT-TO-SPEECH ================= */
 function speakText(text, btn) {
   if (currentBtn === btn && currentAudio) { stopSpeaking(); return; }
   stopSpeaking();
-
   const cleanText = text.replace(/[*_`~>#\[\]()]/g, '').replace(/\s+/g, ' ').trim();
   if (!cleanText) return;
-
   const chunks = splitIntoChunks(cleanText, 180);
-  currentBtn = btn;
-  isStoppingTTS = false;
+  currentBtn = btn; isStoppingTTS = false;
   if (btn) btn.classList.add('speaking');
   playChunksSequentially(chunks, btn, 0);
 }
@@ -849,37 +913,27 @@ function splitIntoChunks(text, maxLen) {
 function playChunksSequentially(chunks, btn, index) {
   if (isStoppingTTS || index >= chunks.length) {
     if (btn) btn.classList.remove('speaking');
-    currentBtn = null; currentAudio = null;
-    return;
+    currentBtn = null; currentAudio = null; return;
   }
   const url = 'https://translate.googleapis.com/translate_tts?ie=UTF-8&q='
     + encodeURIComponent(chunks[index]) + '&tl=ur&client=tw-ob';
   const audio = new Audio(url);
   currentAudio = audio;
-  audio.onended = () => {
-    if (isStoppingTTS) return;
-    setTimeout(() => playChunksSequentially(chunks, btn, index + 1), 120);
-  };
+  audio.onended = () => { if (isStoppingTTS) return; setTimeout(() => playChunksSequentially(chunks, btn, index + 1), 120); };
   audio.onerror = () => fallbackBrowserTTS(chunks.slice(index).join(' '), btn);
   audio.play().catch(() => fallbackBrowserTTS(chunks.slice(index).join(' '), btn));
 }
 
 function fallbackBrowserTTS(text, btn) {
-  if (!window.speechSynthesis) {
-    if (btn) btn.classList.remove('speaking');
-    currentBtn = null; return;
-  }
+  if (!window.speechSynthesis) { if (btn) btn.classList.remove('speaking'); currentBtn = null; return; }
   const utt = new SpeechSynthesisUtterance(text);
   const voices = speechSynthesis.getVoices();
-  const urdu = voices.find(v => v.lang.startsWith('ur'))
-            || voices.find(v => v.lang.startsWith('hi'))
-            || voices.find(v => v.lang.startsWith('en-IN'));
+  const urdu = voices.find(v => v.lang.startsWith('ur')) || voices.find(v => v.lang.startsWith('hi')) || voices.find(v => v.lang.startsWith('en-IN'));
   if (urdu) utt.voice = urdu;
   utt.lang = urdu ? urdu.lang : 'en-US';
   utt.onend = () => { if (btn) btn.classList.remove('speaking'); currentBtn = null; };
   utt.onerror = () => { if (btn) btn.classList.remove('speaking'); currentBtn = null; };
-  speechSynthesis.cancel();
-  speechSynthesis.speak(utt);
+  speechSynthesis.cancel(); speechSynthesis.speak(utt);
 }
 
 function stopSpeaking() {
@@ -891,18 +945,11 @@ function stopSpeaking() {
 
 /* ---------------- Attach handling ---------------- */
 attachBtn.addEventListener('click', () => fileInput.click());
-
 fileInput.addEventListener('change', () => {
   const file = fileInput.files[0];
   if (!file) return;
-  if (!file.type.startsWith('image/')) {
-    addPlainMessage('⚠️ Abhi sirf images attach ki ja sakti hain.', false);
-    fileInput.value = ''; return;
-  }
-  if (file.size > 5 * 1024 * 1024) {
-    addPlainMessage('⚠️ Image 5MB se choti honi chahiye.', false);
-    fileInput.value = ''; return;
-  }
+  if (!file.type.startsWith('image/')) { addPlainMessage('⚠️ Abhi sirf images attach ki ja sakti hain.', false); fileInput.value = ''; return; }
+  if (file.size > 5 * 1024 * 1024) { addPlainMessage('⚠️ Image 5MB se choti honi chahiye.', false); fileInput.value = ''; return; }
   const reader = new FileReader();
   reader.onload = (e) => {
     pendingImage = { dataUrl: e.target.result, name: file.name };
@@ -912,20 +959,10 @@ fileInput.addEventListener('change', () => {
   };
   reader.readAsDataURL(file);
 });
-
-attachRemove.addEventListener('click', () => {
-  pendingImage = null;
-  fileInput.value = '';
-  attachPreview.classList.remove('show');
-});
+attachRemove.addEventListener('click', () => { pendingImage = null; fileInput.value = ''; attachPreview.classList.remove('show'); });
 
 /* ---------------- Enter key ---------------- */
-userInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
-});
+userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
 
 /* ---------------- Clear chat ---------------- */
 clearBtn.addEventListener('click', () => {
@@ -947,7 +984,6 @@ function addPlainMessage(text, isUser, imageDataUrl) {
   avatar.innerText = isUser ? 'Y' : 'J';
   const bubble = document.createElement('div');
   bubble.className = 'msg';
-
   if (imageDataUrl) {
     const img = document.createElement('img');
     img.className = 'attached-img-inline';
@@ -957,15 +993,14 @@ function addPlainMessage(text, isUser, imageDataUrl) {
   const textNode = document.createElement('div');
   textNode.innerText = text;
   bubble.appendChild(textNode);
-
-  row.appendChild(avatar);
-  row.appendChild(bubble);
+  row.appendChild(avatar); row.appendChild(bubble);
   chatBox.appendChild(row);
   chatBox.scrollTop = chatBox.scrollHeight;
   return { row, bubble, textNode };
 }
 
-function addStreamingMessage() {
+function addStreamingMessage(opts = {}) {
+  const { withSearch = false } = opts;
   const row = document.createElement('div');
   row.className = 'row ai';
   const avatar = document.createElement('div');
@@ -973,6 +1008,14 @@ function addStreamingMessage() {
   avatar.innerText = 'J';
   const bubble = document.createElement('div');
   bubble.className = 'msg streaming';
+
+  if (withSearch) {
+    const badge = document.createElement('div');
+    badge.className = 'search-badge';
+    badge.innerHTML = '<span class="pulse"></span> Web search...';
+    bubble.appendChild(badge);
+  }
+
   const textNode = document.createElement('div');
   bubble.appendChild(textNode);
 
@@ -999,11 +1042,36 @@ function addStreamingMessage() {
   actions.appendChild(speakerBtn);
   bubble.appendChild(actions);
 
-  row.appendChild(avatar);
-  row.appendChild(bubble);
+  row.appendChild(avatar); row.appendChild(bubble);
   chatBox.appendChild(row);
   chatBox.scrollTop = chatBox.scrollHeight;
-  return { row, bubble, textNode, actions, speakerBtn };
+  return { row, bubble, textNode, actions, speakerBtn, badge: withSearch ? bubble.querySelector('.search-badge') : null };
+}
+
+function addSourcesBlock(bubble, sources) {
+  if (!sources || !sources.length) return;
+  const block = document.createElement('div');
+  block.className = 'sources-block';
+  const title = document.createElement('div');
+  title.className = 'sources-title';
+  title.innerText = 'Sources';
+  block.appendChild(title);
+
+  const seen = new Set();
+  let count = 0;
+  for (const s of sources) {
+    if (!s.url || seen.has(s.url) || count >= 6) continue;
+    seen.add(s.url);
+    const a = document.createElement('a');
+    a.className = 'source-item';
+    a.href = s.url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.innerText = '↗ ' + (s.title || s.url);
+    block.appendChild(a);
+    count++;
+  }
+  if (count > 0) bubble.appendChild(block);
 }
 
 function addImageMessage(prompt) {
@@ -1014,18 +1082,15 @@ function addImageMessage(prompt) {
   avatar.innerText = 'J';
   const bubble = document.createElement('div');
   bubble.className = 'msg';
-
   const caption = document.createElement('div');
   caption.className = 'img-caption';
   caption.innerText = '🎨 "' + prompt + '"';
-
   const img = document.createElement('img');
   img.className = 'generated-img';
   const url = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(prompt)
             + '?width=512&height=512&nologo=true&seed=' + Math.floor(Math.random() * 100000);
   img.src = url;
   img.alt = prompt;
-
   img.onerror = () => {
     img.style.display = 'none';
     const err = document.createElement('div');
@@ -1033,11 +1098,8 @@ function addImageMessage(prompt) {
     err.innerText = '⚠️ Image load nahi ho saki. Internet ya service check karein.';
     bubble.appendChild(err);
   };
-
-  bubble.appendChild(caption);
-  bubble.appendChild(img);
-  row.appendChild(avatar);
-  row.appendChild(bubble);
+  bubble.appendChild(caption); bubble.appendChild(img);
+  row.appendChild(avatar); row.appendChild(bubble);
   chatBox.appendChild(row);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
@@ -1055,15 +1117,11 @@ function cleanMarkdown(text) {
 function trimHistory() {
   const system = conversation[0];
   const rest = conversation.slice(1);
-  if (rest.length > MAX_HISTORY) {
-    conversation = [system, ...rest.slice(-MAX_HISTORY)];
-  }
+  if (rest.length > MAX_HISTORY) conversation = [system, ...rest.slice(-MAX_HISTORY)];
 }
 
 function saveHistory() {
-  try {
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(conversation.slice(1)));
-  } catch (e) {}
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(conversation.slice(1))); } catch (e) {}
 }
 
 function loadHistory() {
@@ -1099,10 +1157,7 @@ async function sendMessage() {
     const prompt = text.slice(7).trim();
     addPlainMessage(text, true);
     userInput.value = '';
-    if (!prompt) {
-      addPlainMessage('Image ke liye kuch description bhi likho, jaise: /image ek sher jungle mein', false);
-      return;
-    }
+    if (!prompt) { addPlainMessage('Image ke liye kuch description bhi likho, jaise: /image ek sher jungle mein', false); return; }
     addImageMessage(prompt);
     return;
   }
@@ -1128,36 +1183,41 @@ async function sendMessage() {
   isSending = true;
   sendBtn.disabled = true;
 
-  const { bubble, textNode, speakerBtn } = addStreamingMessage();
+  // Decide model + search
+  let model, withSearch = false;
+  if (image) {
+    model = VISION_MODEL;
+  } else if (searchEnabled) {
+    model = SEARCH_MODEL;
+    withSearch = true;
+  } else {
+    model = TEXT_MODEL;
+  }
 
-  // Make sure system prompt has latest memory
+  const { bubble, textNode, speakerBtn, badge } = addStreamingMessage({ withSearch });
+
   refreshSystemPrompt();
   const apiMessages = [...conversation, { role: 'user', content: userContentForApi }];
 
   try {
     const body = {
-      model: image ? VISION_MODEL : TEXT_MODEL,
+      model: model,
       messages: apiMessages,
       max_completion_tokens: image ? 700 : 1024,
       stream: true
     };
-    if (!image) body.reasoning_effort = "low";
+    if (model === TEXT_MODEL) body.reasoning_effort = "low";
+    if (withSearch) body.search_settings = { country: "pakistan" };
 
     const res = await fetch(API_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GROQ_KEY}`
-      },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` },
       body: JSON.stringify(body)
     });
 
     if (!res.ok) {
       let errMsg = `HTTP ${res.status}`;
-      try {
-        const j = await res.json();
-        errMsg = j?.error?.message || errMsg;
-      } catch (e) {}
+      try { const j = await res.json(); errMsg = j?.error?.message || errMsg; } catch (e) {}
       throw new Error(errMsg);
     }
 
@@ -1165,6 +1225,7 @@ async function sendMessage() {
     const decoder = new TextDecoder();
     let buffer   = '';
     let fullText = '';
+    const collectedSources = [];
 
     while (true) {
       const { done, value } = await reader.read();
@@ -1181,11 +1242,23 @@ async function sendMessage() {
         if (payload === '[DONE]') continue;
         try {
           const json = JSON.parse(payload);
-          const delta = json?.choices?.[0]?.delta?.content;
+          const choice = json?.choices?.[0];
+          const delta = choice?.delta?.content;
           if (delta) {
             fullText += delta;
             textNode.innerText = cleanMarkdown(fullText);
             chatBox.scrollTop = chatBox.scrollHeight;
+          }
+          // Collect search results if available in stream
+          const execTools = choice?.delta?.executed_tools || choice?.message?.executed_tools;
+          if (execTools && Array.isArray(execTools)) {
+            for (const tool of execTools) {
+              if (tool?.search_results?.results) {
+                for (const r of tool.search_results.results) {
+                  if (r?.url) collectedSources.push({ title: r.title, url: r.url });
+                }
+              }
+            }
           }
         } catch (e) {}
       }
@@ -1196,6 +1269,10 @@ async function sendMessage() {
     const clean = cleanMarkdown(fullText);
     textNode.innerText = clean;
     bubble.classList.remove('streaming');
+    if (badge) badge.remove();
+
+    // Add sources block if we got any
+    if (collectedSources.length) addSourcesBlock(bubble, collectedSources);
 
     speakerBtn.onclick = () => speakText(clean, speakerBtn);
 
@@ -1208,18 +1285,18 @@ async function sendMessage() {
     trimHistory();
     saveHistory();
 
-    // Memory extraction every N messages (only text messages)
     if (!image) {
       messagesSinceExtract++;
       if (messagesSinceExtract >= MEM_EXTRACT_EVERY) {
         messagesSinceExtract = 0;
-        extractFacts();  // fire & forget
+        extractFacts();
       }
     }
 
   } catch (err) {
     console.error(err);
     bubble.classList.remove('streaming');
+    if (badge) badge.remove();
     textNode.innerText = 'Error: ' + (err.message || 'kuch ghalat ho gaya, dobara try karein.');
   } finally {
     isSending = false;
@@ -1230,6 +1307,7 @@ async function sendMessage() {
 
 /* ---------------- Init ---------------- */
 loadMemory();
+loadSearchState();
 refreshSystemPrompt();
 loadHistory();
 
