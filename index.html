@@ -48,7 +48,7 @@
     background: var(--online);
     box-shadow: 0 0 0 3px rgba(63, 191, 160, 0.15);
   }
-  .header-actions { display: flex; gap: 8px; align-items: center; }
+  .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .clear-btn, .memory-btn, .search-btn {
     background: transparent; border: 1px solid var(--border);
     color: var(--text-dim); padding: 6px 12px;
@@ -70,6 +70,92 @@
     padding: 1px 5px; border-radius: 8px;
     margin-left: 2px; vertical-align: middle;
   }
+
+  /* Model selector */
+  .model-selector {
+    position: relative;
+    display: inline-block;
+  }
+  .model-btn {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .model-btn:hover { border-color: var(--accent); }
+  .model-btn .arrow {
+    font-size: 9px;
+    color: var(--text-dim);
+    transition: transform 0.2s ease;
+  }
+  .model-selector.open .model-btn .arrow { transform: rotate(180deg); }
+  .model-btn .model-icon { font-size: 13px; }
+
+  .model-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 6px;
+    min-width: 240px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    z-index: 300;
+    display: none;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  .model-selector.open .model-dropdown { display: block; }
+  .model-option {
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.15s ease;
+    font-size: 13px;
+  }
+  .model-option:hover { background: var(--panel-2); }
+  .model-option.active { background: var(--accent-dim); }
+  .model-option .m-icon {
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .model-option .m-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+  }
+  .model-option .m-name {
+    font-weight: 500;
+    color: var(--text);
+    font-size: 13px;
+  }
+  .model-option .m-desc {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .model-option .m-check {
+    color: var(--online);
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
   .chat-wrap {
     width: 100%; max-width: 720px; flex: 1;
     display: flex; flex-direction: column;
@@ -158,6 +244,13 @@
     font-size: 11px; color: var(--online);
     background: rgba(63, 191, 160, 0.12);
     border: 1px solid rgba(63, 191, 160, 0.3);
+    padding: 2px 8px; border-radius: 6px; margin-bottom: 6px;
+  }
+  .model-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10.5px; color: var(--text-dim);
+    background: var(--panel-2);
+    border: 1px solid var(--border);
     padding: 2px 8px; border-radius: 6px; margin-bottom: 6px;
   }
   .input-bar { width: 100%; max-width: 720px; padding: 14px 20px 22px; }
@@ -321,8 +414,16 @@
       </div>
     </div>
     <div class="header-actions">
-      <button class="search-btn" id="searchBtn" title="Web search on/off">🌐 Search</button>
-      <button class="memory-btn" id="memoryBtn">🧠 Memory<span class="mem-count" id="memCount">0</span></button>
+      <div class="model-selector" id="modelSelector">
+        <button class="model-btn" id="modelBtn">
+          <span class="model-icon" id="currentModelIcon">✨</span>
+          <span id="currentModelName">Smart</span>
+          <span class="arrow">▼</span>
+        </button>
+        <div class="model-dropdown" id="modelDropdown"></div>
+      </div>
+      <button class="search-btn" id="searchBtn" title="Web search on/off">🌐</button>
+      <button class="memory-btn" id="memoryBtn">🧠<span class="mem-count" id="memCount">0</span></button>
       <button class="clear-btn" id="clearBtn">Clear</button>
     </div>
   </div>
@@ -333,11 +434,9 @@
         <div class="avatar ai">J</div>
         <div class="msg">Assalam-o-Alaikum! Main Jarvis hoon. Kuch bhi pooch sakte hain.
 
-Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle mein baitha hai
+Upar dropdown se model choose karo — Fast, Smart, ya Code.
 
-Web search on karne ke liye 🌐 Search button dabao.
-
-File ke baare mein sawaal poochne ke liye 📄 button se file attach karo (PDF, DOCX, TXT, MD, CSV, JSON).</div>
+Image: 📎 | File: 📄 | Voice: 🎙️ | Search: 🌐 | Image gen: /image</div>
       </div>
     </div>
   </div>
@@ -377,7 +476,7 @@ File ke baare mein sawaal poochne ke liye 📄 button se file attach karo (PDF, 
         </svg>
       </button>
     </div>
-    <div class="hint">Image: 📎 | File: 📄 | Voice: 🎙️ | Search: 🌐 | Image gen: <code>/image</code></div>
+    <div class="hint">Model badalne ke liye upar dropdown. Search: 🌐 | File: 📄 | Voice: 🎙️ | Image gen: <code>/image</code></div>
   </div>
 
   <div class="mem-toast" id="memToast"><span class="dot"></span><span id="memToastText">Memory update ho gayi</span></div>
@@ -401,24 +500,65 @@ File ke baare mein sawaal poochne ke liye 📄 button se file attach karo (PDF, 
 <script>
 const GROQ_KEY = "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";
 
-const TEXT_MODEL    = "openai/gpt-oss-120b";
-const VISION_MODEL  = "meta-llama/llama-4-scout-17b-16e-instruct";
 const FAST_MODEL    = "llama-3.1-8b-instant";
+const VISION_MODEL  = "meta-llama/llama-4-scout-17b-16e-instruct";
 const API_URL       = "https://api.groq.com/openai/v1/chat/completions";
 const TAVILY_URL    = "https://api.tavily.com/search";
 const HISTORY_KEY   = "jarvis_history_v1";
 const MEMORY_KEY    = "jarvis_memory_v1";
 const SEARCH_KEY    = "jarvis_search_enabled_v1";
+const MODEL_KEY     = "jarvis_selected_model_v1";
 const MAX_HISTORY   = 10;
 const MEM_EXTRACT_EVERY = 6;
 const MAX_FACTS     = 15;
 const MAX_IMG_DIM   = 1024;
 const JPEG_QUALITY  = 0.75;
 const MAX_MSG_LEN   = 1500;
-const MAX_DOC_CHARS = 8000;       // file context ke liye max chars
-const MAX_DOC_SIZE  = 10 * 1024 * 1024; // 10MB max file size
+const MAX_DOC_CHARS = 8000;
+const MAX_DOC_SIZE  = 10 * 1024 * 1024;
 
-// pdf.js worker setup
+/* ============ MODEL CATALOG ============ */
+const MODELS = [
+  {
+    id: "openai/gpt-oss-120b",
+    name: "Smart",
+    icon: "✨",
+    desc: "Best for reasoning, analysis, general chat"
+  },
+  {
+    id: "llama-3.1-8b-instant",
+    name: "Fast",
+    icon: "⚡",
+    desc: "Instant replies, simple sawaal, quick tasks"
+  },
+  {
+    id: "llama-3.3-70b-versatile",
+    name: "Balanced",
+    icon: "⚖️",
+    desc: "Good balance of speed & quality"
+  },
+  {
+    id: "openai/gpt-oss-20b",
+    name: "Compact",
+    icon: "🌱",
+    desc: "Fast reasoning, chhota model"
+  },
+  {
+    id: "qwen/qwen3-32b",
+    name: "Code",
+    icon: "💻",
+    desc: "Best for coding, debugging, technical tasks"
+  },
+  {
+    id: "moonshotai/kimi-k2-instruct-0905",
+    name: "Long Context",
+    icon: "📚",
+    desc: "Bada documents aur long chats ke liye"
+  }
+];
+
+let currentModelId = MODELS[0].id;
+
 if (window.pdfjsLib) {
   pdfjsLib.GlobalWorkerOptions.workerSrc =
     "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
@@ -447,9 +587,14 @@ const memClearBtn   = document.getElementById('memClearBtn');
 const memToast      = document.getElementById('memToast');
 const memToastText  = document.getElementById('memToastText');
 const searchBtn     = document.getElementById('searchBtn');
+const modelSelector = document.getElementById('modelSelector');
+const modelBtn      = document.getElementById('modelBtn');
+const modelDropdown = document.getElementById('modelDropdown');
+const currentModelIcon = document.getElementById('currentModelIcon');
+const currentModelName = document.getElementById('currentModelName');
 
 let pendingImage = null;
-let pendingFile  = null;      // { name, text, size }
+let pendingFile  = null;
 let isSending    = false;
 let isListening  = false;
 let recognition  = null;
@@ -463,6 +608,68 @@ let searchEnabled = false;
 const baseInstruction = 'Tumhara naam Jarvis hai. Tum ek helpful AI assistant ho. Agar koi tumhara naam pooche, to hamesha "Jarvis" bolna. Tum kisi company ke banaye hue nahi ho — tumhe user ne banaya hai. Hamesha seedha, saaf jawab do — apna internal soch-vichar (thinking/reasoning process) kabhi mat dikhana, sirf final jawab do. Natural tarike se baat karo jaise ek insaan karta hai — normal conversation mein har cheez ko numbered list, bullet points, ya bold text mein mat todo, seedhe paragraph mein baat karo. Sirf tab list use karo jab user steps ya multiple items specifically maange. Hamesha sirf Roman Urdu/Hindi aur English mein jawab do.';
 
 let conversation = [{ role: 'system', content: baseInstruction }];
+
+/* ============ MODEL SELECTOR ============ */
+function loadModelState() {
+  try {
+    const saved = localStorage.getItem(MODEL_KEY);
+    if (saved && MODELS.some(m => m.id === saved)) {
+      currentModelId = saved;
+    }
+  } catch (e) {}
+  updateModelBtnUI();
+  renderModelDropdown();
+}
+
+function saveModelState() {
+  try { localStorage.setItem(MODEL_KEY, currentModelId); } catch (e) {}
+}
+
+function getCurrentModel() {
+  return MODELS.find(m => m.id === currentModelId) || MODELS[0];
+}
+
+function updateModelBtnUI() {
+  const m = getCurrentModel();
+  currentModelIcon.innerText = m.icon;
+  currentModelName.innerText = m.name;
+}
+
+function renderModelDropdown() {
+  modelDropdown.innerHTML = '';
+  for (const m of MODELS) {
+    const div = document.createElement('div');
+    div.className = 'model-option' + (m.id === currentModelId ? ' active' : '');
+    div.innerHTML = `
+      <span class="m-icon">${m.icon}</span>
+      <div class="m-info">
+        <div class="m-name">${m.name}</div>
+        <div class="m-desc">${m.desc}</div>
+      </div>
+      ${m.id === currentModelId ? '<span class="m-check">✓</span>' : ''}
+    `;
+    div.onclick = () => {
+      currentModelId = m.id;
+      saveModelState();
+      updateModelBtnUI();
+      renderModelDropdown();
+      modelSelector.classList.remove('open');
+      showMemToast(`${m.icon} ${m.name} model select ho gaya`);
+    };
+    modelDropdown.appendChild(div);
+  }
+}
+
+modelBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  modelSelector.classList.toggle('open');
+});
+
+document.addEventListener('click', (e) => {
+  if (!modelSelector.contains(e.target)) {
+    modelSelector.classList.remove('open');
+  }
+});
 
 /* ============ IMAGE COMPRESSION ============ */
 function compressImage(file, maxDim = MAX_IMG_DIM, quality = JPEG_QUALITY) {
@@ -512,13 +719,11 @@ async function extractPdfText(file) {
   }
   return fullText.trim();
 }
-
 async function extractDocxText(file) {
   const arrayBuffer = await file.arrayBuffer();
   const result = await mammoth.extractRawText({ arrayBuffer });
   return result.value.trim();
 }
-
 function extractPlainText(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -527,18 +732,12 @@ function extractPlainText(file) {
     reader.readAsText(file);
   });
 }
-
 async function extractFileText(file) {
   const name = file.name.toLowerCase();
   if (name.endsWith('.pdf')) return await extractPdfText(file);
   if (name.endsWith('.docx')) return await extractDocxText(file);
-  if (name.endsWith('.txt') || name.endsWith('.md') || name.endsWith('.csv') || name.endsWith('.json')) {
-    return await extractPlainText(file);
-  }
-  // Fallback: plain text try karo
   return await extractPlainText(file);
 }
-
 function truncateFileText(text, maxChars = MAX_DOC_CHARS) {
   if (text.length <= maxChars) return text;
   return text.slice(0, maxChars) + '\n\n[...file ka baaki hissa truncate kiya gaya...]';
@@ -824,12 +1023,10 @@ fileBtn.addEventListener('click', () => docInput.click());
 docInput.addEventListener('change', async () => {
   const file = docInput.files[0];
   if (!file) return;
-
   if (file.size > MAX_DOC_SIZE) {
     addPlainMessage('⚠️ File 10MB se choti honi chahiye.', false);
     docInput.value = ''; return;
   }
-
   const name = file.name.toLowerCase();
   const isSupported = name.endsWith('.pdf') || name.endsWith('.docx') ||
                       name.endsWith('.txt') || name.endsWith('.md') ||
@@ -838,29 +1035,20 @@ docInput.addEventListener('change', async () => {
     addPlainMessage('⚠️ Sirf PDF, DOCX, TXT, MD, CSV, JSON files supported hain.', false);
     docInput.value = ''; return;
   }
-
   attachName.innerText = file.name + ' — padha ja raha hai...';
-  attachThumb.src = '';  // hide thumb
+  attachThumb.src = '';
   attachPreview.classList.add('show');
-
   try {
     const rawText = await extractFileText(file);
     const text = truncateFileText(rawText, MAX_DOC_CHARS);
-
     if (!text || text.length < 5) {
-      addPlainMessage('⚠️ File se koi text nahi mila. Ho sakta hai ye scanned PDF ho.', false);
+      addPlainMessage('⚠️ File se koi text nahi mila.', false);
       docInput.value = '';
       attachPreview.classList.remove('show');
       return;
     }
-
     const sizeKB = Math.round(file.size / 1024);
-    pendingFile = {
-      name: file.name,
-      text: text,
-      size: sizeKB,
-      chars: text.length
-    };
+    pendingFile = { name: file.name, text: text, size: sizeKB, chars: text.length };
     attachName.innerText = file.name + ' (' + sizeKB + 'KB, ' + text.length.toLocaleString() + ' chars)';
   } catch (err) {
     console.error(err);
@@ -907,14 +1095,12 @@ function addPlainMessage(text, isUser, imageDataUrl, fileInfo) {
     img.src = imageDataUrl;
     bubble.appendChild(img);
   }
-
   if (fileInfo) {
     const fdiv = document.createElement('div');
     fdiv.className = 'attached-file-inline';
     fdiv.innerText = '📄 ' + fileInfo.name + ' (' + fileInfo.size + 'KB)';
     bubble.appendChild(fdiv);
   }
-
   const textNode = document.createElement('div');
   textNode.innerText = text;
   bubble.appendChild(textNode);
@@ -925,7 +1111,7 @@ function addPlainMessage(text, isUser, imageDataUrl, fileInfo) {
 }
 
 function addStreamingMessage(opts = {}) {
-  const { withSearch = false, withFile = false } = opts;
+  const { withSearch = false, withFile = false, modelName = null, modelIcon = null } = opts;
   const row = document.createElement('div');
   row.className = 'row ai';
   const avatar = document.createElement('div');
@@ -934,13 +1120,18 @@ function addStreamingMessage(opts = {}) {
   const bubble = document.createElement('div');
   bubble.className = 'msg streaming';
 
+  if (modelName && modelIcon) {
+    const mbadge = document.createElement('div');
+    mbadge.className = 'model-badge';
+    mbadge.innerText = modelIcon + ' ' + modelName;
+    bubble.appendChild(mbadge);
+  }
   if (withSearch) {
     const badge = document.createElement('div');
     badge.className = 'search-badge';
     badge.innerHTML = '<span class="pulse"></span> Web search...';
     bubble.appendChild(badge);
   }
-
   if (withFile) {
     const badge = document.createElement('div');
     badge.className = 'file-badge';
@@ -1079,7 +1270,7 @@ function loadHistory() {
   } catch (e) {}
 }
 
-/* ============ TAVILY WEB SEARCH ============ */
+/* ============ TAVILY SEARCH ============ */
 async function performTavilySearch(query) {
   const res = await fetch(TAVILY_URL, {
     method: 'POST',
@@ -1109,7 +1300,8 @@ async function streamChatCompletion(apiMessages, model, bubble, textNode) {
     max_completion_tokens: 1024,
     stream: true
   };
-  if (model === TEXT_MODEL) body.reasoning_effort = "low";
+  // reasoning_effort sirf gpt-oss models ke liye
+  if (model.startsWith('openai/gpt-oss')) body.reasoning_effort = "low";
 
   const res = await fetch(API_URL, {
     method: 'POST',
@@ -1167,7 +1359,6 @@ async function sendMessage() {
   const file  = pendingFile;
   if (!text && !image && !file) return;
 
-  /* ----- /image command ----- */
   if (!image && !file && text.toLowerCase().startsWith('/image ')) {
     const prompt = text.slice(7).trim();
     addPlainMessage(text, true);
@@ -1177,7 +1368,6 @@ async function sendMessage() {
     return;
   }
 
-  /* ----- build API content ----- */
   let userContentForApi;
   if (image) {
     userContentForApi = [
@@ -1188,10 +1378,8 @@ async function sendMessage() {
     userContentForApi = text;
   }
 
-  // UI pe user message dikhao (image + file info ke saath)
   addPlainMessage(text || (file ? '(file attach ki)' : '(image bheji)'), true, image ? image.dataUrl : null, file ? { name: file.name, size: file.size } : null);
 
-  // Input clear karo
   userInput.value = '';
   pendingImage = null;
   pendingFile = null;
@@ -1204,7 +1392,14 @@ async function sendMessage() {
 
   const useSearch = !image && !file && searchEnabled;
   const useFile   = !!file;
-  const { bubble, textNode, speakerBtn, badge } = addStreamingMessage({ withSearch: useSearch, withFile: useFile });
+  const curModel  = getCurrentModel();
+
+  const { bubble, textNode, speakerBtn, badge } = addStreamingMessage({
+    withSearch: useSearch,
+    withFile: useFile,
+    modelName: !image ? curModel.name : null,
+    modelIcon: !image ? curModel.icon : null
+  });
 
   refreshSystemPrompt();
   let apiMessages = [...conversation, { role: 'user', content: userContentForApi }];
@@ -1213,7 +1408,6 @@ async function sendMessage() {
 
   try {
     if (useFile) {
-      // ----- RAG: File ke saath jawab do -----
       const filePrompt = `User ne ek file attach ki hai: "${file.name}"
 
 File ka content (truncated):
@@ -1234,14 +1428,13 @@ Instructions:
         { role: 'user', content: filePrompt }
       ];
 
-      clean = await streamChatCompletion(apiMessages, TEXT_MODEL, bubble, textNode);
+      clean = await streamChatCompletion(apiMessages, currentModelId, bubble, textNode);
 
     } else if (useSearch) {
-      // ----- Web Search -----
       const searchResults = await performTavilySearch(text);
 
       if (searchResults.length === 0) {
-        clean = await streamChatCompletion(apiMessages, TEXT_MODEL, bubble, textNode);
+        clean = await streamChatCompletion(apiMessages, currentModelId, bubble, textNode);
       } else {
         const searchContext = searchResults
           .map((r, i) => `[${i+1}] ${r.title}\n${r.snippet}\nURL: ${r.url}`)
@@ -1261,14 +1454,14 @@ Instru: Sources ke URLs ko include mat karo, sirf natural jawab do. Agar search 
           { role: 'user', content: searchPrompt }
         ];
 
-        clean = await streamChatCompletion(apiMessages, TEXT_MODEL, bubble, textNode);
-
+        clean = await streamChatCompletion(apiMessages, currentModelId, bubble, textNode);
         if (clean) addSourcesBlock(bubble, searchResults);
       }
 
     } else {
-      // ----- Normal chat / Vision -----
-      const model = image ? VISION_MODEL : TEXT_MODEL;
+      // Normal chat / Vision
+      // Image ke liye always vision model
+      const model = image ? VISION_MODEL : currentModelId;
       clean = await streamChatCompletion(apiMessages, model, bubble, textNode);
     }
 
@@ -1309,6 +1502,7 @@ Instru: Sources ke URLs ko include mat karo, sirf natural jawab do. Agar search 
 /* ============ INIT ============ */
 loadMemory();
 loadSearchState();
+loadModelState();
 refreshSystemPrompt();
 loadHistory();
 </script>
