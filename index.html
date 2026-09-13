@@ -463,7 +463,8 @@ const FAST_MODEL    = "llama-3.1-8b-instant";
 const VISION_MODEL  = "meta-llama/llama-4-scout-17b-16e-instruct";
 const API_URL       = "https://api.groq.com/openai/v1/chat/completions";
 const TAVILY_URL    = "https://api.tavily.com/search";
-const POLLI_URL     = "https://text.pollinations.ai/openai";
+const OPENCODE_URL  = "https://opencode.ai/zen/v1/chat/completions";
+const OPENCODE_MODEL = "x-preview-f-free";
 const HISTORY_KEY   = "jarvis_history_v1";
 const MEMORY_KEY    = "jarvis_memory_v1";
 const SEARCH_KEY    = "jarvis_search_enabled_v1";
@@ -515,11 +516,11 @@ const MODELS = [
     provider: "groq"
   },
   {
-    id: "openai",
+    id: "x-preview-f-free",
     name: "Coding (Free)",
     icon: "💻",
-    desc: "Pollinations AI se free coding — no signup",
-    provider: "pollinations"
+    desc: "OpenCode Zen se free coding — no signup",
+    provider: "opencode"
   }
 ];
 
@@ -602,7 +603,7 @@ function renderModelDropdown() {
   for (const m of MODELS) {
     const div = document.createElement('div');
     div.className = 'model-option' + (m.id === currentModelId ? ' active' : '');
-    const tag = m.provider === 'pollinations' ? '<span class="m-tag">FREE</span>' : '';
+    const tag = m.provider === 'opencode' ? '<span class="m-tag">FREE</span>' : '';
     div.innerHTML = `
       <span class="m-icon">${m.icon}</span>
       <div class="m-info">
@@ -1308,23 +1309,23 @@ async function streamGroqCompletion(apiMessages, model, bubble, textNode) {
   return clean;
 }
 
-/* ============ STREAMING (Pollinations AI - Coding) ============ */
-async function streamPollinationsCompletion(apiMessages, bubble, textNode) {
-  const res = await fetch(POLLI_URL, {
+/* ============ STREAMING (OpenCode Zen - Coding) ============ */
+async function streamOpenCodeCompletion(apiMessages, bubble, textNode) {
+  const res = await fetch(OPENCODE_URL, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
-      // Koi Authorization header nahi — bilkul keyless
+      'Content-Type': 'application/json',
+      'Authorization': ''
     },
     body: JSON.stringify({
-      model: "openai",
+      model: OPENCODE_MODEL,
       messages: apiMessages,
       stream: true
     })
   });
 
   if (!res.ok) {
-    let errMsg = `Pollinations HTTP ${res.status}`;
+    let errMsg = `OpenCode HTTP ${res.status}`;
     try { const j = await res.json(); errMsg = j?.error?.message || errMsg; } catch (e) {}
     throw new Error(errMsg);
   }
@@ -1405,10 +1406,10 @@ async function sendMessage() {
   sendBtn.disabled = true;
 
   const curModel   = getCurrentModel();
-  const isPolli    = curModel.provider === 'pollinations';
-  const isCode     = isPolli;
+  const isOpenCode = curModel.provider === 'opencode';
+  const isCode     = isOpenCode;
 
-  const useSearch  = !image && !file && !isPolli && searchEnabled;
+  const useSearch  = !image && !file && !isOpenCode && searchEnabled;
   const useFile    = !!file;
 
   const { bubble, textNode, speakerBtn, badge } = addStreamingMessage({
@@ -1446,15 +1447,15 @@ Instructions:
         { role: 'user', content: filePrompt }
       ];
 
-      if (isPolli) {
-        clean = await streamPollinationsCompletion(apiMessages, bubble, textNode);
+      if (isOpenCode) {
+        clean = await streamOpenCodeCompletion(apiMessages, bubble, textNode);
       } else {
         clean = await streamGroqCompletion(apiMessages, currentModelId, bubble, textNode);
       }
 
-    } else if (isPolli) {
-      // === Pollinations coding model ===
-      clean = await streamPollinationsCompletion(apiMessages, bubble, textNode);
+    } else if (isOpenCode) {
+      // === OpenCode Zen coding model ===
+      clean = await streamOpenCodeCompletion(apiMessages, bubble, textNode);
 
     } else if (useSearch) {
       const searchResults = await performTavilySearch(text);
