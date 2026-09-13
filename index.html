@@ -402,18 +402,21 @@ let messagesSinceExtract = 0;
 let memory = [];
 let searchEnabled = false;
 let lightboxCurrentUrl = '';
+let imageContextActive = false;   // Track if user is in image-request flow
+let lastUserImageIntent = false;
 
-const baseInstruction = `Tumhara naam Jarvis hai. Ek helpful AI assistant. Roman Urdu/Hindi/English mein natural baat karo. Bina wajah list aur bold mat use karo.
+const baseInstruction = `Tumhara naam Jarvis hai. Ek helpful AI assistant. Roman Urdu/Hindi/English mein natural baat karo.
 
 IMAGE CAPABILITY:
 - Tum image BANA SAKTE HO. Agar koi pooche "kya tum image bana sakte ho?", to HAAN kaho aur bolo "Batao kaisi image chahiye."
-- Jab user SAFAAT TOR PE image banane ko kahe (jaise "ek sher ki image banao", "mountains ki image banao", "photo generate karo"), to pehle 1-2 line mein natural reply do (jaise "Yeh lo aapki image!") aur uske baad bilkul nayi line pe likho:
-IMAGE_GEN: <detailed English description of the image>
-- Us IMAGE_GEN line ke baad kuch aur mat likho.
+- Jab user koi bhi image ki request kare, to pehle 1 line ka natural reply likho jaise "Yeh lo aapki image!" ya "Ban rahi hai!"
+- IMPORTANT: Uske baad bilkul nayi line pe likho:
+IMAGE_GEN: <detailed English description>
+- IMAGE_GEN line ke baad kuch mat likho.
 
 RULES:
-- Normal baat-cheet, compliment ("achi image banayi"), thanks, ya sawaal pe KABHI IMAGE_GEN mat likho.
-- Agar user mana kare ("nahi banao", "mat banao", "band karo") to IMAGE_GEN BILKUL mat likho.
+- Compliment ("achi image banayi"), thanks, ya normal sawaal pe KABHI IMAGE_GEN mat likho.
+- User mana kare ("nahi banao", "mat banao") to IMAGE_GEN BILKUL mat likho.
 - KABHI fake URLs ya markdown ![alt](url) mat likho.`;
 
 let conversation = [{ role: 'system', content: baseInstruction }];
@@ -775,6 +778,7 @@ clearBtn.addEventListener('click', () => {
   stopSpeaking(); chatBox.innerHTML = '';
   conversation = [{ role: 'system', content: buildSystemPrompt() }];
   messagesSinceExtract = 0;
+  imageContextActive = false;
   try { localStorage.removeItem(HISTORY_KEY); } catch(e) {}
   addPlainMessage('Chat clear ho gayi. Memory save hai.', false);
 });
@@ -920,60 +924,98 @@ async function performTavilySearch(query) {
   return results.map(r => ({ title: r.title, url: r.url, snippet: r.content || r.snippet || '' }));
 }
 
-/* ============ DETECT IMAGE INTENT (STRICT) ============ */
-function userClearlyAskedForImage(text) {
-  const lower = (text || '').toLowerCase().trim();
-  if (!lower) return false;
+/* ============ IMAGE INTENT DETECTION (SMART) ============ */
 
-  // Rejection
-  if (/\b(nahi\s+bana|nhi\s+bana|mat\s+bana|na\s+bana|band\s+karo|stop|rehne\s+do|chhod\s+do)\b/i.test(lower)) return false;
+// Rejection: "nahi banao", "mat banao", "band karo image"
+function userRejectedImage(text) {
+  const lower = text.toLowerCase().trim();
+  const rejWord = /\b(nahi|nhi|mat|na|band|stop|rehne|chhod|don'?t|dont)\b/i.test(lower);
+  const imgWord = /\b(image|pic|photo|tasveer|bana|banao|bnado|bnao|bnay|bna)\b/i.test(lower);
+  return rejWord && imgWord;
+}
 
-  // Compliment/feedback
-  if (/\b(achi|acha|accha|nice|good|great|wow|wah|bura|theek|thik|sahi|behtar|piyara|pyara|mazak|interesting|amazing|beautiful|zabardast|shukriya|thanks|thank\s*you)\b/i.test(lower)) return false;
+// Compliment: "achi image", "nice pic", "wah kya baat"
+function userComplimented(text) {
+  const lower = text.toLowerCase().trim();
+  return /\b(achi|acha|accha|nice|good|great|wow|wah|bura|theek|thik|sahi|behtar|piyara|pyara|amazing|beautiful|zabardast|shukriya|thanks|thank\s*you)\b/i.test(lower);
+}
 
-  // Question
-  if (/\?/.test(lower)) return false;
-  if (/\b(kaise|kese|how|kyun|kyu|why|kahan|where|kab|when|kaun|who)\b/i.test(lower)) return false;
-  if (/\b(kya\s+tum|kya\s+aap|kya\s+main|can\s+you|can\s+u|kar\s+sakte|sakte\s+ho|sakti\s+ho|bana\s+sakte|bana\s+sakti|bana\s+sakta|bna\s+sakte)\b/i.test(lower)) return false;
+// AI ne image ke details maange? (isi base pe context activate karte hain)
+function aiAskedForImageDetails(text) {
+  const lower = (text || '').toLowerCase();
+  const qWord = /\b(kaisi|kaisay|kis\s+type|kis\s+qism|konsi|kaunsi|kya\s+type|what\s+kind|batao|bata\s+dein|detail)\b/i.test(lower);
+  const imgWord = /\b(image|pic|photo|tasveer|scene|picture|art|wallpaper|landscape|abstract)\b/i.test(lower);
+  return qWord && imgWord;
+}
 
+// Direct image request — image word + action word dono
+function userDirectlyAskedImage(text) {
+  const lower = text.toLowerCase().trim();
+  if (userRejectedImage(text)) return false;
+  if (userComplimented(text)) return false;
+  // Pure capability question
+  if (/\b(kya\s+tum|kya\s+aap|kya\s+main|can\s+you|can\s+u|kar\s+sakte|sakte\s+ho|sakti\s+ho|bana\s+sakte|bana\s+sakti|bana\s+sakta|bna\s+sakte|bna\s+sakta)\b/i.test(lower) && /\?/.test(lower)) return false;
   // Code
   if (/\b(code|program|function|script|website|app|calculator|game|programming|snippet)\b/i.test(lower)) return false;
 
-  // Must have BOTH image word AND action word
-  const hasImageWord = /\b(image|photo|picture|tasveer|chitra|pic|drawing|sketch|painting|artwork|wallpaper|poster|scene|scenery|landscape|drishya)\b/i.test(lower);
-  const hasActionWord = /\b(bana|banao|banaao|banai|banade|banado|bana\s*do|banaye|generate|create|make|draw|paint|sketch|render|dikhao|dikha|dikhaao|bna|bnao|bnaao)\b/i.test(lower);
-
-  return hasImageWord && hasActionWord;
+  const hasImg = /\b(image|photo|picture|tasveer|chitra|pic|drawing|sketch|painting|artwork|wallpaper|poster|scene|scenery|landscape|drishya)\b/i.test(lower);
+  const hasAct = /\b(bana|banao|banaao|banai|banade|banado|bana\s*do|banaye|banay|generate|create|make|draw|paint|sketch|render|dikhao|dikha|dikhaao|bna|bnao|bnaao|bnado|bnade|bnay|bnaye|bnakr|bnakar|lagao)\b/i.test(lower);
+  return hasImg && hasAct;
 }
 
-/* ============ GET IMAGE PROMPT FROM AI (SEPARATE FOCUSED CALL) ============ */
+// Short action-only reply (context active hone pe) — "koi si bhi bnado", "hiran ki"
+function userShortImageReply(text) {
+  const lower = text.toLowerCase().trim();
+  if (!lower) return false;
+  if (lower.length > 60) return false;
+  if (userRejectedImage(text)) return false;
+  if (userComplimented(text)) return false;
+  if (/\b(kya\s+tum|can\s+you|kaise|kese|how|kyun|why)\b/i.test(lower)) return false;
+  if (/\b(code|program|function|script)\b/i.test(lower)) return false;
+
+  // Action verb OR subject-only reply
+  const hasAct = /\b(bana|banao|banaao|banai|banade|banado|bana\s*do|banaye|banay|generate|create|draw|bna|bnao|bnaao|bnado|bnade|bnay|bnaye|bnakr|bnakar|kardo|krdo|kar\s*do|de\s*do|dedo)\b/i.test(lower);
+  const hasAnyNoun = lower.split(/\s+/).length >= 1;
+  return hasAct || hasAnyNoun;
+}
+
+// Main entry — kya image generate karni hai?
+function shouldGenerateImage(text) {
+  // 1. Explicit /image command
+  if (/^\/image/i.test(text.trim())) return false; // handled separately
+
+  // 2. Direct request
+  if (userDirectlyAskedImage(text)) return true;
+
+  // 3. Context active + short reply
+  if (imageContextActive && userShortImageReply(text)) return true;
+
+  return false;
+}
+
+/* ============ GET IMAGE PROMPT FROM AI ============ */
 async function getImagePromptFromAI(userRequest, recentContext) {
-  const sysPrompt = 'You convert user requests into a single detailed English image generation prompt. Output ONLY the prompt in English (max 100 words), nothing else. No explanation, no quotes, no prefix.';
-  const userMsg = `User request: ${userRequest}\n\nRecent chat context (for reference):\n${recentContext}\n\nWrite a detailed English image generation prompt that captures what the user wants. Include subject, composition, lighting, mood, style, quality keywords. Output ONLY the prompt.`;
+  const sysPrompt = 'Convert the user request into a single detailed English image generation prompt. Output ONLY the prompt in English (max 100 words), nothing else. No explanation, no quotes, no prefix.';
+  const userMsg = `User request: ${userRequest}\n\nRecent chat context:\n${recentContext}\n\nWrite a detailed English image generation prompt. Include subject, composition, lighting, mood, style, quality keywords. Output ONLY the prompt.`;
   try {
     const res = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` },
       body: JSON.stringify({
         model: FAST_MODEL,
-        messages: [
-          { role: 'system', content: sysPrompt },
-          { role: 'user', content: userMsg }
-        ],
-        max_completion_tokens: 250,
-        temperature: 0.7
+        messages: [{ role: 'system', content: sysPrompt }, { role: 'user', content: userMsg }],
+        max_completion_tokens: 250, temperature: 0.7
       })
     });
     if (!res.ok) return null;
     const data = await res.json();
-    const prompt = (data?.choices?.[0]?.message?.content || '').trim();
+    let prompt = (data?.choices?.[0]?.message?.content || '').trim();
     if (!prompt) return null;
-    // Clean up any quotes/prefixes AI might add
-    return prompt.replace(/^["'`]|["'`]$/g, '').replace(/^(prompt|image\s*prompt)\s*:\s*/i, '').trim();
+    prompt = prompt.replace(/^["'`]+|["'`]+$/g, '').replace(/^(prompt|image\s*prompt)\s*:\s*/i, '').trim();
+    return prompt;
   } catch (e) { return null; }
 }
 
-/* ============ GET RECENT CONTEXT ============ */
 function getRecentContext() {
   const recent = conversation.slice(-4).filter(m => m.role !== 'system');
   return recent.map(m => (m.role === 'user' ? 'User' : 'Jarvis') + ': ' + (typeof m.content === 'string' ? m.content.slice(0, 200) : '(image)')).join('\n');
@@ -1000,8 +1042,7 @@ async function streamGroqCompletion(apiMessages, model, bubble, textNode) {
         const delta = json?.choices?.[0]?.delta?.content;
         if (delta) {
           fullText += delta;
-          const displayText = hideImageGenLine(fullText);
-          textNode.innerText = cleanMarkdown(displayText);
+          textNode.innerText = cleanMarkdown(hideImageGenLine(fullText));
           chatBox.scrollTop = chatBox.scrollHeight;
         }
       } catch (e) {}
@@ -1064,8 +1105,33 @@ async function sendMessage() {
   const file  = pendingFile;
   if (!text && !image && !file) return;
 
-  const userAskedForImage = userClearlyAskedForImage(text);
+  // Reset context on rejection
+  if (userRejectedImage(text)) {
+    imageContextActive = false;
+    addPlainMessage(text, true);
+    userInput.value = '';
+    isSending = true; sendBtn.disabled = true;
+    const { bubble, textNode, speakerBtn } = addStreamingMessage({ modelName: getCurrentModel().name, modelIcon: getCurrentModel().icon });
+    try {
+      refreshSystemPrompt();
+      const apiMessages = [...conversation, { role: 'user', content: text }];
+      const fullRawReply = await streamGroqCompletion(apiMessages, currentModelId, bubble, textNode);
+      const clean = cleanMarkdown(hideImageGenLine(fullRawReply)) || 'Theek hai.';
+      textNode.innerText = clean;
+      speakerBtn.onclick = () => speakText(clean, speakerBtn);
+      conversation.push({ role: 'user', content: text });
+      conversation.push({ role: 'assistant', content: clean.slice(0, MAX_MSG_LEN) });
+      trimHistory(); saveHistory();
+    } catch (err) {
+      bubble.classList.remove('streaming');
+      textNode.innerText = 'Theek hai. Aur kuch poocho?';
+    } finally {
+      isSending = false; sendBtn.disabled = false; userInput.focus();
+    }
+    return;
+  }
 
+  // /image command
   const imgCmd = !image && !file ? parseImageCommand(text) : null;
   if (imgCmd) {
     addPlainMessage(text, true); userInput.value = '';
@@ -1074,22 +1140,26 @@ async function sendMessage() {
     return;
   }
 
-  // === AGAR USER NE SAFAAT IMAGE MAANGI HAI — DIRECT IMAGE BANAO, AI PE BHAROSA MAT KARO ===
-  if (userAskedForImage && !image && !file) {
+  // Direct image intent
+  const wantsImage = shouldGenerateImage(text);
+
+  if (wantsImage && !image && !file) {
     addPlainMessage(text, true);
     userInput.value = '';
     isSending = true; sendBtn.disabled = true;
+    imageContextActive = false; // Reset after generating
 
-    // Direct image generation with fallback
     (async () => {
       try {
-        // Step 1: Get detailed prompt from AI (separate focused call)
         const context = getRecentContext();
         let imgPrompt = await getImagePromptFromAI(text, context);
-        // Step 2: Fallback — agar AI fail ho jaye, user ka message use karo
         if (!imgPrompt) imgPrompt = text;
-        // Step 3: Generate image
+        // Clean up image prompt from Roman Urdu if it looks too short
         addImageGenerationMessage(imgPrompt, 1, null);
+        // History mein daalo
+        conversation.push({ role: 'user', content: text });
+        conversation.push({ role: 'assistant', content: '[image generated]' });
+        trimHistory(); saveHistory();
       } catch (e) {
         console.error(e);
         addImageGenerationMessage(text, 1, null);
@@ -1132,7 +1202,7 @@ async function sendMessage() {
 
   try {
     if (useFile) {
-      const filePrompt = `User ne ek file attach ki hai: "${file.name}"\n\nFile ka content (truncated):\n---\n${file.text}\n---\n\nUser ka sawaal: "${text || 'Is file ke baare mein kuch batao'}"\n\nInstructions:\n- File ke content ke base pe jawab do.\n- Roman Urdu mein jawab do.`;
+      const filePrompt = `User ne ek file attach ki hai: "${file.name}"\n\nFile ka content:\n---\n${file.text}\n---\n\nUser ka sawaal: "${text || 'Is file ke baare mein batao'}"\n\nInstructions:\n- File ke content ke base pe jawab do.\n- Roman Urdu mein.`;
       apiMessages = [{ role: 'system', content: baseInstruction }, { role: 'user', content: filePrompt }];
       if (isDevToolbox) { fullRawReply = await streamDevToolboxCompletion(apiMessages, bubble, textNode); clean = fullRawReply; }
       else { fullRawReply = await streamGroqCompletion(apiMessages, currentModelId, bubble, textNode); clean = cleanMarkdown(hideImageGenLine(fullRawReply)); }
@@ -1143,7 +1213,7 @@ async function sendMessage() {
       if (searchResults.length === 0) { fullRawReply = await streamGroqCompletion(apiMessages, currentModelId, bubble, textNode); clean = cleanMarkdown(hideImageGenLine(fullRawReply)); }
       else {
         const searchContext = searchResults.map((r, i) => `[${i+1}] ${r.title}\n${r.snippet}\nURL: ${r.url}`).join('\n\n');
-        const searchPrompt = `User ne ye sawaal poocha: "${text}"\n\nNeeche web search ke results hain. Inka istemaal karke user ko ek saaf, natural jawab do. Jawab Roman Urdu mein ho.\n\nSearch Results:\n${searchContext}\n\nInstru: Sources ke URLs ko include mat karo, sirf natural jawab do.`;
+        const searchPrompt = `User ne poocha: "${text}"\n\nWeb search results:\n${searchContext}\n\nInka istemaal karke natural Roman Urdu mein jawab do. Sources URLs include mat karo.`;
         apiMessages = [{ role: 'system', content: baseInstruction }, { role: 'user', content: searchPrompt }];
         fullRawReply = await streamGroqCompletion(apiMessages, currentModelId, bubble, textNode);
         clean = cleanMarkdown(hideImageGenLine(fullRawReply));
@@ -1158,6 +1228,19 @@ async function sendMessage() {
     if (!clean || !clean.trim()) {
       clean = 'Samajh gaya. Aur kuch poochna hai?';
       textNode.innerText = clean;
+    } else {
+      textNode.innerText = clean;
+    }
+
+    // Check agar AI ne image details maangi → context activate karo
+    if (aiAskedForImageDetails(clean)) {
+      imageContextActive = true;
+    } else if (userDirectlyAskedImage(text) && !/\bIMAGE_GEN\b/i.test(fullRawReply || '')) {
+      // AI ne image banane se inkar kiya ya bhool gaya → force generate
+      imageContextActive = true;
+    } else {
+      // koi aur response — context reset nahi karte agar direct image intent tha
+      if (!userDirectlyAskedImage(text)) imageContextActive = false;
     }
 
     speakerBtn.onclick = () => speakText(clean, speakerBtn);
