@@ -81,15 +81,23 @@
   }
   button:hover { background: #0ea5e9; }
   button:disabled { background: #475569; cursor: not-allowed; }
+  .generated-img {
+    max-width: 100%;
+    border-radius: 10px;
+    margin-top: 6px;
+    display: block;
+  }
 </style>
 </head>
 <body>
 
   <h1>🤖 Jarvis</h1>
-  <p class="subtitle">Groq AI ke zariye chal raha hai</p>
+  <p class="subtitle">Groq AI ke zariye chal raha hai — image ke liye "/image" likh kar shuru karo</p>
 
   <div class="chat-box" id="chatBox">
-    <div class="msg ai-msg">Assalam-o-Alaikum! Main Jarvis hoon. Kuch bhi pooch sakte hain 👋</div>
+    <div class="msg ai-msg">Assalam-o-Alaikum! Main Jarvis hoon. Kuch bhi pooch sakte hain 👋
+
+Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle mein baitha hai</div>
   </div>
 
   <div class="input-row">
@@ -127,9 +135,38 @@
     return div;
   }
 
+  function addImageMessage(prompt) {
+    const div = document.createElement('div');
+    div.className = 'msg ai-msg';
+    const label = document.createElement('div');
+    label.innerText = '🎨 "' + prompt + '"';
+    const img = document.createElement('img');
+    img.className = 'generated-img';
+    img.src = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?width=512&height=512&nologo=true&seed=' + Math.floor(Math.random() * 100000);
+    img.alt = prompt;
+    div.appendChild(label);
+    div.appendChild(img);
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    return div;
+  }
+
   async function sendMessage() {
     const text = userInput.value.trim();
     if (!text) return;
+
+    // Image generation command: "/image <prompt>"
+    if (text.toLowerCase().startsWith('/image ')) {
+      const prompt = text.slice(7).trim();
+      addMessage(text, true);
+      userInput.value = '';
+      if (!prompt) {
+        addMessage('Image ke liye kuch description bhi likho, jaise: /image ek sher jungle mein', false);
+        return;
+      }
+      addImageMessage(prompt);
+      return;
+    }
 
     addMessage(text, true);
     conversation.push({ role: 'user', content: text });
