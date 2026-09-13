@@ -503,12 +503,12 @@
         <div class="avatar ai">J</div>
         <div class="msg">Assalam-o-Alaikum! Main Jarvis hoon. Kuch bhi pooch sakte hain.
 
-🎨 Image banane ke liye: <b>/image ek sher jungle mein</b>
+🎨 Image banane ke liye SAFAAT bolo: <b>"ek sher ki image banao"</b>
 🖼️ Zyada: <b>/image2</b> ya <b>/image4</b>
 🎭 Style: <b>/image anime: sher jungle mein</b>
 📎 Image | 📄 File | 🎙️ Voice | 🌐 Search | 📤 Share
 
-Note: Aap naturally bhi likh sakte ho jaise "ek sher ki tasveer banao" — Jarvis khud samajh jayega.</div>
+Note: Sirf tab image banegi jab aap image banane ko kaho ge — baat-cheet, compliment, ya normal sawaal pe nahi.</div>
       </div>
     </div>
   </div>
@@ -580,7 +580,7 @@ Note: Aap naturally bhi likh sakte ho jaise "ek sher ki tasveer banao" — Jarvi
         <button class="mem-modal-close" id="shareModalClose">×</button>
       </div>
       <div class="mem-modal-body">
-        <div style="font-size:13px;color:var(--text-dim);margin-bottom:8px;">Ye link copy karke kisi ko bhejein. Wo link kholenge to poori chat khud load ho jayegi.</div>
+        <div style="font-size:13px;color:var(--text-dim);margin-bottom:8px;">Ye link copy karke kisi ko bhejein.</div>
         <div class="share-url-box">
           <input type="text" class="share-url-input" id="shareUrlInput" readonly>
         </div>
@@ -706,7 +706,18 @@ let memory = [];
 let searchEnabled = false;
 let lightboxCurrentUrl = '';
 
-const baseInstruction = 'Tumhara naam Jarvis hai. Tum ek helpful AI assistant ho. Agar koi tumhara naam pooche, to hamesha "Jarvis" bolna. Tum kisi company ke banaye hue nahi ho — tumhe user ne banaya hai. Hamesha seedha, saaf jawab do — apna internal soch-vichar (thinking/reasoning process) kabhi mat dikhana, sirf final jawab do. Natural tarike se baat karo jaise ek insaan karta hai — normal conversation mein har cheez ko numbered list, bullet points, ya bold text mein mat todo, seedhe paragraph mein baat karo. Sirf tab list use karo jab user steps ya multiple items specifically maange. Hamesha sirf Roman Urdu/Hindi aur English mein jawab do. \n\nIMPORTANT IMAGE RULES:\n1. Tum ek text-based AI ho — tum KABHI apne aap image nahi bana sakte directly.\n2. KABHI fake image URLs mat banao (jaise blob.core.windows.net, oaidalleapiprodscus, dall-e, openai.com, image URLs waghera).\n3. KABHI markdown image format ![alt text](url) mat likho apne replies mein.\n4. Kabhi "Here is the image" ke saath fake URL mat do.\n\nJab user image banane ko kahe (chahay seedha "ek sher ki image banao" ya confirmation ke taur pe "ha banao" / "tumhari marzi" / "bana do"), to apne reply mein EK LINE zaroor likho is exact format mein:\nIMAGE_GEN: <detailed english prompt describing the image>\n\nBaqi text normal ho sakta hai, lekin IMAGE_GEN: wali line zaroor honi chahiye. Us line ke baad kuch aur na likho.';
+const baseInstruction = `Tumhara naam Jarvis hai. Tum ek helpful AI assistant ho. Agar koi tumhara naam pooche, to hamesha "Jarvis" bolna. Tum kisi company ke banaye hue nahi ho. Hamesha seedha, saaf jawab do — apna internal soch-vichar (thinking/reasoning) kabhi mat dikhana, sirf final jawab do. Natural tarike se baat karo jaise ek insaan karta hai. Sirf Roman Urdu/Hindi aur English mein jawab do.
+
+IMAGE RULES (BOHOT ZAROORI — INHE SAKHTI SE FOLLOW KARO):
+1. IMAGE_GEN line SIRF tab likho jab user SAFAAT TOR PE image banane ko kahe — jaise "ek sher ki image banao", "photo banao", "image generate karo", "ek billi ki tasveer dikhao", "draw a cat", "ek insaan ki image generate karo".
+2. Compliments ("achi image bnayi", "wah kya baat", "nice pic"), feedback, thanks, normal baat-cheet, mazak, ya koi bhi non-image sawaal — in sab pe KABHI IMAGE_GEN line MAT likho. Sirf normal text jawab do.
+3. Agar user image banane se MANA kare ("nahi banao", "mat banao", "band karo", "rehne do") — to IMAGE_GEN BILKUL MAT likho. Bas normal confirm karo jaise "Theek hai, aur kuch?"
+4. Agar user ka message image ke BAARE mein hai lekin banane ko nahi keh raha (jaise "ye image kya hai", "achi hai", "kaisi hai") — to normally jawab do, IMAGE_GEN MAT likho.
+5. KABHI fake image URLs MAT banao (blob.core.windows.net, oaidalleapiprodscus, dall-e, openai.com, koi bhi URL). Tum khud direct image nahi bana sakte.
+6. KABHI markdown image format ![alt](url) mat likho.
+7. Jab (aur sirf jab) actual image banani ho — apne jawab mein EK LINE likho exactly is format mein:
+IMAGE_GEN: <detailed english prompt describing the image>
+Us line ke ilawa kuch aur mat likho.`;
 
 let conversation = [{ role: 'system', content: baseInstruction }];
 
@@ -1360,7 +1371,7 @@ function createImageCell(url, altText, onDone) {
   img.loading = 'lazy';
   img.style.opacity = '0';
   img.onload = () => { loading.remove(); img.style.opacity = '1'; if (onDone) onDone(); };
-  img.onerror = () => { loading.innerHTML = '<div style="color:#e07a7a;font-size:12px;text-align:center;padding:10px;">⚠️ Load nahi hui</div>'; };
+  img.onerror = () => { loading.innerHTML = '<div style="color:#e07a7a;font-size:12px;text-align:center;padding:10px;">⚠️ Load nahi hui<br><small style="opacity:0.7">Dobara try karo</small></div>'; };
   img.addEventListener('click', () => { if (img.src) openLightbox(img.src); });
   cell.appendChild(img);
   const dl = document.createElement('button');
@@ -1504,7 +1515,6 @@ async function streamGroqCompletion(apiMessages, model, bubble, textNode) {
         const delta = json?.choices?.[0]?.delta?.content;
         if (delta) {
           fullText += delta;
-          // Stream karne ke doran IMAGE_GEN: line ko hide karo
           const displayText = hideImageGenLine(fullText);
           textNode.innerText = cleanMarkdown(displayText);
           chatBox.scrollTop = chatBox.scrollHeight;
@@ -1517,12 +1527,11 @@ async function streamGroqCompletion(apiMessages, model, bubble, textNode) {
   const clean = cleanMarkdown(displayText);
   textNode.innerText = clean;
   bubble.classList.remove('streaming');
-  return fullText; // full text return karo (IMAGE_GEN line ke saath)
+  return fullText;
 }
 
-/* ============ IMAGE_GEN LINE DETECTOR ============ */
+/* ============ IMAGE_GEN LINE HELPERS ============ */
 function hideImageGenLine(text) {
-  // IMAGE_GEN: wali line ko display se hatao
   return text.replace(/^\s*IMAGE_GEN\s*:.*$/gim, '').replace(/\n{3,}/g, '\n\n').trim();
 }
 
@@ -1530,6 +1539,36 @@ function extractImageGenPrompt(text) {
   const m = text.match(/^\s*IMAGE_GEN\s*:\s*(.+)$/im);
   if (!m) return null;
   return m[1].trim();
+}
+
+/* ============ USER INTENT CHECK (STRICT) ============ */
+function userExplicitlyAskedForImage(text) {
+  const lower = (text || '').toLowerCase().trim();
+  if (!lower) return false;
+  
+  // 1. Rejection words — "nahi banao", "mat banao", "band karo"
+  if (/\b(nahi|nhi|mat|na|band|stop|no|don'?t|dont|rehne|chhod|chhodo|chhod\s*do)\b/i.test(lower)) return false;
+  
+  // 2. Compliment/feedback words — "achi image", "nice pic", "wah kya baat"
+  if (/\b(achi|acha|accha|nice|good|great|wow|wah|bura|buraa|theek|thik|sahi|behtar|piyara|pyara|mazak|mazaa|interesting|amazing|beautiful|zabardast)\b/i.test(lower)) return false;
+  
+  // 3. Question mark → sawaal hai
+  if (/\?/.test(lower)) return false;
+  
+  // 4. Question words
+  if (/\b(kya|kaise|kese|kyun|kyu|kahan|kab|kaun|kitna|kitne|how|what|why|where|when|who)\b/i.test(lower)) return false;
+  
+  // 5. Code-related
+  if (/\b(code|program|function|script|website|app|calculator|game|programming)\b/i.test(lower)) return false;
+  
+  // 6. Meta/discussion words
+  if (/\b(batao|bata|bataiye|samjhao|samjha|explain|describe|baare|bare|baat|liye|waste)\b/i.test(lower)) return false;
+  
+  // 7. Must have image word AND action word
+  const hasImageWord = /\b(image|photo|picture|tasveer|chitra|pic|drawing|sketch|painting|artwork|wallpaper|poster)\b/i.test(lower);
+  const hasActionWord = /\b(bana|banao|banaao|banai|banade|banado|bana\s*do|generate|create|make|draw|paint|sketch|render|dikhao|dikha|dikhaao)\b/i.test(lower);
+  
+  return hasImageWord && hasActionWord;
 }
 
 /* ============ STREAMING DEVTOOLBOX ============ */
@@ -1583,36 +1622,6 @@ function parseImageCommand(text) {
   return { count, style, prompt: rest };
 }
 
-/* ============ NATURAL IMAGE INTENT (STRICT) ============ */
-function detectImageIntent(text) {
-  const lower = text.toLowerCase().trim();
-  if (!lower) return null;
-  if (lower.startsWith('/image')) return null;
-  if (/\?/.test(lower)) return null;
-  const wordCount = lower.split(/\s+/).length;
-  if (wordCount > 10) return null;
-  const metaWords = /\b(kya|kaise|kese|kyun|kyu|kahan|kab|kaun|kitna|kitne|how|what|why|where|when|who|batao|bata|bataiye|samjhao|samjha|samjhaiye|dekho|dekha|dekh|explain|describe|btao|bta|baare|bare|baat|liye|chahiye|chahta|chahti)\b/i;
-  if (metaWords.test(lower)) return null;
-  if (/\b(can\s+you|can\s+u|kya\s+tum|kya\s+aap|kya\s+main|kar\s+sakte|sakte\s+ho|sakti\s+ho|kar\s+sakta)\b/i.test(lower)) return null;
-  const codeWords = /\b(code|program|function|script|website|app|calculator|game|programming|snippet|algorithm|class|variable|loop|array|json|api|html|css|python|javascript|java|cpp)\b/i;
-  if (codeWords.test(lower)) return null;
-  const imgWords = /\b(image|photo|picture|tasveer|chitra|pic|drawing|sketch|painting|artwork|wallpaper|poster)\b/i;
-  const actionWords = /\b(bana|banao|banaao|banai|banade|banado|bana\s*do|generate|create|make|draw|paint|sketch|render)\b/i;
-  const hasImg = imgWords.test(lower);
-  const hasAction = actionWords.test(lower);
-  if (!hasImg || !hasAction) return null;
-  let prompt = text.replace(/^\/image\d*\s*:?\s*/i, '')
-    .replace(/\b(mujhe|mujhay|mery|meri|mera|mere|please|plz|pls|zara|ek|si|of|an|a|the|me|for|ka|ki|ke|kar|karo|kardo|de|do|dein|dena|dijiye)\b/gi, ' ')
-    .replace(/\b(image|photo|picture|tasveer|chitra|pic|drawing|sketch|painting|artwork|wallpaper|poster)\b/gi, ' ')
-    .replace(/\b(bana|banao|banaao|banai|banade|banado|generate|create|make|draw|paint|sketch|render)\b/gi, ' ')
-    .replace(/\b(mein|me|par|pe|se|ko|ne|ye|wo|yeh|woh|is|us)\b/gi, ' ')
-    .replace(/\s+/g, ' ').trim();
-  if (prompt.length < 3) return null;
-  if (prompt.length > 150) prompt = prompt.slice(0, 150);
-  if (metaWords.test(prompt)) return null;
-  return { prompt };
-}
-
 /* ============ MAIN SEND ============ */
 async function sendMessage() {
   if (isSending) return;
@@ -1621,16 +1630,10 @@ async function sendMessage() {
   const file  = pendingFile;
   if (!text && !image && !file) return;
 
-  if (!image && !file && text && !text.startsWith('/')) {
-    const naturalImg = detectImageIntent(text);
-    if (naturalImg) {
-      addPlainMessage(text, true);
-      userInput.value = '';
-      addImageGenerationMessage(naturalImg.prompt, 1, null);
-      return;
-    }
-  }
+  // User ne SAFAAT TOR PE image banane ko kaha hai?
+  const userWantsImage = userExplicitlyAskedForImage(text);
 
+  // /image command
   const imgCmd = !image && !file ? parseImageCommand(text) : null;
   if (imgCmd) {
     addPlainMessage(text, true);
@@ -1684,7 +1687,7 @@ async function sendMessage() {
 
   try {
     if (useFile) {
-      const filePrompt = `User ne ek file attach ki hai: "${file.name}"\n\nFile ka content (truncated):\n---\n${file.text}\n---\n\nUser ka sawaal: "${text || 'Is file ke baare mein buch batao'}"\n\nInstructions:\n- File ke content ke base pe jawab do.\n- Roman Urdu mein jawab do.`;
+      const filePrompt = `User ne ek file attach ki hai: "${file.name}"\n\nFile ka content (truncated):\n---\n${file.text}\n---\n\nUser ka sawaal: "${text || 'Is file ke baare mein kuch batao'}"\n\nInstructions:\n- File ke content ke base pe jawab do.\n- Roman Urdu mein jawab do.`;
       apiMessages = [{ role: 'system', content: baseInstruction }, { role: 'user', content: filePrompt }];
       if (isDevToolbox) { fullRawReply = await streamDevToolboxCompletion(apiMessages, bubble, textNode); clean = fullRawReply; }
       else { fullRawReply = await streamGroqCompletion(apiMessages, currentModelId, bubble, textNode); clean = cleanMarkdown(hideImageGenLine(fullRawReply)); }
@@ -1715,25 +1718,23 @@ async function sendMessage() {
 
     if (!clean && !fullRawReply) return;
 
-    // ==== IMAGE_GEN line detect karo aur image generate karo ====
-    if (fullRawReply) {
+    // ==== IMAGE_GEN DETECT — SIRF tab generate karo jab USER ne SAFAAT kaha ho ====
+    if (fullRawReply && userWantsImage) {
       const imgPrompt = extractImageGenPrompt(fullRawReply);
       if (imgPrompt) {
-        // Text bubble ke neeche ek naya bubble banao image ke liye
         addImageGenerationMessage(imgPrompt, 1, null);
-        // IMAGE_GEN line ko display se hata do
-        textNode.innerText = cleanMarkdown(hideImageGenLine(fullRawReply));
       }
     }
+    // Agar userWantsImage false hai lekin AI ne IMAGE_GEN line likhi — 
+    // to bas display se hata do, image generate NA karo.
 
-    if (!clean) clean = '';
+    if (!clean) clean = 'Theek hai!';
     speakerBtn.onclick = () => speakText(clean, speakerBtn);
 
     const historyUserContent = image
       ? (text ? `${text} [image attach ki thi]` : '[image attach ki thi]')
       : (file ? (text ? `${text} [file: ${file.name}]` : `[file: ${file.name}]`) : text);
     conversation.push({ role: 'user', content: historyUserContent });
-    // History mein bhi IMAGE_GEN line hata do
     conversation.push({ role: 'assistant', content: clean.slice(0, MAX_MSG_LEN) });
 
     trimHistory();
