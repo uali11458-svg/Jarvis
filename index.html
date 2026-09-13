@@ -266,7 +266,6 @@ const VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
 const API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const TAVILY_URL = "https://api.tavily.com/search";
 const DEVTOOLBOX_URL = "https://devtoolbox-api.devtoolbox-api.workers.dev/ai/generate";
-const CATBOX_URL = "https://catbox.moe/user/api.php";
 const HISTORY_KEY = "jarvis_history_v1";
 const MEMORY_KEY = "jarvis_memory_v1";
 const SEARCH_KEY = "jarvis_search_v1";
@@ -282,7 +281,6 @@ const SHARE_PREFIX = '#share=';
 
 const MODEL_MAX = { "openai/gpt-oss-120b": 900, "openai/gpt-oss-20b": 900, "qwen/qwen3.6-27b": 800, "devtoolbox-coding": 2048 };
 
-/* ============ IMAGE STYLES ============ */
 const IMAGE_STYLES = {
   realistic: "ultra realistic photograph, cinematic lighting, 8k, highly detailed, photorealistic",
   anime: "anime style, studio ghibli, vibrant colors, beautiful detailed anime art",
@@ -296,72 +294,34 @@ const IMAGE_STYLES = {
   minimal: "minimalist, clean, simple, flat design, soft colors, modern"
 };
 
-/* ============ EDIT STYLES (for kontext transform) ============ */
 const EDIT_STYLES = {
-  anime: "transform this image into anime style, studio ghibli aesthetic, vibrant anime colors, beautiful anime art, detailed anime character, japanese animation style",
-  cartoon: "transform this image into cartoon style, pixar 3d animation, smooth shading, colorful cartoon look",
-  sketch: "transform this image into pencil sketch style, black and white hand drawn line art, detailed sketch",
-  oil: "transform this image into oil painting, classical art style, textured brushstrokes, masterpiece",
-  watercolor: "transform this image into watercolor painting, soft artistic colors, gentle brush strokes",
-  realistic: "transform this image into ultra realistic photo, 8k photorealistic, cinematic lighting",
-  "3d": "transform this image into 3D render, octane render, cinematic lighting, ultra detailed 3d model",
-  cyberpunk: "transform this image into cyberpunk style, neon lights, futuristic aesthetic, dark atmosphere",
-  pixel: "transform this image into pixel art, 8-bit retro game style, pixelated",
-  comic: "transform this image into comic book style, bold lines, halftone dots, comic art",
-  painting: "transform this image into a beautiful painting, artistic masterpiece, brushstrokes",
-  minimal: "transform this image into minimalist flat design, clean simple style, geometric"
+  anime: "transform this image into anime style, studio ghibli aesthetic, vibrant anime colors, beautiful anime art, detailed anime character, japanese animation style, high quality anime illustration",
+  cartoon: "transform this image into cartoon style, pixar 3d animation, smooth shading, colorful cartoon look, cute cartoon character",
+  sketch: "transform this image into pencil sketch style, black and white hand drawn line art, detailed sketch, artistic sketch",
+  oil: "transform this image into oil painting, classical art style, textured brushstrokes, masterpiece, museum quality",
+  watercolor: "transform this image into watercolor painting, soft artistic colors, gentle brush strokes, dreamy watercolor",
+  realistic: "transform this image into ultra realistic photo, 8k photorealistic, cinematic lighting, sharp details",
+  "3d": "transform this image into 3D render, octane render, cinematic lighting, ultra detailed 3d model, blender style",
+  cyberpunk: "transform this image into cyberpunk style, neon lights, futuristic aesthetic, dark atmosphere, blade runner style",
+  pixel: "transform this image into pixel art, 8-bit retro game style, pixelated, nostalgic game art",
+  comic: "transform this image into comic book style, bold lines, halftone dots, comic art, graphic novel style",
+  painting: "transform this image into a beautiful painting, artistic masterpiece, brushstrokes, artistic interpretation",
+  minimal: "transform this image into minimalist flat design, clean simple style, geometric shapes, vector art"
 };
 
-/* ============ TYPO FUZZY MATCHING ============ */
 const STYLE_ALIASES = {
   aime: 'anime', anima: 'anime', anmie: 'anime', animi: 'anime', aneem: 'anime',
-  crtoon: 'cartoon', carton: 'cartoon', cartton: 'cartoon',
+  crtoon: 'cartoon', carton: 'cartoon', cartton: 'cartoon', curtun: 'cartoon',
   skech: 'sketch', scetch: 'sketch', sekch: 'sketch',
   realstic: 'realistic', realistik: 'realistic', relistic: 'realistic',
-  watecolor: 'watercolor', watercolour: 'watercolor',
+  watecolor: 'watercolor', watercolour: 'watercolor', watercolr: 'watercolor',
   oill: 'oil', oi: 'oil',
-  pixal: 'pixel', pixle: 'pixel',
-  comik: 'comic',
-  cyberpank: 'cyberpunk', cyberpunj: 'cyberpunk',
+  pixal: 'pixel', pixle: 'pixel', pixe: 'pixel',
+  comik: 'comic', comick: 'comic',
+  cyberpank: 'cyberpunk', cyberpunj: 'cyberpunk', cyber: 'cyberpunk',
   paintng: 'painting', paintin: 'painting',
-  minimil: 'minimal', miniml: 'minimal'
+  minimil: 'minimal', miniml: 'minimal', minimul: 'minimal'
 };
-
-function normalizeStyle(str) {
-  const s = (str || '').toLowerCase().trim();
-  if (EDIT_STYLES[s]) return s;
-  if (STYLE_ALIASES[s]) return STYLE_ALIASES[s];
-  return null;
-}
-
-function detectStyleFromText(text) {
-  const lower = (text || '').toLowerCase();
-  // Direct match
-  for (const key of Object.keys(EDIT_STYLES)) {
-    if (new RegExp('\\b' + key + '\\b', 'i').test(lower)) return key;
-  }
-  // Alias match
-  for (const [alias, real] of Object.entries(STYLE_ALIASES)) {
-    if (new RegExp('\\b' + alias + '\\b', 'i').test(lower)) return real;
-  }
-  // Partial/typo match (levenshtein-lite: check if any style starts with or contains)
-  const words = lower.split(/\s+/);
-  for (const w of words) {
-    const wClean = w.replace(/[^a-z]/g, '');
-    if (wClean.length < 3) continue;
-    for (const key of Object.keys(EDIT_STYLES)) {
-      // Check if starts same as key or key starts same
-      if (wClean === key) return key;
-      if (wClean.length >= 4 && key.length >= 4) {
-        // Common prefix of 4+ chars
-        if (wClean.substring(0, 4) === key.substring(0, 4)) return key;
-        // Or edit distance 1-2
-        if (levenshtein(wClean, key) <= 2) return key;
-      }
-    }
-  }
-  return null;
-}
 
 function levenshtein(a, b) {
   const m = a.length, n = b.length;
@@ -375,6 +335,29 @@ function levenshtein(a, b) {
     }
   }
   return dp[m][n];
+}
+
+function detectStyleFromText(text) {
+  const lower = (text || '').toLowerCase();
+  for (const key of Object.keys(EDIT_STYLES)) {
+    if (new RegExp('\\b' + key + '\\b', 'i').test(lower)) return key;
+  }
+  for (const [alias, real] of Object.entries(STYLE_ALIASES)) {
+    if (new RegExp('\\b' + alias + '\\b', 'i').test(lower)) return real;
+  }
+  const words = lower.split(/\s+/);
+  for (const w of words) {
+    const wc = w.replace(/[^a-z]/g, '');
+    if (wc.length < 3) continue;
+    for (const key of Object.keys(EDIT_STYLES)) {
+      if (wc === key) return key;
+      if (wc.length >= 4 && key.length >= 4) {
+        if (wc.substring(0, 4) === key.substring(0, 4)) return key;
+        if (levenshtein(wc, key) <= 2) return key;
+      }
+    }
+  }
+  return null;
 }
 
 const MODELS = [
@@ -626,18 +609,79 @@ function compressImg(file, md = MAX_IMG_DIM, q = JPEG_Q) {
   });
 }
 
-/* ============ IMAGE UPLOAD (catbox.moe — reliable, anonymous) ============ */
+/* ============ MULTI-HOST IMAGE UPLOAD ============ */
 async function uploadImageToHost(dataUrl) {
   const resp = await fetch(dataUrl);
   const blob = await resp.blob();
-  const fd = new FormData();
-  fd.append('reqtype', 'fileupload');
-  fd.append('fileToUpload', blob, 'jarvis-upload.jpg');
-  const res = await fetch(CATBOX_URL, { method: 'POST', body: fd });
-  if (!res.ok) throw new Error('Upload HTTP ' + res.status);
-  const url = (await res.text()).trim();
-  if (!url || !url.startsWith('http')) throw new Error('Upload URL invalid: ' + url.slice(0, 100));
-  return url;
+  const file = new File([blob], 'jarvis.jpg', { type: 'image/jpeg' });
+
+  const attempts = [
+    {
+      name: '0x0.st',
+      fn: async () => {
+        const fd = new FormData();
+        fd.append('file', file);
+        const r = await fetch('https://0x0.st', { method: 'POST', body: fd });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const url = (await r.text()).trim();
+        if (!url.startsWith('http')) throw new Error('Bad response: ' + url.slice(0, 50));
+        return url;
+      }
+    },
+    {
+      name: 'litterbox',
+      fn: async () => {
+        const fd = new FormData();
+        fd.append('reqtype', 'fileupload');
+        fd.append('time', '1h');
+        fd.append('fileToUpload', file);
+        const r = await fetch('https://litterbox.catbox.moe/resources/internals/api.php', { method: 'POST', body: fd });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const url = (await r.text()).trim();
+        if (!url.startsWith('http')) throw new Error('Bad response');
+        return url;
+      }
+    },
+    {
+      name: 'file.io',
+      fn: async () => {
+        const fd = new FormData();
+        fd.append('file', file);
+        const r = await fetch('https://file.io', { method: 'POST', body: fd });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const d = await r.json();
+        if (!d.link) throw new Error('No link');
+        return d.link;
+      }
+    },
+    {
+      name: 'tmpfiles',
+      fn: async () => {
+        const fd = new FormData();
+        fd.append('file', file);
+        const r = await fetch('https://tmpfiles.org/api/v1/upload', { method: 'POST', body: fd });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const d = await r.json();
+        let u = d?.data?.url;
+        if (!u) throw new Error('No URL');
+        return u.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
+      }
+    }
+  ];
+
+  const errors = [];
+  for (const a of attempts) {
+    try {
+      console.log('Trying upload host:', a.name);
+      const url = await a.fn();
+      console.log('Upload success via', a.name, ':', url);
+      return url;
+    } catch (e) {
+      console.warn(a.name + ' failed:', e.message);
+      errors.push(a.name + ': ' + e.message);
+    }
+  }
+  throw new Error('All upload hosts failed. ' + errors.join(' | '));
 }
 
 async function pdfText(file) {
@@ -885,7 +929,6 @@ function addSrcs(bubble, sources) {
   if (c > 0) bubble.appendChild(bl);
 }
 
-/* ============ IMAGE GEN ============ */
 function buildPollURL(p, seed) { return 'https://image.pollinations.ai/prompt/' + encodeURIComponent(p) + `?width=768&height=768&nologo=true&enhance=true&seed=${seed}`; }
 
 function createCell(url, alt, onDone) {
@@ -937,7 +980,7 @@ function addImgGen(prompt, count = 1, styleKey = null) {
   }
 }
 
-/* ============ IMAGE TRANSFORM (kontext via Pollinations) ============ */
+/* ============ IMAGE TRANSFORM ============ */
 async function transformImage(dataUrl, stylePrompt, styleLabel) {
   const r = document.createElement('div'); r.className = 'row ai';
   const a = document.createElement('div'); a.className = 'avatar ai'; a.innerText = 'J';
@@ -955,12 +998,11 @@ async function transformImage(dataUrl, stylePrompt, styleLabel) {
     st.innerText = '✨ Style apply ho rahi hai...';
   } catch (e) {
     console.error('Upload failed:', e);
-    st.innerText = '⚠️ Image upload fail hui — ' + (e.message || 'network issue');
+    st.innerHTML = '⚠️ Image upload nahi ho saki.<br><small>Dobara try karo ya internet check karein.</small>';
     st.style.color = '#e07a7a';
     return;
   }
 
-  // Build kontext URL with the uploaded image
   const seed = Math.floor(Math.random() * 1000000);
   const url = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(stylePrompt)
     + `?model=kontext&image=${encodeURIComponent(hostedUrl)}&width=768&height=768&nologo=true&seed=${seed}`;
@@ -972,7 +1014,6 @@ async function transformImage(dataUrl, stylePrompt, styleLabel) {
   g.appendChild(cell);
 }
 
-/* ============ HISTORY ============ */
 function trimHist() {
   const s = conversation[0]; const rest = conversation.slice(1);
   if (rest.length > MAX_HISTORY) conversation = [s, ...rest.slice(-MAX_HISTORY)];
@@ -1113,7 +1154,6 @@ async function handleImageEdit(userMsg, imgDataUrl) {
   isSending = true; sendBtn.disabled = true;
 
   try {
-    // Detect style from text (with typo tolerance)
     let styleKey = detectStyleFromText(userMsg);
     let stylePrompt, styleLabel;
 
@@ -1121,7 +1161,6 @@ async function handleImageEdit(userMsg, imgDataUrl) {
       stylePrompt = EDIT_STYLES[styleKey];
       styleLabel = styleKey + ' style';
     } else {
-      // Ask AI for a custom transformation prompt
       try {
         const p = `Write a detailed English image-to-image transformation prompt for: "${userMsg}". Include the artistic style, visual details, quality keywords. Output ONLY the prompt, max 80 words.`;
         const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` }, body: JSON.stringify({ model: FAST_MODEL, messages: [{ role: 'user', content: p }], max_completion_tokens: 200, temperature: 0.6 }) });
@@ -1188,21 +1227,17 @@ async function sendMessage() {
   }
 
   // IMAGE ATTACHED + edit intent → transform
-  if (image) {
+  if (image && text) {
     const lower = text.toLowerCase();
-    const editKeywords = /\b(edit|change|transform|convert|badal|badlo|banao|bana\s*do|bna|kardo|krdo|style|anime|cartoon|sketch|oil|watercolor|realistic|3d|cyberpunk|pixel|comic|painting|minimal|aime|anima|crtoon|skech)\b/i;
-    // Also check if a known style word exists
+    const editKeywords = /\b(edit|change|transform|convert|badal|badlo|banao|bana\s*do|bna|kardo|krdo|style|mein\s+badal|bana\s+do|ka\s+krdo|ka\s+kardo)\b/i;
     const hasStyle = detectStyleFromText(text) !== null;
-    if (hasStyle || editKeywords.test(lower) || !text) {
-      // If no text at all with image attached → just describe (vision)
-      if (!text) {
-        // fall through to vision
-      } else {
-        const dataUrl = image.dataUrl;
-        pendingImage = null; fileInput.value = ''; attachPreview.classList.remove('show');
-        await handleImageEdit(text, dataUrl);
-        return;
-      }
+    // Edit intent if: has style word OR explicit edit keyword OR mentions "is image"
+    const isImageRef = /\b(is\s+image|is\s+pic|is\s+photo|isko|ise|isko|iss\s+ko|is\s+ko)\b/i.test(lower);
+    if (hasStyle || (editKeywords.test(lower) && isImageRef) || (hasStyle && isImageRef)) {
+      const dataUrl = image.dataUrl;
+      pendingImage = null; fileInput.value = ''; attachPreview.classList.remove('show');
+      await handleImageEdit(text, dataUrl);
+      return;
     }
   }
 
