@@ -153,6 +153,13 @@
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .source-item:hover { text-decoration: underline; }
+  .file-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; color: var(--online);
+    background: rgba(63, 191, 160, 0.12);
+    border: 1px solid rgba(63, 191, 160, 0.3);
+    padding: 2px 8px; border-radius: 6px; margin-bottom: 6px;
+  }
   .input-bar { width: 100%; max-width: 720px; padding: 14px 20px 22px; }
   .input-shell {
     display: flex; align-items: center; gap: 8px;
@@ -178,14 +185,14 @@
   button.send-btn:hover:not(:disabled) { background: #6bb0e8; }
   button.send-btn:disabled { background: #33394a; cursor: not-allowed; }
   button.send-btn svg { width: 17px; height: 17px; }
-  button.attach-btn, button.mic-btn {
+  button.attach-btn, button.mic-btn, button.file-btn {
     width: 36px; height: 36px; border-radius: 10px;
     border: none; background: transparent; color: var(--text-dim);
     cursor: pointer; display: flex; align-items: center; justify-content: center;
     flex-shrink: 0; transition: background 0.15s ease, color 0.15s ease;
   }
-  button.attach-btn:hover, button.mic-btn:hover { background: var(--panel-2); color: var(--text); }
-  button.attach-btn svg, button.mic-btn svg { width: 18px; height: 18px; }
+  button.attach-btn:hover, button.mic-btn:hover, button.file-btn:hover { background: var(--panel-2); color: var(--text); }
+  button.attach-btn svg, button.mic-btn svg, button.file-btn svg { width: 18px; height: 18px; }
   button.mic-btn.listening {
     background: var(--danger); color: #fff;
     animation: pulse 1.2s infinite;
@@ -216,6 +223,12 @@
   .attached-img-inline {
     max-width: 220px; border-radius: 10px;
     margin-bottom: 6px; display: block; border: 1px solid var(--border);
+  }
+  .attached-file-inline {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px; margin-bottom: 6px;
+    font-size: 13px; color: var(--text-dim);
   }
   .hint {
     text-align: center; font-size: 12px;
@@ -322,7 +335,9 @@
 
 Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle mein baitha hai
 
-Web search on karne ke liye 🌐 Search button dabao — phir latest news, weather, scores sab pooch sakte ho.</div>
+Web search on karne ke liye 🌐 Search button dabao.
+
+File ke baare mein sawaal poochne ke liye 📄 button se file attach karo (PDF, DOCX, TXT, MD, CSV, JSON).</div>
       </div>
     </div>
   </div>
@@ -335,9 +350,16 @@ Web search on karne ke liye 🌐 Search button dabao — phir latest news, weath
     </div>
     <div class="input-shell">
       <input type="file" id="fileInput" accept="image/*" style="display:none">
-      <button class="attach-btn" id="attachBtn" aria-label="Attach">
+      <input type="file" id="docInput" accept=".pdf,.docx,.txt,.md,.csv,.json" style="display:none">
+      <button class="attach-btn" id="attachBtn" aria-label="Image attach">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M21.44 11.05L12.25 20.24C10.01 22.48 6.37 22.48 4.13 20.24C1.89 18 1.89 14.36 4.13 12.12L13.32 2.93C14.81 1.44 17.22 1.44 18.71 2.93C20.2 4.42 20.2 6.83 18.71 8.32L10.36 16.67C9.62 17.41 8.42 17.41 7.68 16.67C6.94 15.93 6.94 14.73 7.68 13.99L15.16 6.51" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <button class="file-btn" id="fileBtn" aria-label="File attach">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M14 2V8H20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
       <button class="mic-btn" id="micBtn" aria-label="Mic">
@@ -355,7 +377,7 @@ Web search on karne ke liye 🌐 Search button dabao — phir latest news, weath
         </svg>
       </button>
     </div>
-    <div class="hint">Image ke liye <code>/image</code> se message shuru karo, ya 📎 se photo attach karo. 🎙️ se bol kar baat karo. 🌐 se web search on/off.</div>
+    <div class="hint">Image: 📎 | File: 📄 | Voice: 🎙️ | Search: 🌐 | Image gen: <code>/image</code></div>
   </div>
 
   <div class="mem-toast" id="memToast"><span class="dot"></span><span id="memToastText">Memory update ho gayi</span></div>
@@ -374,6 +396,8 @@ Web search on karne ke liye 🌐 Search button dabao — phir latest news, weath
     </div>
   </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/0.3.26/mammoth.browser.min.js"></script>
 <script>
 const GROQ_KEY = "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";
 
@@ -391,12 +415,22 @@ const MAX_FACTS     = 15;
 const MAX_IMG_DIM   = 1024;
 const JPEG_QUALITY  = 0.75;
 const MAX_MSG_LEN   = 1500;
+const MAX_DOC_CHARS = 8000;       // file context ke liye max chars
+const MAX_DOC_SIZE  = 10 * 1024 * 1024; // 10MB max file size
+
+// pdf.js worker setup
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
+}
 
 const chatBox       = document.getElementById('chatBox');
 const userInput     = document.getElementById('userInput');
 const sendBtn       = document.getElementById('sendBtn');
 const fileInput     = document.getElementById('fileInput');
+const docInput      = document.getElementById('docInput');
 const attachBtn     = document.getElementById('attachBtn');
+const fileBtn       = document.getElementById('fileBtn');
 const attachPreview = document.getElementById('attachPreview');
 const attachThumb   = document.getElementById('attachThumb');
 const attachName    = document.getElementById('attachName');
@@ -415,6 +449,7 @@ const memToastText  = document.getElementById('memToastText');
 const searchBtn     = document.getElementById('searchBtn');
 
 let pendingImage = null;
+let pendingFile  = null;      // { name, text, size }
 let isSending    = false;
 let isListening  = false;
 let recognition  = null;
@@ -462,6 +497,51 @@ function compressImage(file, maxDim = MAX_IMG_DIM, quality = JPEG_QUALITY) {
     reader.onerror = () => reject(new Error('File read error'));
     reader.readAsDataURL(file);
   });
+}
+
+/* ============ FILE TEXT EXTRACTION ============ */
+async function extractPdfText(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let fullText = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items.map(item => item.str).join(' ');
+    fullText += pageText + '\n';
+  }
+  return fullText.trim();
+}
+
+async function extractDocxText(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const result = await mammoth.extractRawText({ arrayBuffer });
+  return result.value.trim();
+}
+
+function extractPlainText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result.trim());
+    reader.onerror = () => reject(new Error('File read error'));
+    reader.readAsText(file);
+  });
+}
+
+async function extractFileText(file) {
+  const name = file.name.toLowerCase();
+  if (name.endsWith('.pdf')) return await extractPdfText(file);
+  if (name.endsWith('.docx')) return await extractDocxText(file);
+  if (name.endsWith('.txt') || name.endsWith('.md') || name.endsWith('.csv') || name.endsWith('.json')) {
+    return await extractPlainText(file);
+  }
+  // Fallback: plain text try karo
+  return await extractPlainText(file);
+}
+
+function truncateFileText(text, maxChars = MAX_DOC_CHARS) {
+  if (text.length <= maxChars) return text;
+  return text.slice(0, maxChars) + '\n\n[...file ka baaki hissa truncate kiya gaya...]';
 }
 
 /* ============ WEB SEARCH TOGGLE ============ */
@@ -709,7 +789,7 @@ function stopSpeaking() {
   if (currentBtn) { currentBtn.classList.remove('speaking'); currentBtn = null; }
 }
 
-/* ============ ATTACH ============ */
+/* ============ ATTACH IMAGE ============ */
 attachBtn.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', async () => {
   const file = fileInput.files[0];
@@ -738,7 +818,66 @@ fileInput.addEventListener('change', async () => {
     fileInput.value = '';
   }
 });
-attachRemove.addEventListener('click', () => { pendingImage = null; fileInput.value = ''; attachPreview.classList.remove('show'); });
+
+/* ============ ATTACH FILE (RAG) ============ */
+fileBtn.addEventListener('click', () => docInput.click());
+docInput.addEventListener('change', async () => {
+  const file = docInput.files[0];
+  if (!file) return;
+
+  if (file.size > MAX_DOC_SIZE) {
+    addPlainMessage('⚠️ File 10MB se choti honi chahiye.', false);
+    docInput.value = ''; return;
+  }
+
+  const name = file.name.toLowerCase();
+  const isSupported = name.endsWith('.pdf') || name.endsWith('.docx') ||
+                      name.endsWith('.txt') || name.endsWith('.md') ||
+                      name.endsWith('.csv') || name.endsWith('.json');
+  if (!isSupported) {
+    addPlainMessage('⚠️ Sirf PDF, DOCX, TXT, MD, CSV, JSON files supported hain.', false);
+    docInput.value = ''; return;
+  }
+
+  attachName.innerText = file.name + ' — padha ja raha hai...';
+  attachThumb.src = '';  // hide thumb
+  attachPreview.classList.add('show');
+
+  try {
+    const rawText = await extractFileText(file);
+    const text = truncateFileText(rawText, MAX_DOC_CHARS);
+
+    if (!text || text.length < 5) {
+      addPlainMessage('⚠️ File se koi text nahi mila. Ho sakta hai ye scanned PDF ho.', false);
+      docInput.value = '';
+      attachPreview.classList.remove('show');
+      return;
+    }
+
+    const sizeKB = Math.round(file.size / 1024);
+    pendingFile = {
+      name: file.name,
+      text: text,
+      size: sizeKB,
+      chars: text.length
+    };
+    attachName.innerText = file.name + ' (' + sizeKB + 'KB, ' + text.length.toLocaleString() + ' chars)';
+  } catch (err) {
+    console.error(err);
+    addPlainMessage('⚠️ File padhne mein error: ' + err.message, false);
+    pendingFile = null;
+    docInput.value = '';
+    attachPreview.classList.remove('show');
+  }
+});
+
+attachRemove.addEventListener('click', () => {
+  pendingImage = null;
+  pendingFile = null;
+  fileInput.value = '';
+  docInput.value = '';
+  attachPreview.classList.remove('show');
+});
 
 userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
 
@@ -753,7 +892,7 @@ clearBtn.addEventListener('click', () => {
 });
 
 /* ============ UI HELPERS ============ */
-function addPlainMessage(text, isUser, imageDataUrl) {
+function addPlainMessage(text, isUser, imageDataUrl, fileInfo) {
   const row = document.createElement('div');
   row.className = 'row ' + (isUser ? 'user' : 'ai');
   const avatar = document.createElement('div');
@@ -761,12 +900,21 @@ function addPlainMessage(text, isUser, imageDataUrl) {
   avatar.innerText = isUser ? 'Y' : 'J';
   const bubble = document.createElement('div');
   bubble.className = 'msg';
+
   if (imageDataUrl) {
     const img = document.createElement('img');
     img.className = 'attached-img-inline';
     img.src = imageDataUrl;
     bubble.appendChild(img);
   }
+
+  if (fileInfo) {
+    const fdiv = document.createElement('div');
+    fdiv.className = 'attached-file-inline';
+    fdiv.innerText = '📄 ' + fileInfo.name + ' (' + fileInfo.size + 'KB)';
+    bubble.appendChild(fdiv);
+  }
+
   const textNode = document.createElement('div');
   textNode.innerText = text;
   bubble.appendChild(textNode);
@@ -777,7 +925,7 @@ function addPlainMessage(text, isUser, imageDataUrl) {
 }
 
 function addStreamingMessage(opts = {}) {
-  const { withSearch = false } = opts;
+  const { withSearch = false, withFile = false } = opts;
   const row = document.createElement('div');
   row.className = 'row ai';
   const avatar = document.createElement('div');
@@ -790,6 +938,13 @@ function addStreamingMessage(opts = {}) {
     const badge = document.createElement('div');
     badge.className = 'search-badge';
     badge.innerHTML = '<span class="pulse"></span> Web search...';
+    bubble.appendChild(badge);
+  }
+
+  if (withFile) {
+    const badge = document.createElement('div');
+    badge.className = 'file-badge';
+    badge.innerHTML = '📄 File padh raha hoon...';
     bubble.appendChild(badge);
   }
 
@@ -926,7 +1081,6 @@ function loadHistory() {
 
 /* ============ TAVILY WEB SEARCH ============ */
 async function performTavilySearch(query) {
-  // Tavily keyless endpoint — no API key required
   const res = await fetch(TAVILY_URL, {
     method: 'POST',
     headers: {
@@ -939,22 +1093,15 @@ async function performTavilySearch(query) {
       search_depth: 'basic'
     })
   });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error('Tavily search failed: ' + res.status + ' ' + errText);
-  }
-
+  if (!res.ok) throw new Error('Tavily search failed: ' + res.status);
   const data = await res.json();
   const results = data?.results || [];
   return results.map(r => ({
-    title: r.title,
-    url: r.url,
-    snippet: r.content || r.snippet || ''
+    title: r.title, url: r.url, snippet: r.content || r.snippet || ''
   }));
 }
 
-/* ============ STREAMING (regular chat, no search) ============ */
+/* ============ STREAMING ============ */
 async function streamChatCompletion(apiMessages, model, bubble, textNode) {
   const body = {
     model: model,
@@ -972,10 +1119,7 @@ async function streamChatCompletion(apiMessages, model, bubble, textNode) {
 
   if (!res.ok) {
     let errMsg = `HTTP ${res.status}`;
-    try {
-      const j = await res.json();
-      errMsg = j?.error?.message || errMsg;
-    } catch (e) {}
+    try { const j = await res.json(); errMsg = j?.error?.message || errMsg; } catch (e) {}
     throw new Error(errMsg);
   }
 
@@ -1020,9 +1164,11 @@ async function sendMessage() {
 
   const text  = userInput.value.trim();
   const image = pendingImage;
-  if (!text && !image) return;
+  const file  = pendingFile;
+  if (!text && !image && !file) return;
 
-  if (!image && text.toLowerCase().startsWith('/image ')) {
+  /* ----- /image command ----- */
+  if (!image && !file && text.toLowerCase().startsWith('/image ')) {
     const prompt = text.slice(7).trim();
     addPlainMessage(text, true);
     userInput.value = '';
@@ -1031,6 +1177,7 @@ async function sendMessage() {
     return;
   }
 
+  /* ----- build API content ----- */
   let userContentForApi;
   if (image) {
     userContentForApi = [
@@ -1041,18 +1188,23 @@ async function sendMessage() {
     userContentForApi = text;
   }
 
-  addPlainMessage(text || '(image bheji)', true, image ? image.dataUrl : null);
+  // UI pe user message dikhao (image + file info ke saath)
+  addPlainMessage(text || (file ? '(file attach ki)' : '(image bheji)'), true, image ? image.dataUrl : null, file ? { name: file.name, size: file.size } : null);
 
+  // Input clear karo
   userInput.value = '';
   pendingImage = null;
+  pendingFile = null;
   fileInput.value = '';
+  docInput.value = '';
   attachPreview.classList.remove('show');
 
   isSending = true;
   sendBtn.disabled = true;
 
-  const useSearch = !image && searchEnabled;
-  const { bubble, textNode, speakerBtn, badge } = addStreamingMessage({ withSearch: useSearch });
+  const useSearch = !image && !file && searchEnabled;
+  const useFile   = !!file;
+  const { bubble, textNode, speakerBtn, badge } = addStreamingMessage({ withSearch: useSearch, withFile: useFile });
 
   refreshSystemPrompt();
   let apiMessages = [...conversation, { role: 'user', content: userContentForApi }];
@@ -1060,15 +1212,37 @@ async function sendMessage() {
   let clean = null;
 
   try {
-    if (useSearch) {
-      // 1. Pehle Tavily se search karo
+    if (useFile) {
+      // ----- RAG: File ke saath jawab do -----
+      const filePrompt = `User ne ek file attach ki hai: "${file.name}"
+
+File ka content (truncated):
+---
+${file.text}
+---
+
+User ka sawaal: "${text || 'Is file ke baare mein kuch batao'}"
+
+Instructions:
+- File ke content ke base pe sawaal ka jawab do.
+- Agar sawaal file se related nahi hai, to normally jawab do.
+- Roman Urdu mein jawab do.
+- File ka poora content repeat mat karo, sirf relevant hissa use karo.`;
+
+      apiMessages = [
+        { role: 'system', content: baseInstruction },
+        { role: 'user', content: filePrompt }
+      ];
+
+      clean = await streamChatCompletion(apiMessages, TEXT_MODEL, bubble, textNode);
+
+    } else if (useSearch) {
+      // ----- Web Search -----
       const searchResults = await performTavilySearch(text);
 
       if (searchResults.length === 0) {
-        // Agar kuch nahi mila, to normal chat ki tarah jawab do
         clean = await streamChatCompletion(apiMessages, TEXT_MODEL, bubble, textNode);
       } else {
-        // 2. Search results ko prompt mein daal kar Groq ko bhejo
         const searchContext = searchResults
           .map((r, i) => `[${i+1}] ${r.title}\n${r.snippet}\nURL: ${r.url}`)
           .join('\n\n');
@@ -1082,7 +1256,6 @@ ${searchContext}
 
 Instru: Sources ke URLs ko include mat karo, sirf natural jawab do. Agar search results sawaal ka jawab nahi de rahe, to apni knowledge se jawab do.`;
 
-        // 3. Groq ko bhejo (system prompt + search prompt)
         apiMessages = [
           { role: 'system', content: baseInstruction },
           { role: 'user', content: searchPrompt }
@@ -1090,13 +1263,11 @@ Instru: Sources ke URLs ko include mat karo, sirf natural jawab do. Agar search 
 
         clean = await streamChatCompletion(apiMessages, TEXT_MODEL, bubble, textNode);
 
-        // 4. Sources block add karo
-        if (clean) {
-          addSourcesBlock(bubble, searchResults);
-        }
+        if (clean) addSourcesBlock(bubble, searchResults);
       }
+
     } else {
-      // Normal chat (no search)
+      // ----- Normal chat / Vision -----
       const model = image ? VISION_MODEL : TEXT_MODEL;
       clean = await streamChatCompletion(apiMessages, model, bubble, textNode);
     }
@@ -1106,15 +1277,17 @@ Instru: Sources ke URLs ko include mat karo, sirf natural jawab do. Agar search 
     speakerBtn.onclick = () => speakText(clean, speakerBtn);
 
     const historyUserContent = image
-      ? (text ? `${text} [user ne image attach ki thi]` : '[user ne image attach ki thi]')
-      : text;
+      ? (text ? `${text} [image attach ki thi]` : '[image attach ki thi]')
+      : (file
+          ? (text ? `${text} [file: ${file.name}]` : `[file: ${file.name}]`)
+          : text);
     conversation.push({ role: 'user', content: historyUserContent });
     conversation.push({ role: 'assistant', content: clean.slice(0, MAX_MSG_LEN) });
 
     trimHistory();
     saveHistory();
 
-    if (!image) {
+    if (!image && !file) {
       messagesSinceExtract++;
       if (messagesSinceExtract >= MEM_EXTRACT_EVERY) {
         messagesSinceExtract = 0;
