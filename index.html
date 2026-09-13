@@ -476,31 +476,19 @@
         <div class="share-dropdown" id="shareDropdown">
           <div class="share-option" data-action="txt">
             <span class="s-icon">📥</span>
-            <div class="s-info">
-              <div class="s-name">Download TXT</div>
-              <div class="s-desc">Simple text file</div>
-            </div>
+            <div class="s-info"><div class="s-name">Download TXT</div><div class="s-desc">Simple text file</div></div>
           </div>
           <div class="share-option" data-action="md">
             <span class="s-icon">📝</span>
-            <div class="s-info">
-              <div class="s-name">Download Markdown</div>
-              <div class="s-desc">Formatted .md file</div>
-            </div>
+            <div class="s-info"><div class="s-name">Download Markdown</div><div class="s-desc">Formatted .md file</div></div>
           </div>
           <div class="share-option" data-action="link">
             <span class="s-icon">🔗</span>
-            <div class="s-info">
-              <div class="s-name">Share Link</div>
-              <div class="s-desc">URL mein encode karo</div>
-            </div>
+            <div class="s-info"><div class="s-name">Share Link</div><div class="s-desc">URL mein encode karo</div></div>
           </div>
           <div class="share-option" data-action="copy">
             <span class="s-icon">📋</span>
-            <div class="s-info">
-              <div class="s-name">Copy All</div>
-              <div class="s-desc">Clipboard mein copy</div>
-            </div>
+            <div class="s-info"><div class="s-name">Copy All</div><div class="s-desc">Clipboard mein copy</div></div>
           </div>
         </div>
       </div>
@@ -520,7 +508,7 @@
 🎭 Style: <b>/image anime: sher jungle mein</b>
 📎 Image | 📄 File | 🎙️ Voice | 🌐 Search | 📤 Share
 
-Note: Natural bhi likh sakte ho jaise "ek sher ki tasveer banao" — lekin agar normal baat karo (jaise "ye image kaisi hai") to AI normally jawab dega.</div>
+Note: Aap naturally bhi likh sakte ho jaise "ek sher ki tasveer banao" — Jarvis khud samajh jayega.</div>
       </div>
     </div>
   </div>
@@ -592,9 +580,7 @@ Note: Natural bhi likh sakte ho jaise "ek sher ki tasveer banao" — lekin agar 
         <button class="mem-modal-close" id="shareModalClose">×</button>
       </div>
       <div class="mem-modal-body">
-        <div style="font-size:13px;color:var(--text-dim);margin-bottom:8px;">
-          Ye link copy karke kisi ko bhejein. Wo link kholenge to poori chat khud load ho jayegi. (Koi server nahi — sab kuch URL mein hai)
-        </div>
+        <div style="font-size:13px;color:var(--text-dim);margin-bottom:8px;">Ye link copy karke kisi ko bhejein. Wo link kholenge to poori chat khud load ho jayegi.</div>
         <div class="share-url-box">
           <input type="text" class="share-url-input" id="shareUrlInput" readonly>
         </div>
@@ -720,7 +706,7 @@ let memory = [];
 let searchEnabled = false;
 let lightboxCurrentUrl = '';
 
-const baseInstruction = 'Tumhara naam Jarvis hai. Tum ek helpful AI assistant ho. Agar koi tumhara naam pooche, to hamesha "Jarvis" bolna. Tum kisi company ke banaye hue nahi ho — tumhe user ne banaya hai. Hamesha seedha, saaf jawab do — apna internal soch-vichar (thinking/reasoning process) kabhi mat dikhana, sirf final jawab do. Natural tarike se baat karo jaise ek insaan karta hai — normal conversation mein har cheez ko numbered list, bullet points, ya bold text mein mat todo, seedhe paragraph mein baat karo. Sirf tab list use karo jab user steps ya multiple items specifically maange. Hamesha sirf Roman Urdu/Hindi aur English mein jawab do. Tum image generate kar sakte ho. Agar koi pooche ke tum image bana sakte ho ya nahi, to haan bolo aur kaho ke seedha batao kaisi image chahiye — ya /image likh kar.';
+const baseInstruction = 'Tumhara naam Jarvis hai. Tum ek helpful AI assistant ho. Agar koi tumhara naam pooche, to hamesha "Jarvis" bolna. Tum kisi company ke banaye hue nahi ho — tumhe user ne banaya hai. Hamesha seedha, saaf jawab do — apna internal soch-vichar (thinking/reasoning process) kabhi mat dikhana, sirf final jawab do. Natural tarike se baat karo jaise ek insaan karta hai — normal conversation mein har cheez ko numbered list, bullet points, ya bold text mein mat todo, seedhe paragraph mein baat karo. Sirf tab list use karo jab user steps ya multiple items specifically maange. Hamesha sirf Roman Urdu/Hindi aur English mein jawab do. \n\nIMPORTANT IMAGE RULES:\n1. Tum ek text-based AI ho — tum KABHI apne aap image nahi bana sakte directly.\n2. KABHI fake image URLs mat banao (jaise blob.core.windows.net, oaidalleapiprodscus, dall-e, openai.com, image URLs waghera).\n3. KABHI markdown image format ![alt text](url) mat likho apne replies mein.\n4. Kabhi "Here is the image" ke saath fake URL mat do.\n\nJab user image banane ko kahe (chahay seedha "ek sher ki image banao" ya confirmation ke taur pe "ha banao" / "tumhari marzi" / "bana do"), to apne reply mein EK LINE zaroor likho is exact format mein:\nIMAGE_GEN: <detailed english prompt describing the image>\n\nBaqi text normal ho sakta hai, lekin IMAGE_GEN: wali line zaroor honi chahiye. Us line ke baad kuch aur na likho.';
 
 let conversation = [{ role: 'system', content: baseInstruction }];
 
@@ -822,7 +808,6 @@ function generateShareLink() {
     const b64 = btoa(unescape(encodeURIComponent(json)));
     const baseUrl = location.origin + location.pathname;
     const shareUrl = baseUrl + SHARE_HASH_PREFIX + b64;
-    if (shareUrl.length > 8000) showMemToast('⚠️ Chat bohot lambi hai — sirf last 20 share honge');
     shareUrlInput.value = shareUrl;
     shareModal.classList.add('show');
   } catch (e) { console.error(e); showMemToast('⚠️ Share link nahi ban saki'); }
@@ -839,15 +824,13 @@ function loadSharedChatFromUrl() {
     conversation = [{ role: 'system', content: buildSystemPrompt() }];
     const infoRow = document.createElement('div');
     infoRow.className = 'row ai';
-    infoRow.innerHTML = '<div class="avatar ai">J</div><div class="msg" style="background:rgba(245,158,122,0.1);border-color:rgba(245,158,122,0.3);color:#f59e7a;">🔗 Ye ek shared chat hai. Aap isse continue kar sakte hain.</div>';
+    infoRow.innerHTML = '<div class="avatar ai">J</div><div class="msg" style="background:rgba(245,158,122,0.1);border-color:rgba(245,158,122,0.3);color:#f59e7a;">🔗 Ye ek shared chat hai.</div>';
     chatBox.appendChild(infoRow);
     for (const item of arr) {
       const isUser = item.r === 'u';
       const content = String(item.c || '');
-      if (isUser) {
-        addPlainMessage(content, true);
-        conversation.push({ role: 'user', content: content });
-      } else {
+      if (isUser) { addPlainMessage(content, true); conversation.push({ role: 'user', content: content }); }
+      else {
         const { bubble, textNode } = addStreamingMessage();
         bubble.classList.remove('streaming');
         textNode.innerText = content;
@@ -945,19 +928,13 @@ function compressImage(file, maxDim = MAX_IMG_DIM, quality = JPEG_QUALITY) {
       img.onload = () => {
         let { width, height } = img;
         if (width > maxDim || height > maxDim) {
-          if (width > height) {
-            height = Math.round((height * maxDim) / width);
-            width = maxDim;
-          } else {
-            width = Math.round((width * maxDim) / height);
-            height = maxDim;
-          }
+          if (width > height) { height = Math.round((height * maxDim) / width); width = maxDim; }
+          else { width = Math.round((width * maxDim) / height); height = maxDim; }
         }
         const canvas = document.createElement('canvas');
         canvas.width = width; canvas.height = height;
         const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, width, height);
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
         resolve(canvas.toDataURL('image/jpeg', quality));
       };
@@ -1064,56 +1041,34 @@ async function extractFacts() {
     const content = typeof m.content === 'string' ? m.content.slice(0, 300) : '(image)';
     return role + ': ' + content;
   }).join('\n');
-  const existingFacts = memory.length
-    ? 'Pehle se:\n' + memory.map(f => '- ' + f).join('\n')
-    : 'Memory khali hai.';
+  const existingFacts = memory.length ? 'Pehle se:\n' + memory.map(f => '- ' + f).join('\n') : 'Memory khali hai.';
   const extractionPrompt = `Conversation se user ke baare mein IMPORTANT long-term facts nikaalo.\n\n${existingFacts}\n\nConversation:\n${chatLog}\n\nRules:\n- Sirf user ke baare mein facts.\n- Har fact max 15 words.\n- Naya fact nahi mila to sirf "NONE".\n- Warna har fact ek nayi line.\n- Roman Urdu/English.`;
   try {
     const res = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` },
-      body: JSON.stringify({
-        model: FAST_MODEL,
-        messages: [{ role: 'user', content: extractionPrompt }],
-        max_completion_tokens: 200, temperature: 0.3
-      })
+      body: JSON.stringify({ model: FAST_MODEL, messages: [{ role: 'user', content: extractionPrompt }], max_completion_tokens: 200, temperature: 0.3 })
     });
     if (!res.ok) return;
     const data = await res.json();
     const raw = (data?.choices?.[0]?.message?.content || '').trim();
     if (!raw || raw.toUpperCase() === 'NONE') return;
-    const newFacts = raw.split('\n')
-      .map(l => l.replace(/^[-•*\d.\s]+/, '').trim())
-      .filter(f => f.length > 3 && f.length < 200);
+    const newFacts = raw.split('\n').map(l => l.replace(/^[-•*\d.\s]+/, '').trim()).filter(f => f.length > 3 && f.length < 200);
     if (!newFacts.length) return;
     let added = 0;
     for (const fact of newFacts) {
       const lower = fact.toLowerCase();
-      const exists = memory.some(m => {
-        const ml = m.toLowerCase();
-        return ml === lower || ml.includes(lower) || lower.includes(ml);
-      });
+      const exists = memory.some(m => { const ml = m.toLowerCase(); return ml === lower || ml.includes(lower) || lower.includes(ml); });
       if (!exists && memory.length < MAX_FACTS) { memory.push(fact); added++; }
     }
-    if (added > 0) {
-      saveMemory();
-      refreshSystemPrompt();
-      showMemToast(`${added} nayi baat yaad kar li`);
-    }
+    if (added > 0) { saveMemory(); refreshSystemPrompt(); showMemToast(`${added} nayi baat yaad kar li`); }
   } catch (e) { console.warn('Memory extraction failed:', e); }
 }
 function renderMemoryModal() {
-  if (!memory.length) {
-    memModalBody.innerHTML = '<div class="mem-empty">Abhi tak kuch yaad nahi hai.<br>Jarvis se baat karo, wo khud yaad rakhega.</div>';
-    return;
-  }
-  memModalBody.innerHTML = memory.map(f =>
-    '<div class="mem-item"><span class="mem-dot">●</span><span class="mem-text">' + escapeHtml(f) + '</span></div>'
-  ).join('');
+  if (!memory.length) { memModalBody.innerHTML = '<div class="mem-empty">Abhi tak kuch yaad nahi hai.</div>'; return; }
+  memModalBody.innerHTML = memory.map(f => '<div class="mem-item"><span class="mem-dot">●</span><span class="mem-text">' + escapeHtml(f) + '</span></div>').join('');
 }
-function escapeHtml(s) {
-  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
+function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 memoryBtn.addEventListener('click', () => { renderMemoryModal(); memModal.classList.add('show'); });
 function closeMemModal() { memModal.classList.remove('show'); }
 memModalClose.addEventListener('click', closeMemModal);
@@ -1122,11 +1077,7 @@ memModal.addEventListener('click', (e) => { if (e.target === memModal) closeMemM
 memClearBtn.addEventListener('click', () => {
   if (!memory.length) { closeMemModal(); return; }
   if (!confirm('Saari memory bhula deni hai?')) return;
-  memory = [];
-  saveMemory();
-  refreshSystemPrompt();
-  renderMemoryModal();
-  showMemToast('Memory clear ho gayi');
+  memory = []; saveMemory(); refreshSystemPrompt(); renderMemoryModal(); showMemToast('Memory clear ho gayi');
 });
 
 /* ============ VOICE ============ */
@@ -1137,9 +1088,7 @@ if (SpeechRecognition) {
   recognition.interimResults = true;
   recognition.lang = 'ur-PK';
   recognition.maxAlternatives = 1;
-} else {
-  if (micBtn) micBtn.style.display = 'none';
-}
+} else { if (micBtn) micBtn.style.display = 'none'; }
 function toggleListening() {
   if (!recognition) return;
   if (isListening) { recognition.stop(); return; }
@@ -1185,14 +1134,12 @@ function splitIntoChunks(text, maxLen) {
   const sentences = text.split(/(?<=[.!?۔])\s+/);
   let current = '';
   for (const sentence of sentences) {
-    if ((current + ' ' + sentence).length <= maxLen) {
-      current = current ? current + ' ' + sentence : sentence;
-    } else {
+    if ((current + ' ' + sentence).length <= maxLen) { current = current ? current + ' ' + sentence : sentence; }
+    else {
       if (current) chunks.push(current);
       if (sentence.length <= maxLen) current = sentence;
       else {
-        const words = sentence.split(' ');
-        current = '';
+        const words = sentence.split(' '); current = '';
         for (const w of words) {
           if ((current + ' ' + w).length <= maxLen) current = current ? current + ' ' + w : w;
           else { if (current) chunks.push(current); current = w; }
@@ -1208,8 +1155,7 @@ function playChunksSequentially(chunks, btn, index) {
     if (btn) btn.classList.remove('speaking');
     currentBtn = null; currentAudio = null; return;
   }
-  const url = 'https://translate.googleapis.com/translate_tts?ie=UTF-8&q='
-    + encodeURIComponent(chunks[index]) + '&tl=ur&client=tw-ob';
+  const url = 'https://translate.googleapis.com/translate_tts?ie=UTF-8&q=' + encodeURIComponent(chunks[index]) + '&tl=ur&client=tw-ob';
   const audio = new Audio(url);
   currentAudio = audio;
   audio.onended = () => { if (isStoppingTTS) return; setTimeout(() => playChunksSequentially(chunks, btn, index + 1), 120); };
@@ -1239,14 +1185,8 @@ attachBtn.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', async () => {
   const file = fileInput.files[0];
   if (!file) return;
-  if (!file.type.startsWith('image/')) {
-    addPlainMessage('⚠️ Abhi sirf images attach ki ja sakti hain.', false);
-    fileInput.value = ''; return;
-  }
-  if (file.size > 20 * 1024 * 1024) {
-    addPlainMessage('⚠️ Image 20MB se choti honi chahiye.', false);
-    fileInput.value = ''; return;
-  }
+  if (!file.type.startsWith('image/')) { addPlainMessage('⚠️ Sirf images.', false); fileInput.value = ''; return; }
+  if (file.size > 20 * 1024 * 1024) { addPlainMessage('⚠️ 20MB max.', false); fileInput.value = ''; return; }
   attachName.innerText = file.name + ' — compress...';
   attachPreview.classList.add('show');
   try {
@@ -1256,11 +1196,8 @@ fileInput.addEventListener('change', async () => {
     attachThumb.src = compressedDataUrl;
     attachName.innerText = file.name + ' (~' + sizeKB + 'KB)';
   } catch (err) {
-    console.error(err);
     addPlainMessage('⚠️ Image process nahi ho saki.', false);
-    pendingImage = null;
-    attachPreview.classList.remove('show');
-    fileInput.value = '';
+    pendingImage = null; attachPreview.classList.remove('show'); fileInput.value = '';
   }
 });
 
@@ -1269,47 +1206,29 @@ fileBtn.addEventListener('click', () => docInput.click());
 docInput.addEventListener('change', async () => {
   const file = docInput.files[0];
   if (!file) return;
-  if (file.size > MAX_DOC_SIZE) {
-    addPlainMessage('⚠️ File 10MB se choti honi chahiye.', false);
-    docInput.value = ''; return;
-  }
+  if (file.size > MAX_DOC_SIZE) { addPlainMessage('⚠️ 10MB max.', false); docInput.value = ''; return; }
   const name = file.name.toLowerCase();
-  const isSupported = name.endsWith('.pdf') || name.endsWith('.docx') ||
-                      name.endsWith('.txt') || name.endsWith('.md') ||
-                      name.endsWith('.csv') || name.endsWith('.json');
-  if (!isSupported) {
-    addPlainMessage('⚠️ Sirf PDF, DOCX, TXT, MD, CSV, JSON files supported hain.', false);
-    docInput.value = ''; return;
-  }
+  const isSupported = name.endsWith('.pdf') || name.endsWith('.docx') || name.endsWith('.txt') || name.endsWith('.md') || name.endsWith('.csv') || name.endsWith('.json');
+  if (!isSupported) { addPlainMessage('⚠️ Sirf PDF, DOCX, TXT, MD, CSV, JSON.', false); docInput.value = ''; return; }
   attachName.innerText = file.name + ' — padha ja raha hai...';
   attachThumb.src = '';
   attachPreview.classList.add('show');
   try {
     const rawText = await extractFileText(file);
     const text = truncateFileText(rawText, MAX_DOC_CHARS);
-    if (!text || text.length < 5) {
-      addPlainMessage('⚠️ File se koi text nahi mila.', false);
-      docInput.value = '';
-      attachPreview.classList.remove('show');
-      return;
-    }
+    if (!text || text.length < 5) { addPlainMessage('⚠️ File se text nahi mila.', false); docInput.value = ''; attachPreview.classList.remove('show'); return; }
     const sizeKB = Math.round(file.size / 1024);
     pendingFile = { name: file.name, text: text, size: sizeKB, chars: text.length };
-    attachName.innerText = file.name + ' (' + sizeKB + 'KB, ' + text.length.toLocaleString() + ' chars)';
+    attachName.innerText = file.name + ' (' + sizeKB + 'KB)';
   } catch (err) {
-    console.error(err);
-    addPlainMessage('⚠️ File padhne mein error: ' + err.message, false);
-    pendingFile = null;
-    docInput.value = '';
-    attachPreview.classList.remove('show');
+    addPlainMessage('⚠️ File error: ' + err.message, false);
+    pendingFile = null; docInput.value = ''; attachPreview.classList.remove('show');
   }
 });
 
 attachRemove.addEventListener('click', () => {
-  pendingImage = null;
-  pendingFile = null;
-  fileInput.value = '';
-  docInput.value = '';
+  pendingImage = null; pendingFile = null;
+  fileInput.value = ''; docInput.value = '';
   attachPreview.classList.remove('show');
 });
 
@@ -1322,7 +1241,7 @@ clearBtn.addEventListener('click', () => {
   conversation = [{ role: 'system', content: buildSystemPrompt() }];
   messagesSinceExtract = 0;
   try { localStorage.removeItem(HISTORY_KEY); } catch(e) {}
-  addPlainMessage('Chat clear ho gayi. Memory save hai. Naya sawaal poochein.', false);
+  addPlainMessage('Chat clear ho gayi. Memory save hai.', false);
 });
 
 /* ============ UI HELPERS ============ */
@@ -1334,21 +1253,9 @@ function addPlainMessage(text, isUser, imageDataUrl, fileInfo) {
   avatar.innerText = isUser ? 'Y' : 'J';
   const bubble = document.createElement('div');
   bubble.className = 'msg';
-  if (imageDataUrl) {
-    const img = document.createElement('img');
-    img.className = 'attached-img-inline';
-    img.src = imageDataUrl;
-    bubble.appendChild(img);
-  }
-  if (fileInfo) {
-    const fdiv = document.createElement('div');
-    fdiv.className = 'attached-file-inline';
-    fdiv.innerText = '📄 ' + fileInfo.name + ' (' + fileInfo.size + 'KB)';
-    bubble.appendChild(fdiv);
-  }
-  const textNode = document.createElement('div');
-  textNode.innerText = text;
-  bubble.appendChild(textNode);
+  if (imageDataUrl) { const img = document.createElement('img'); img.className = 'attached-img-inline'; img.src = imageDataUrl; bubble.appendChild(img); }
+  if (fileInfo) { const fdiv = document.createElement('div'); fdiv.className = 'attached-file-inline'; fdiv.innerText = '📄 ' + fileInfo.name + ' (' + fileInfo.size + 'KB)'; bubble.appendChild(fdiv); }
+  const textNode = document.createElement('div'); textNode.innerText = text; bubble.appendChild(textNode);
   row.appendChild(avatar); row.appendChild(bubble);
   chatBox.appendChild(row);
   chatBox.scrollTop = chatBox.scrollHeight;
@@ -1364,52 +1271,29 @@ function addStreamingMessage(opts = {}) {
   avatar.innerText = 'J';
   const bubble = document.createElement('div');
   bubble.className = 'msg streaming';
-
   if (modelName && modelIcon) {
     const mbadge = document.createElement('div');
     mbadge.className = 'model-badge' + (isCode ? ' code' : '');
     mbadge.innerText = modelIcon + ' ' + modelName;
     bubble.appendChild(mbadge);
   }
-  if (withSearch) {
-    const badge = document.createElement('div');
-    badge.className = 'search-badge';
-    badge.innerHTML = '<span class="pulse"></span> Web search...';
-    bubble.appendChild(badge);
-  }
-  if (withFile) {
-    const badge = document.createElement('div');
-    badge.className = 'file-badge';
-    badge.innerHTML = '📄 File padh raha hoon...';
-    bubble.appendChild(badge);
-  }
-
+  if (withSearch) { const badge = document.createElement('div'); badge.className = 'search-badge'; badge.innerHTML = '<span class="pulse"></span> Web search...'; bubble.appendChild(badge); }
+  if (withFile) { const badge = document.createElement('div'); badge.className = 'file-badge'; badge.innerHTML = '📄 File padh raha hoon...'; bubble.appendChild(badge); }
   const textNode = document.createElement('div');
   bubble.appendChild(textNode);
-
   const actions = document.createElement('div');
   actions.className = 'msg-actions';
-
   const copyBtn = document.createElement('button');
   copyBtn.className = 'action-btn';
   copyBtn.innerText = 'Copy';
-  copyBtn.onclick = () => {
-    navigator.clipboard.writeText(textNode.innerText).then(() => {
-      copyBtn.innerText = 'Copied!';
-      setTimeout(() => copyBtn.innerText = 'Copy', 1500);
-    }).catch(() => {});
-  };
-
+  copyBtn.onclick = () => { navigator.clipboard.writeText(textNode.innerText).then(() => { copyBtn.innerText = 'Copied!'; setTimeout(() => copyBtn.innerText = 'Copy', 1500); }).catch(() => {}); };
   const speakerBtn = document.createElement('button');
   speakerBtn.className = 'speaker-btn';
   speakerBtn.title = 'Bol kar sunao';
   speakerBtn.innerHTML = '🔊';
   speakerBtn.onclick = () => speakText(textNode.innerText, speakerBtn);
-
-  actions.appendChild(copyBtn);
-  actions.appendChild(speakerBtn);
+  actions.appendChild(copyBtn); actions.appendChild(speakerBtn);
   bubble.appendChild(actions);
-
   row.appendChild(avatar); row.appendChild(bubble);
   chatBox.appendChild(row);
   chatBox.scrollTop = chatBox.scrollHeight;
@@ -1424,16 +1308,13 @@ function addSourcesBlock(bubble, sources) {
   title.className = 'sources-title';
   title.innerText = 'Sources';
   block.appendChild(title);
-  const seen = new Set();
-  let count = 0;
+  const seen = new Set(); let count = 0;
   for (const s of sources) {
     if (!s.url || seen.has(s.url) || count >= 6) continue;
     seen.add(s.url);
     const a = document.createElement('a');
     a.className = 'source-item';
-    a.href = s.url;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
+    a.href = s.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
     a.innerText = '↗ ' + (s.title || s.url);
     block.appendChild(a);
     count++;
@@ -1443,19 +1324,15 @@ function addSourcesBlock(bubble, sources) {
 
 /* ============ IMAGE GENERATION ============ */
 async function enhanceImagePrompt(rawPrompt) {
-  const sysPrompt = 'You are an expert at writing detailed image generation prompts. Take the user\'s image description (which may be in Roman Urdu, English, or mixed) and convert it into a single, highly detailed English image generation prompt. Include: subject, composition, lighting, mood, colors, style details, and quality keywords. Output ONLY the final prompt in English, nothing else. Maximum 100 words.';
+  const sysPrompt = 'You are an expert at writing detailed image generation prompts. Take the user\'s image description and convert it into a single, highly detailed English image generation prompt. Include: subject, composition, lighting, mood, colors, style details, and quality keywords. Output ONLY the final prompt in English. Maximum 100 words.';
   try {
     const res = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` },
       body: JSON.stringify({
         model: FAST_MODEL,
-        messages: [
-          { role: 'system', content: sysPrompt },
-          { role: 'user', content: rawPrompt }
-        ],
-        max_completion_tokens: 200,
-        temperature: 0.6
+        messages: [{ role: 'system', content: sysPrompt }, { role: 'user', content: rawPrompt }],
+        max_completion_tokens: 200, temperature: 0.6
       })
     });
     if (!res.ok) return rawPrompt;
@@ -1477,29 +1354,23 @@ function createImageCell(url, altText, onDone) {
   loading.className = 'img-loading';
   loading.innerHTML = '<div class="spinner"></div><div>Ban rahi hai...</div>';
   cell.appendChild(loading);
-
   const img = document.createElement('img');
   img.className = 'generated-img';
   img.alt = altText;
   img.loading = 'lazy';
   img.style.opacity = '0';
   img.onload = () => { loading.remove(); img.style.opacity = '1'; if (onDone) onDone(); };
-  img.onerror = () => { loading.innerHTML = '<div style="color:#e07a7a;font-size:12px;text-align:center;padding:10px;">⚠️ Load nahi hui<br><small style="opacity:0.7">Reload karo</small></div>'; };
+  img.onerror = () => { loading.innerHTML = '<div style="color:#e07a7a;font-size:12px;text-align:center;padding:10px;">⚠️ Load nahi hui</div>'; };
   img.addEventListener('click', () => { if (img.src) openLightbox(img.src); });
   cell.appendChild(img);
-
   const dl = document.createElement('button');
-  dl.className = 'img-download';
-  dl.innerHTML = '⬇';
-  dl.title = 'Download';
+  dl.className = 'img-download'; dl.innerHTML = '⬇'; dl.title = 'Download';
   dl.onclick = async (e) => {
     e.stopPropagation();
     try {
-      const res = await fetch(img.src);
-      const blob = await res.blob();
+      const res = await fetch(img.src); const blob = await res.blob();
       const u = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = u; a.download = 'jarvis-' + Date.now() + '.jpg';
+      const a = document.createElement('a'); a.href = u; a.download = 'jarvis-' + Date.now() + '.jpg';
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       URL.revokeObjectURL(u);
     } catch (err) { console.error(err); }
@@ -1513,36 +1384,28 @@ function addImageGenerationMessage(rawPrompt, count, styleKey) {
   const row = document.createElement('div');
   row.className = 'row ai';
   const avatar = document.createElement('div');
-  avatar.className = 'avatar ai';
-  avatar.innerText = 'J';
+  avatar.className = 'avatar ai'; avatar.innerText = 'J';
   const bubble = document.createElement('div');
   bubble.className = 'msg';
-
   const styleLabel = styleKey ? ` [${styleKey}]` : '';
   const countLabel = count > 1 ? ` (${count} images)` : '';
   const caption = document.createElement('div');
   caption.className = 'img-caption';
   caption.innerText = `🎨 "${rawPrompt}"${styleLabel}${countLabel}`;
   bubble.appendChild(caption);
-
   const grid = document.createElement('div');
   grid.className = 'img-grid ' + (count === 1 ? 'cols-1' : 'cols-2');
   bubble.appendChild(grid);
-
   const status = document.createElement('div');
   status.className = 'img-status';
   status.innerText = '⏳ Prompt behtar kiya ja raha hai...';
   bubble.appendChild(status);
-
   row.appendChild(avatar); row.appendChild(bubble);
   chatBox.appendChild(row);
   chatBox.scrollTop = chatBox.scrollHeight;
-
   enhanceImagePrompt(rawPrompt).then(enhanced => {
     let finalPrompt = enhanced;
-    if (styleKey && IMAGE_STYLES[styleKey]) {
-      finalPrompt = enhanced + ', ' + IMAGE_STYLES[styleKey];
-    }
+    if (styleKey && IMAGE_STYLES[styleKey]) finalPrompt = enhanced + ', ' + IMAGE_STYLES[styleKey];
     status.innerText = count > 1 ? `✨ ${count} images ban rahi hain...` : '✨ Image ban rahi hai...';
     let doneCount = 0;
     for (let i = 0; i < count; i++) {
@@ -1551,12 +1414,8 @@ function addImageGenerationMessage(rawPrompt, count, styleKey) {
       const cell = createImageCell(url, rawPrompt, () => {
         doneCount++;
         if (doneCount === count) {
-          status.innerText = '✅ ' + count + ' image' + (count > 1 ? 's' : '') + ' ready — click karke zoom karo';
-          setTimeout(() => {
-            status.style.transition = 'opacity 0.5s ease';
-            status.style.opacity = '0';
-            setTimeout(() => status.remove(), 500);
-          }, 3000);
+          status.innerText = '✅ ' + count + ' image' + (count > 1 ? 's' : '') + ' ready';
+          setTimeout(() => { status.style.transition = 'opacity 0.5s ease'; status.style.opacity = '0'; setTimeout(() => status.remove(), 500); }, 3000);
         }
       });
       grid.appendChild(cell);
@@ -1621,17 +1480,14 @@ async function streamGroqCompletion(apiMessages, model, bubble, textNode) {
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` },
     body: JSON.stringify(body)
   });
-
   if (!res.ok) {
     let errMsg = `HTTP ${res.status}`;
     try { const j = await res.json(); errMsg = j?.error?.message || errMsg; } catch (e) {}
     throw new Error(errMsg);
   }
-
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '', fullText = '';
-
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -1648,72 +1504,68 @@ async function streamGroqCompletion(apiMessages, model, bubble, textNode) {
         const delta = json?.choices?.[0]?.delta?.content;
         if (delta) {
           fullText += delta;
-          textNode.innerText = cleanMarkdown(fullText);
+          // Stream karne ke doran IMAGE_GEN: line ko hide karo
+          const displayText = hideImageGenLine(fullText);
+          textNode.innerText = cleanMarkdown(displayText);
           chatBox.scrollTop = chatBox.scrollHeight;
         }
       } catch (e) {}
     }
   }
-
   if (!fullText.trim()) fullText = 'Koi response nahi mila.';
-  const clean = cleanMarkdown(fullText);
+  const displayText = hideImageGenLine(fullText);
+  const clean = cleanMarkdown(displayText);
   textNode.innerText = clean;
   bubble.classList.remove('streaming');
-  return clean;
+  return fullText; // full text return karo (IMAGE_GEN line ke saath)
+}
+
+/* ============ IMAGE_GEN LINE DETECTOR ============ */
+function hideImageGenLine(text) {
+  // IMAGE_GEN: wali line ko display se hatao
+  return text.replace(/^\s*IMAGE_GEN\s*:.*$/gim, '').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+function extractImageGenPrompt(text) {
+  const m = text.match(/^\s*IMAGE_GEN\s*:\s*(.+)$/im);
+  if (!m) return null;
+  return m[1].trim();
 }
 
 /* ============ STREAMING DEVTOOLBOX ============ */
 async function streamDevToolboxCompletion(apiMessages, bubble, textNode) {
   const lastUser = [...apiMessages].reverse().find(m => m.role === 'user');
   if (!lastUser) throw new Error('Koi user message nahi mila.');
-  const userText = typeof lastUser.content === 'string'
-    ? lastUser.content
-    : (Array.isArray(lastUser.content) ? lastUser.content.map(c => c.text || '').join(' ') : String(lastUser.content || ''));
-
+  const userText = typeof lastUser.content === 'string' ? lastUser.content : (Array.isArray(lastUser.content) ? lastUser.content.map(c => c.text || '').join(' ') : String(lastUser.content || ''));
   const codingPrompt = `You are an expert coding assistant. Answer in Roman Urdu/English. Write clean, working code with explanation.\n\nUser question: ${userText}`;
-
   const res = await fetch(DEVTOOLBOX_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ prompt: codingPrompt, max_tokens: 2048 })
   });
-
   if (!res.ok) {
     let errMsg = `DevToolBox HTTP ${res.status}`;
     try { const j = await res.json(); errMsg = j?.error?.message || j?.error || errMsg; } catch (e) {}
     throw new Error(errMsg);
   }
-
   const data = await res.json();
-  const text = data?.text || data?.response || data?.result
-            || data?.output || data?.message
-            || (data?.choices?.[0]?.message?.content)
-            || (typeof data === 'string' ? data : '');
-
+  const text = data?.text || data?.response || data?.result || data?.output || data?.message || (data?.choices?.[0]?.message?.content) || (typeof data === 'string' ? data : '');
   if (!text) throw new Error('DevToolBox se koi jawab nahi mila.');
-
   const clean = cleanMarkdown(text);
   textNode.innerText = '';
   const words = clean.split(/(\s+)/);
   let acc = '';
   for (let i = 0; i < words.length; i++) {
-    acc += words[i];
-    textNode.innerText = acc;
-    chatBox.scrollTop = chatBox.scrollHeight;
+    acc += words[i]; textNode.innerText = acc; chatBox.scrollTop = chatBox.scrollHeight;
     if (i % 6 === 0) await new Promise(r => setTimeout(r, 25));
   }
   textNode.innerText = clean;
   bubble.classList.remove('streaming');
-  return clean;
+  return text;
 }
 
 function cleanMarkdown(text) {
-  return text
-    .replace(/\*\*(.*?)\*\*/g, '$1')
-    .replace(/\*(.*?)\*/g, '$1')
-    .replace(/^#{1,6}\s+/gm, '')
-    .replace(/^[-•]\s+/gm, '• ')
-    .trim();
+  return text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/^#{1,6}\s+/gm, '').replace(/^[-•]\s+/gm, '• ').trim();
 }
 
 /* ============ IMAGE COMMAND PARSER ============ */
@@ -1726,78 +1578,49 @@ function parseImageCommand(text) {
   const styleMatch = rest.match(/^([a-z0-9]+)\s*:\s*(.+)$/i);
   if (styleMatch) {
     const possibleStyle = styleMatch[1].toLowerCase();
-    if (IMAGE_STYLES[possibleStyle]) {
-      style = possibleStyle;
-      rest = styleMatch[2].trim();
-    }
+    if (IMAGE_STYLES[possibleStyle]) { style = possibleStyle; rest = styleMatch[2].trim(); }
   }
   return { count, style, prompt: rest };
 }
 
-/* ============ NATURAL IMAGE INTENT DETECTION (STRICT) ============ */
+/* ============ NATURAL IMAGE INTENT (STRICT) ============ */
 function detectImageIntent(text) {
   const lower = text.toLowerCase().trim();
   if (!lower) return null;
   if (lower.startsWith('/image')) return null;
-
-  // 1. Question mark → chhod do
   if (/\?/.test(lower)) return null;
-
-  // 2. Bohot lambi sentence → chhod do (10 words se zyada)
   const wordCount = lower.split(/\s+/).length;
   if (wordCount > 10) return null;
-
-  // 3. Question aur meta-discussion words → chhod do
-  //    (image ke baare mein baat, sawaal, ya explanation)
-  const metaWords = /\b(kya|kaise|kese|kyun|kyu|kahan|kab|kaun|kitna|kitne|how|what|why|where|when|who|batao|bata|bataiye|samjhao|samjha|samjhaiye|dekho|dekha|dekh|explain|describe|btao|bta|baare|bare|baat|liye|liye|waste|chahiye|chahiyay|chahta|chahti)\b/i;
+  const metaWords = /\b(kya|kaise|kese|kyun|kyu|kahan|kab|kaun|kitna|kitne|how|what|why|where|when|who|batao|bata|bataiye|samjhao|samjha|samjhaiye|dekho|dekha|dekh|explain|describe|btao|bta|baare|bare|baat|liye|chahiye|chahta|chahti)\b/i;
   if (metaWords.test(lower)) return null;
-
-  // 4. "can you" / "kya tum" jaisa → chhod do
   if (/\b(can\s+you|can\s+u|kya\s+tum|kya\s+aap|kya\s+main|kar\s+sakte|sakte\s+ho|sakti\s+ho|kar\s+sakta)\b/i.test(lower)) return null;
-
-  // 5. Code-related → chhod do
   const codeWords = /\b(code|program|function|script|website|app|calculator|game|programming|snippet|algorithm|class|variable|loop|array|json|api|html|css|python|javascript|java|cpp)\b/i;
   if (codeWords.test(lower)) return null;
-
-  // 6. Ab strict check: sirf tab detect jab IMAGE word + ACTION word dono hon
   const imgWords = /\b(image|photo|picture|tasveer|chitra|pic|drawing|sketch|painting|artwork|wallpaper|poster)\b/i;
   const actionWords = /\b(bana|banao|banaao|banai|banade|banado|bana\s*do|generate|create|make|draw|paint|sketch|render)\b/i;
-
   const hasImg = imgWords.test(lower);
   const hasAction = actionWords.test(lower);
-
-  // Dono zaroori hain — warna detect nahi
   if (!hasImg || !hasAction) return null;
-
-  // 7. Prompt extract karo — aur bache hue words mein check karo ke koi meta word na ho
-  let prompt = text
-    .replace(/^\/image\d*\s*:?\s*/i, '')
+  let prompt = text.replace(/^\/image\d*\s*:?\s*/i, '')
     .replace(/\b(mujhe|mujhay|mery|meri|mera|mere|please|plz|pls|zara|ek|si|of|an|a|the|me|for|ka|ki|ke|kar|karo|kardo|de|do|dein|dena|dijiye)\b/gi, ' ')
     .replace(/\b(image|photo|picture|tasveer|chitra|pic|drawing|sketch|painting|artwork|wallpaper|poster)\b/gi, ' ')
     .replace(/\b(bana|banao|banaao|banai|banade|banado|generate|create|make|draw|paint|sketch|render)\b/gi, ' ')
     .replace(/\b(mein|me|par|pe|se|ko|ne|ye|wo|yeh|woh|is|us)\b/gi, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
+    .replace(/\s+/g, ' ').trim();
   if (prompt.length < 3) return null;
   if (prompt.length > 150) prompt = prompt.slice(0, 150);
-
-  // 8. Prompt mein bhi meta words check karo
   if (metaWords.test(prompt)) return null;
-
   return { prompt };
 }
 
 /* ============ MAIN SEND ============ */
 async function sendMessage() {
   if (isSending) return;
-
   const text  = userInput.value.trim();
   const image = pendingImage;
   const file  = pendingFile;
   if (!text && !image && !file) return;
 
-  // Natural image intent check (bina /image ke) — STRICT version
   if (!image && !file && text && !text.startsWith('/')) {
     const naturalImg = detectImageIntent(text);
     if (naturalImg) {
@@ -1813,7 +1636,7 @@ async function sendMessage() {
     addPlainMessage(text, true);
     userInput.value = '';
     if (!imgCmd.prompt) {
-      addPlainMessage('Image ke liye kuch description bhi likho.\n\nExamples:\n/image ek sher jungle mein\n/image2 anime: ek ladki chand pe baithi hai\n/image4 realistic: old Lahore street', false);
+      addPlainMessage('Image ke liye kuch description bhi likho.', false);
       return;
     }
     addImageGenerationMessage(imgCmd.prompt, imgCmd.count, imgCmd.style);
@@ -1823,7 +1646,7 @@ async function sendMessage() {
   let userContentForApi;
   if (image) {
     userContentForApi = [
-      { type: 'text', text: text || 'Is image mein kya hai? Explain karo.' },
+      { type: 'text', text: text || 'Is image mein kya hai?' },
       { type: 'image_url', image_url: { url: image.dataUrl } }
     ];
   } else {
@@ -1857,48 +1680,60 @@ async function sendMessage() {
   refreshSystemPrompt();
   let apiMessages = [...conversation, { role: 'user', content: userContentForApi }];
   let clean = null;
+  let fullRawReply = null;
 
   try {
     if (useFile) {
-      const filePrompt = `User ne ek file attach ki hai: "${file.name}"\n\nFile ka content (truncated):\n---\n${file.text}\n---\n\nUser ka sawaal: "${text || 'Is file ke baare mein kuch batao'}"\n\nInstructions:\n- File ke content ke base pe sawaal ka jawab do.\n- Roman Urdu mein jawab do.\n- File ka poora content repeat mat karo.`;
-      apiMessages = [
-        { role: 'system', content: baseInstruction },
-        { role: 'user', content: filePrompt }
-      ];
-      if (isDevToolbox) clean = await streamDevToolboxCompletion(apiMessages, bubble, textNode);
-      else clean = await streamGroqCompletion(apiMessages, currentModelId, bubble, textNode);
+      const filePrompt = `User ne ek file attach ki hai: "${file.name}"\n\nFile ka content (truncated):\n---\n${file.text}\n---\n\nUser ka sawaal: "${text || 'Is file ke baare mein buch batao'}"\n\nInstructions:\n- File ke content ke base pe jawab do.\n- Roman Urdu mein jawab do.`;
+      apiMessages = [{ role: 'system', content: baseInstruction }, { role: 'user', content: filePrompt }];
+      if (isDevToolbox) { fullRawReply = await streamDevToolboxCompletion(apiMessages, bubble, textNode); clean = fullRawReply; }
+      else { fullRawReply = await streamGroqCompletion(apiMessages, currentModelId, bubble, textNode); clean = cleanMarkdown(hideImageGenLine(fullRawReply)); }
 
     } else if (isDevToolbox) {
-      clean = await streamDevToolboxCompletion(apiMessages, bubble, textNode);
+      fullRawReply = await streamDevToolboxCompletion(apiMessages, bubble, textNode);
+      clean = fullRawReply;
 
     } else if (useSearch) {
       const searchResults = await performTavilySearch(text);
       if (searchResults.length === 0) {
-        clean = await streamGroqCompletion(apiMessages, currentModelId, bubble, textNode);
+        fullRawReply = await streamGroqCompletion(apiMessages, currentModelId, bubble, textNode);
+        clean = cleanMarkdown(hideImageGenLine(fullRawReply));
       } else {
         const searchContext = searchResults.map((r, i) => `[${i+1}] ${r.title}\n${r.snippet}\nURL: ${r.url}`).join('\n\n');
         const searchPrompt = `User ne ye sawaal poocha: "${text}"\n\nNeeche web search ke results hain. Inka istemaal karke user ko ek saaf, natural jawab do. Jawab Roman Urdu mein ho.\n\nSearch Results:\n${searchContext}\n\nInstru: Sources ke URLs ko include mat karo, sirf natural jawab do.`;
-        apiMessages = [
-          { role: 'system', content: baseInstruction },
-          { role: 'user', content: searchPrompt }
-        ];
-        clean = await streamGroqCompletion(apiMessages, currentModelId, bubble, textNode);
+        apiMessages = [{ role: 'system', content: baseInstruction }, { role: 'user', content: searchPrompt }];
+        fullRawReply = await streamGroqCompletion(apiMessages, currentModelId, bubble, textNode);
+        clean = cleanMarkdown(hideImageGenLine(fullRawReply));
         if (clean) addSourcesBlock(bubble, searchResults);
       }
 
     } else {
       const model = image ? VISION_MODEL : currentModelId;
-      clean = await streamGroqCompletion(apiMessages, model, bubble, textNode);
+      fullRawReply = await streamGroqCompletion(apiMessages, model, bubble, textNode);
+      clean = cleanMarkdown(hideImageGenLine(fullRawReply));
     }
 
-    if (!clean) return;
+    if (!clean && !fullRawReply) return;
 
+    // ==== IMAGE_GEN line detect karo aur image generate karo ====
+    if (fullRawReply) {
+      const imgPrompt = extractImageGenPrompt(fullRawReply);
+      if (imgPrompt) {
+        // Text bubble ke neeche ek naya bubble banao image ke liye
+        addImageGenerationMessage(imgPrompt, 1, null);
+        // IMAGE_GEN line ko display se hata do
+        textNode.innerText = cleanMarkdown(hideImageGenLine(fullRawReply));
+      }
+    }
+
+    if (!clean) clean = '';
     speakerBtn.onclick = () => speakText(clean, speakerBtn);
 
     const historyUserContent = image
       ? (text ? `${text} [image attach ki thi]` : '[image attach ki thi]')
       : (file ? (text ? `${text} [file: ${file.name}]` : `[file: ${file.name}]`) : text);
     conversation.push({ role: 'user', content: historyUserContent });
+    // History mein bhi IMAGE_GEN line hata do
     conversation.push({ role: 'assistant', content: clean.slice(0, MAX_MSG_LEN) });
 
     trimHistory();
@@ -1928,7 +1763,6 @@ loadMemory();
 loadSearchState();
 loadModelState();
 refreshSystemPrompt();
-
 const loadedFromShare = loadSharedChatFromUrl();
 if (!loadedFromShare) {
   loadHistory();
