@@ -379,7 +379,7 @@ Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle m
   });
 
   // Yahan AI ki identity set hoti hai — naam change karna ho to sirf yahan badlo
-  const systemInstruction = 'Tumhara naam Jarvis hai. Tum ek helpful AI assistant ho. Agar koi tumhara naam pooche, to hamesha "Jarvis" bolna. Tum kisi company ke banaye hue nahi ho — tumhe user ne banaya hai.';
+  const systemInstruction = 'Tumhara naam Jarvis hai. Tum ek helpful AI assistant ho. Agar koi tumhara naam pooche, to hamesha "Jarvis" bolna. Tum kisi company ke banaye hue nahi ho — tumhe user ne banaya hai. Hamesha seedha, saaf jawab do — apna internal soch-vichar (thinking/reasoning process) kabhi mat dikhana, sirf final jawab do.';
 
   // Conversation history (OpenAI-compatible format Groq bhi use karta hai)
   const conversation = [
@@ -496,7 +496,8 @@ Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle m
         body: JSON.stringify({
           model: image ? VISION_MODEL : MODEL,
           messages: conversation,
-          max_tokens: image ? 700 : 1024
+          max_tokens: image ? 700 : 1024,
+          reasoning_effort: "none"
         })
       });
 
