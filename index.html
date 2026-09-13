@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jarvis — AI Assistant</title>
+<title>Jarvis — Smart AI Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -35,7 +35,6 @@
   .memory-btn:hover { color: var(--text); border-color: var(--online); }
   .search-btn:hover { color: var(--text); border-color: var(--search); }
   .search-btn.active { background: var(--search); color: #0d0f14; border-color: var(--search); font-weight: 600; }
-  .search-btn.active:hover { background: #d4b65c; border-color: #d4b65c; }
   .share-btn:hover { color: var(--text); border-color: var(--share); }
   .memory-btn .mem-count { display: inline-block; background: var(--online); color: #0d0f14; font-size: 10px; font-weight: 600; padding: 1px 5px; border-radius: 8px; margin-left: 2px; vertical-align: middle; }
   .share-selector { position: relative; display: inline-block; }
@@ -95,9 +94,7 @@
   .lightbox.show { display: flex; }
   .lightbox img { max-width: 95vw; max-height: 95vh; border-radius: 8px; box-shadow: 0 10px 60px rgba(0,0,0,0.8); }
   .lightbox-close { position: absolute; top: 20px; right: 24px; background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 24px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-  .lightbox-close:hover { background: rgba(255,255,255,0.2); }
   .lightbox-download { position: absolute; top: 20px; right: 76px; background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 18px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-  .lightbox-download:hover { background: rgba(79,157,222,0.6); }
   .msg-actions { display: flex; gap: 14px; margin-top: 8px; align-items: center; }
   .action-btn { background: transparent; border: none; color: var(--text-dim); font-size: 12px; cursor: pointer; padding: 0; font-family: inherit; transition: color 0.15s ease; }
   .action-btn:hover { color: var(--accent); }
@@ -135,7 +132,6 @@
   .attachment-preview img { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; }
   .attachment-preview .att-name { flex: 1; font-size: 13px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .attachment-preview .att-remove { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 18px; line-height: 1; padding: 2px 6px; }
-  .attachment-preview .att-remove:hover { color: var(--text); }
   .attached-img-inline { max-width: 220px; border-radius: 10px; margin-bottom: 6px; display: block; border: 1px solid var(--border); }
   .attached-file-inline { display: flex; align-items: center; gap: 8px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; font-size: 13px; color: var(--text-dim); }
   .hint { text-align: center; font-size: 12px; color: var(--text-dim); margin-top: 10px; }
@@ -151,19 +147,16 @@
   .mem-modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
   .mem-modal-header h3 { margin: 0; font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; }
   .mem-modal-close { background: transparent; border: none; color: var(--text-dim); font-size: 22px; cursor: pointer; padding: 0 6px; line-height: 1; }
-  .mem-modal-close:hover { color: var(--text); }
   .mem-modal-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
   .mem-item { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; line-height: 1.5; align-items: flex-start; }
   .mem-item:last-child { border-bottom: none; }
   .mem-item .mem-dot { color: var(--online); flex-shrink: 0; margin-top: 1px; }
-  .mem-item .mem-text { flex: 1; color: var(--text); }
   .mem-empty { text-align: center; color: var(--text-dim); font-size: 14px; padding: 30px 10px; }
   .mem-modal-footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
   .mem-btn { background: transparent; border: 1px solid var(--border); color: var(--text-dim); padding: 8px 14px; border-radius: 8px; font-size: 13px; font-family: inherit; cursor: pointer; transition: all 0.15s ease; }
   .mem-btn:hover { color: var(--text); border-color: var(--text); }
   .mem-btn.danger:hover { color: var(--danger); border-color: var(--danger); }
   .mem-btn.accent { color: var(--accent); border-color: var(--accent-dim); }
-  .mem-btn.accent:hover { color: #6bb0e8; border-color: var(--accent); }
   .share-url-box { display: flex; gap: 8px; margin-top: 8px; }
   .share-url-input { flex: 1; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: var(--text); font-family: monospace; overflow: hidden; text-overflow: ellipsis; }
 </style>
@@ -206,12 +199,11 @@
     <div class="chat-box" id="chatBox">
       <div class="row ai">
         <div class="avatar ai">J</div>
-        <div class="msg">Assalam-o-Alaikum! Main Jarvis hoon. Kuch bhi pooch sakte hain.
+        <div class="msg">Assalam-o-Alaikum! Main Jarvis hoon — aapka personal AI assistant. 
 
-🎨 Image banane ke liye SAFAAT bolo: <b>"ek sher ki image banao"</b>
-🖼️ Zyada: <b>/image2</b> ya <b>/image4</b>
-🎭 Style: <b>/image anime: sher jungle mein</b>
-📎 Image | 📄 File | 🎙️ Voice | 🌐 Search | 📤 Share</div>
+Main aapki har cheez mein madad kar sakta hoon: sawaalon ke jawab, coding, image banane, files padhne, web search, awaz mein baat — sab kuch.
+
+Bas natural baat karein, mujhe sab samajh aata hai. 😊</div>
       </div>
     </div>
   </div>
@@ -226,102 +218,77 @@
       <input type="file" id="fileInput" accept="image/*" style="display:none">
       <input type="file" id="docInput" accept=".pdf,.docx,.txt,.md,.csv,.json" style="display:none">
       <button class="attach-btn" id="attachBtn" aria-label="Image attach">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M21.44 11.05L12.25 20.24C10.01 22.48 6.37 22.48 4.13 20.24C1.89 18 1.89 14.36 4.13 12.12L13.32 2.93C14.81 1.44 17.22 1.44 18.71 2.93C20.2 4.42 20.2 6.83 18.71 8.32L10.36 16.67C9.62 17.41 8.42 17.41 7.68 16.67C6.94 15.93 6.94 14.73 7.68 13.99L15.16 6.51" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21.44 11.05L12.25 20.24C10.01 22.48 6.37 22.48 4.13 20.24C1.89 18 1.89 14.36 4.13 12.12L13.32 2.93C14.81 1.44 17.22 1.44 18.71 2.93C20.2 4.42 20.2 6.83 18.71 8.32L10.36 16.67C9.62 17.41 8.42 17.41 7.68 16.67C6.94 15.93 6.94 14.73 7.68 13.99L15.16 6.51" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
       <button class="file-btn" id="fileBtn" aria-label="File attach">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M14 2V8H20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
       <button class="mic-btn" id="micBtn" aria-label="Mic">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2C10.34 2 9 3.34 9 5V12C9 13.66 10.34 15 12 15C13.66 15 15 13.66 15 12V5C15 3.34 13.66 2 12 2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M19 10V12C19 15.87 15.87 19 12 19C8.13 19 5 15.87 5 12V10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M12 19V22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          <path d="M8 22H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-        </svg>
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C10.34 2 9 3.34 9 5V12C9 13.66 10.34 15 12 15C13.66 15 15 13.66 15 12V5C15 3.34 13.66 2 12 2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 10V12C19 15.87 15.87 19 12 19C8.13 19 5 15.87 5 12V10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 19V22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 22H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
       </button>
-      <input type="text" id="userInput" placeholder="Apna sawaal likhein..." autocomplete="off">
+      <input type="text" id="userInput" placeholder="Kuch bhi poocho ya bolo..." autocomplete="off">
       <button class="send-btn" id="sendBtn" onclick="sendMessage()" aria-label="Bhejein">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M4 12L20 4L14 20L11 13L4 12Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-        </svg>
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 12L20 4L14 20L11 13L4 12Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
       </button>
     </div>
-    <div class="hint">Image: <code>/image</code>, <code>/image2</code>, <code>/image4</code> | Style: <code>/image anime:</code> | Share: 📤</div>
+    <div class="hint">💡 Natural baat karein | 📎 Image | 📄 File | 🎙️ Voice | 🌐 Search | 📤 Share</div>
   </div>
 
   <div class="lightbox" id="lightbox">
     <button class="lightbox-close" id="lightboxClose">×</button>
-    <button class="lightbox-download" id="lightboxDownload" title="Download">⬇</button>
+    <button class="lightbox-download" id="lightboxDownload">⬇</button>
     <img id="lightboxImg" src="" alt="">
   </div>
 
-  <div class="mem-toast" id="memToast"><span class="dot"></span><span id="memToastText">Memory update ho gayi</span></div>
+  <div class="mem-toast" id="memToast"><span class="dot"></span><span id="memToastText"></span></div>
 
   <div class="mem-modal" id="memModal">
     <div class="mem-modal-inner">
-      <div class="mem-modal-header">
-        <h3>🧠 Jarvis ki Memory</h3>
-        <button class="mem-modal-close" id="memModalClose">×</button>
-      </div>
+      <div class="mem-modal-header"><h3>🧠 Jarvis ki Memory</h3><button class="mem-modal-close" id="memModalClose">×</button></div>
       <div class="mem-modal-body" id="memModalBody"></div>
-      <div class="mem-modal-footer">
-        <button class="mem-btn danger" id="memClearBtn">Sab bhula do</button>
-        <button class="mem-btn" id="memCloseBtn">Band karo</button>
-      </div>
+      <div class="mem-modal-footer"><button class="mem-btn danger" id="memClearBtn">Sab bhula do</button><button class="mem-btn" id="memCloseBtn">Band karo</button></div>
     </div>
   </div>
 
   <div class="mem-modal" id="shareModal">
     <div class="mem-modal-inner">
-      <div class="mem-modal-header">
-        <h3>🔗 Share Link</h3>
-        <button class="mem-modal-close" id="shareModalClose">×</button>
-      </div>
+      <div class="mem-modal-header"><h3>🔗 Share Link</h3><button class="mem-modal-close" id="shareModalClose">×</button></div>
       <div class="mem-modal-body">
         <div style="font-size:13px;color:var(--text-dim);margin-bottom:8px;">Ye link copy karke kisi ko bhejein.</div>
         <div class="share-url-box"><input type="text" class="share-url-input" id="shareUrlInput" readonly></div>
       </div>
-      <div class="mem-modal-footer">
-        <button class="mem-btn accent" id="shareCopyBtn">📋 Copy Link</button>
-        <button class="mem-btn" id="shareModalCloseBtn">Band karo</button>
-      </div>
+      <div class="mem-modal-footer"><button class="mem-btn accent" id="shareCopyBtn">📋 Copy Link</button><button class="mem-btn" id="shareModalCloseBtn">Band karo</button></div>
     </div>
   </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/0.3.26/mammoth.browser.min.js"></script>
 <script>
-const GROQ_KEY = "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";
-const FAST_MODEL    = "openai/gpt-oss-20b";
-const VISION_MODEL  = "meta-llama/llama-4-scout-17b-16e-instruct";
-const API_URL       = "https://api.groq.com/openai/v1/chat/completions";
-const TAVILY_URL    = "https://api.tavily.com/search";
-const DEVTOOLBOX_URL = "https://devtoolbox-api.devtoolbox-api.workers.dev/ai/generate";
-const HISTORY_KEY   = "jarvis_history_v1";
-const MEMORY_KEY    = "jarvis_memory_v1";
-const SEARCH_KEY    = "jarvis_search_enabled_v1";
-const MODEL_KEY     = "jarvis_selected_model_v1";
-const MAX_HISTORY   = 10;
-const MEM_EXTRACT_EVERY = 6;
-const MAX_FACTS     = 15;
-const MAX_IMG_DIM   = 1024;
-const JPEG_QUALITY  = 0.75;
-const MAX_MSG_LEN   = 1500;
-const MAX_DOC_CHARS = 8000;
-const MAX_DOC_SIZE  = 10 * 1024 * 1024;
-const SHARE_HASH_PREFIX = '#share=';
+/* =========================================================
+   JARVIS — SMART AI ASSISTANT
+   Full context-aware, emotion-aware, state-machine based
+   ========================================================= */
 
-const MODEL_MAX_TOKENS = {
-  "openai/gpt-oss-120b": 900,
-  "openai/gpt-oss-20b": 900,
-  "qwen/qwen3.6-27b": 800,
-  "devtoolbox-coding": 2048
-};
+const GROQ_KEY = "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";
+const FAST_MODEL = "openai/gpt-oss-20b";
+const VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
+const API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const TAVILY_URL = "https://api.tavily.com/search";
+const DEVTOOLBOX_URL = "https://devtoolbox-api.devtoolbox-api.workers.dev/ai/generate";
+const HISTORY_KEY = "jarvis_history_v1";
+const MEMORY_KEY = "jarvis_memory_v1";
+const SEARCH_KEY = "jarvis_search_v1";
+const MODEL_KEY = "jarvis_model_v1";
+const MAX_HISTORY = 12;
+const MAX_FACTS = 20;
+const MAX_IMG_DIM = 1024;
+const JPEG_Q = 0.75;
+const MAX_MSG_LEN = 1800;
+const MAX_DOC_CHARS = 8000;
+const MAX_DOC_SIZE = 10 * 1024 * 1024;
+const SHARE_PREFIX = '#share=';
+
+const MODEL_MAX = { "openai/gpt-oss-120b": 900, "openai/gpt-oss-20b": 900, "qwen/qwen3.6-27b": 800, "devtoolbox-coding": 2048 };
 
 const IMAGE_STYLES = {
   realistic: "ultra realistic photograph, cinematic lighting, 8k, highly detailed, photorealistic",
@@ -341,326 +308,396 @@ const MODELS = [
   { id: "openai/gpt-oss-20b", name: "Fast", icon: "⚡", desc: "Instant replies, simple sawaal", provider: "groq" },
   { id: "openai/gpt-oss-120b", name: "Balanced", icon: "⚖️", desc: "Good balance of speed & quality", provider: "groq" },
   { id: "openai/gpt-oss-20b", name: "Compact", icon: "🌱", desc: "Fast reasoning, chhota model", provider: "groq" },
-  { id: "qwen/qwen3.6-27b", name: "Long Context", icon: "📚", desc: "Bada documents (131K) — slow", provider: "groq" },
-  { id: "devtoolbox-coding", name: "Coding (Free)", icon: "💻", desc: "DevToolBox se free coding — no signup", provider: "devtoolbox" }
+  { id: "qwen/qwen3.6-27b", name: "Long Context", icon: "📚", desc: "Bada documents (131K)", provider: "groq" },
+  { id: "devtoolbox-coding", name: "Coding (Free)", icon: "💻", desc: "DevToolBox free coding", provider: "devtoolbox" }
 ];
 
 let currentModelId = MODELS[0].id;
-
 if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
 
-const chatBox = document.getElementById('chatBox');
-const userInput = document.getElementById('userInput');
-const sendBtn = document.getElementById('sendBtn');
-const fileInput = document.getElementById('fileInput');
-const docInput = document.getElementById('docInput');
-const attachBtn = document.getElementById('attachBtn');
-const fileBtn = document.getElementById('fileBtn');
-const attachPreview = document.getElementById('attachPreview');
-const attachThumb = document.getElementById('attachThumb');
-const attachName = document.getElementById('attachName');
-const attachRemove = document.getElementById('attachRemove');
-const clearBtn = document.getElementById('clearBtn');
-const micBtn = document.getElementById('micBtn');
-const memoryBtn = document.getElementById('memoryBtn');
-const memCount = document.getElementById('memCount');
-const memModal = document.getElementById('memModal');
-const memModalBody = document.getElementById('memModalBody');
-const memModalClose = document.getElementById('memModalClose');
-const memCloseBtn = document.getElementById('memCloseBtn');
-const memClearBtn = document.getElementById('memClearBtn');
-const memToast = document.getElementById('memToast');
-const memToastText = document.getElementById('memToastText');
-const searchBtn = document.getElementById('searchBtn');
-const modelSelector = document.getElementById('modelSelector');
-const modelBtn = document.getElementById('modelBtn');
-const modelDropdown = document.getElementById('modelDropdown');
-const currentModelIcon = document.getElementById('currentModelIcon');
-const currentModelName = document.getElementById('currentModelName');
-const lightbox = document.getElementById('lightbox');
-const lightboxImg = document.getElementById('lightboxImg');
-const lightboxClose = document.getElementById('lightboxClose');
-const lightboxDownload = document.getElementById('lightboxDownload');
-const shareSelector = document.getElementById('shareSelector');
-const shareBtn = document.getElementById('shareBtn');
-const shareDropdown = document.getElementById('shareDropdown');
-const shareModal = document.getElementById('shareModal');
-const shareUrlInput = document.getElementById('shareUrlInput');
-const shareCopyBtn = document.getElementById('shareCopyBtn');
-const shareModalClose = document.getElementById('shareModalClose');
-const shareModalCloseBtn = document.getElementById('shareModalCloseBtn');
+/* ============ DOM ============ */
+const $ = id => document.getElementById(id);
+const chatBox = $('chatBox'), userInput = $('userInput'), sendBtn = $('sendBtn');
+const fileInput = $('fileInput'), docInput = $('docInput');
+const attachBtn = $('attachBtn'), fileBtn = $('fileBtn');
+const attachPreview = $('attachPreview'), attachThumb = $('attachThumb'), attachName = $('attachName'), attachRemove = $('attachRemove');
+const clearBtn = $('clearBtn'), micBtn = $('micBtn');
+const memoryBtn = $('memoryBtn'), memCount = $('memCount'), memModal = $('memModal'), memModalBody = $('memModalBody');
+const memModalClose = $('memModalClose'), memCloseBtn = $('memCloseBtn'), memClearBtn = $('memClearBtn');
+const memToast = $('memToast'), memToastText = $('memToastText');
+const searchBtn = $('searchBtn');
+const modelSelector = $('modelSelector'), modelBtn = $('modelBtn'), modelDropdown = $('modelDropdown');
+const currentModelIcon = $('currentModelIcon'), currentModelName = $('currentModelName');
+const lightbox = $('lightbox'), lightboxImg = $('lightboxImg'), lightboxClose = $('lightboxClose'), lightboxDownload = $('lightboxDownload');
+const shareSelector = $('shareSelector'), shareBtn = $('shareBtn'), shareDropdown = $('shareDropdown');
+const shareModal = $('shareModal'), shareUrlInput = $('shareUrlInput'), shareCopyBtn = $('shareCopyBtn');
+const shareModalClose = $('shareModalClose'), shareModalCloseBtn = $('shareModalCloseBtn');
 
-let pendingImage = null;
-let pendingFile  = null;
-let isSending    = false;
-let isListening  = false;
-let recognition  = null;
-let currentAudio = null;
-let currentBtn   = null;
-let isStoppingTTS = false;
+/* ============ STATE ============ */
+let pendingImage = null, pendingFile = null;
+let isSending = false, isListening = false, recognition = null;
+let currentAudio = null, currentBtn = null, isStoppingTTS = false;
 let messagesSinceExtract = 0;
 let memory = [];
 let searchEnabled = false;
 let lightboxCurrentUrl = '';
-let imageContextActive = false;   // Track if user is in image-request flow
-let lastUserImageIntent = false;
 
-const baseInstruction = `Tumhara naam Jarvis hai. Ek helpful AI assistant. Roman Urdu/Hindi/English mein natural baat karo.
+/* ============ SMART CONVERSATION STATE ============ */
+const chatState = {
+  mode: 'normal',          // 'normal' | 'awaiting_image_details' | 'image_just_generated'
+  lastImageTopic: null,    // last topic user wanted image of
+  lastIntent: null,        // last detected intent
+  emotionalTone: 'neutral',// 'neutral' | 'happy' | 'frustrated' | 'confused' | 'urgent'
+  turnCount: 0
+};
 
-IMAGE CAPABILITY:
-- Tum image BANA SAKTE HO. Agar koi pooche "kya tum image bana sakte ho?", to HAAN kaho aur bolo "Batao kaisi image chahiye."
-- Jab user koi bhi image ki request kare, to pehle 1 line ka natural reply likho jaise "Yeh lo aapki image!" ya "Ban rahi hai!"
-- IMPORTANT: Uske baad bilkul nayi line pe likho:
-IMAGE_GEN: <detailed English description>
-- IMAGE_GEN line ke baad kuch mat likho.
+/* ============ SMART SYSTEM PROMPT ============ */
+const baseInstruction = `Tum "Jarvis" ho — ek smart, warm, helpful AI assistant. Tumhara banane wala user hai. Tum bilkul insaan jaise baat karte ho, robotic nahi.
 
-RULES:
-- Compliment ("achi image banayi"), thanks, ya normal sawaal pe KABHI IMAGE_GEN mat likho.
-- User mana kare ("nahi banao", "mat banao") to IMAGE_GEN BILKUL mat likho.
-- KABHI fake URLs ya markdown ![alt](url) mat likho.`;
+## ZABAAN
+- Hamesha Roman Urdu/Hindi ya English mein jawab do.
+- Natural, casual, friendly tone. Jaise ek dost baat karta hai.
+- Chhote jawab do, lambi list mat banao jab tak user na maange.
+- "Bhai", "yaar", "dekho", "acha" jaise casual words use kar sakte ho.
+- Zyada **bold** aur bullet points mat use karo — normal paragraph likho.
+
+## TUM KYA KAR SAKTE HO
+- Text chat, sawaal-jawab, reasoning, coding, maths
+- Image generation (Pollinations)
+- Image samajhna (vision)
+- File padhna (PDF, DOCX, TXT, MD, CSV, JSON)
+- Web search
+- Voice (input + output)
+- Memory (yaad rakhna)
+
+## IMAGE GENERATION — BOHOT ZAROORI RULES
+1. Tum image BANA SAKTE HO. Agar koi pooche "kya tum image bana sakte ho?", to HAAN kaho — "Bilkul! Batao kaisi image chahiye."
+2. Jab user SAFAAT TOR PE image banane ko kahe (jaise "ek sher ki image banao", "hiran ki tasveer bnado", "koi si bhi banao", "image banao"), to apne reply ke AAKHIR mein yeh LINE likho:
+IMAGE_GEN: <detailed English prompt of the image>
+
+Us line se PEHLE 1-2 line natural reply likho jaise "Yeh lo aapki image!" ya "Ban rahi hai!"
+
+3. IMAGE_GEN line ke BAAD kuch mat likho.
+
+## KYA NAHI KARNA
+- Compliment ("achi image banayi", "nice pic", "wah kya baat") pe IMAGE_GEN MAT likho — sirf "Shukriya!" ya aisa kuch.
+- Jab user MANA kare ("nahi banao", "mat banao", "band karo", "rehne do") → IMAGE_GEN BILKUL MAT likho. Sirf "Theek hai" jaisa confirm karo.
+- Normal sawaal, greeting, ya baat-cheet pe IMAGE_GEN MAT likho.
+- KABHI fake image URLs mat banao (blob.core.windows.net, dall-e, openai.com, koi bhi URL).
+- KABHI markdown image ![alt](url) mat likho.
+- Apna internal "thinking" process kabhi mat dikhao — sirf final jawab.
+
+## PERSONALITY
+- Warm, helpful, thoda witty
+- User ki frustration samjho — agar wo pareshan ho, to calm karo aur seedha hal do
+- Proactively madad karo — agar kuch samajh aa jaye to bina poochhe kar do
+- Chhoti baat ka lamba jawab mat do
+
+## MEMORY
+Agar user ne apne baare mein kuch bataya ho (naam, sheher, pasand, kaam), to use naturally yaad rakho aur relevant jagah use karo.`;
 
 let conversation = [{ role: 'system', content: baseInstruction }];
+
+/* ============ EMOTION DETECTION ============ */
+function detectEmotion(text) {
+  const lower = (text || '').toLowerCase();
+  // Frustration
+  if (/\b(yaar|yar|abe|arey|arre|kya bakwas|bakwas|faltu|fazool|pagal|dimagh|sir\s+khap|kuch\s+nahi\s+ho\s+raha|kaam\s+nahi|nahi\s+chal|bekar|kharab|bura\s+lag|thak\s+gaya|tired|ugh|uff|nahi\s+mila|kahan\s+hai|kidhar)\b/i.test(lower)) return 'frustrated';
+  // Happy
+  if (/\b(achi|acha|accha|nice|good|great|wow|wah|mast|zabardast|shukriya|thanks|love|pyara|piyara|badhiya|behtareen|kamaal|perfect)\b/i.test(lower)) return 'happy';
+  // Confused
+  if (/\b(samajh\s+nahi|samjha\s+nahi|kya\s+matlab|confuse|clear\s+nahi|mujhe\s+samajh|kaise\s+kaise|kya\s+hai\s+ye)\b/i.test(lower)) return 'confused';
+  // Urgent
+  if (/\b(jaldi|jaldi|urgent|foran|abhi|turant|fast|quick|fatafat)\b/i.test(lower)) return 'urgent';
+  return 'neutral';
+}
+
+/* ============ INTENT DETECTION ============ */
+function detectIntent(text) {
+  const lower = (text || '').toLowerCase().trim();
+  if (!lower) return 'empty';
+
+  // Image rejection
+  if (/\b(nahi|nhi|mat|na|band|stop|rehne|chhod|don'?t|dont)\b/i.test(lower) &&
+      /\b(image|pic|photo|tasveer|bana|banao|bnado|bnao|bnay|bna|generate)\b/i.test(lower)) return 'reject_image';
+
+  // Compliment
+  if (/\b(achi|acha|accha|nice|good|great|wow|wah|mast|zabardast|shukriya|thanks|pyara|piyara|badhiya|kamaal|perfect)\b/i.test(lower) &&
+      /\b(image|pic|photo|tasveer|bana|banao|bnado)\b/i.test(lower)) return 'compliment';
+
+  // Pure capability question
+  if (/\b(kya\s+tum|kya\s+aap|kya\s+main|can\s+you|can\s+u|tum\s+kar\s+sakte|kar\s+sakte\s+ho|sakte\s+ho|bana\s+sakte|bna\s+sakte)\b/i.test(lower) && /\?/.test(lower)) return 'capability_q';
+
+  // Greeting
+  if (/^(hi|hello|hey|salam|assalam|asalam|aoa|assalamualaikum|assalam-o-alaikum|kya\s+haal|kaise\s+ho|howdy|sup)\b/i.test(lower)) return 'greeting';
+
+  // Thanks
+  if (/^(shukriya|thanks|thank\s*you|thanku|shukria|jazak)\b/i.test(lower)) return 'thanks';
+
+  // Code request
+  if (/\b(code|program|function|script|website|app|calculator|game|programming|snippet|algorithm|leetcode|python|javascript|java|c\+\+|html|css)\b/i.test(lower) && !/\b(image|photo|pic|tasveer|banao|bnado)\b/i.test(lower)) return 'code';
+
+  // Direct image request (image word + action word)
+  const hasImg = /\b(image|photo|picture|tasveer|chitra|pic|drawing|sketch|painting|artwork|wallpaper|poster|scene|scenery|landscape|drishya)\b/i.test(lower);
+  const hasAct = /\b(bana|banao|banaao|banai|banade|banado|bana\s*do|banaye|banay|generate|create|make|draw|paint|sketch|render|dikhao|dikha|dikhaao|bna|bnao|bnaao|bnado|bnade|bnay|bnaye|bnakr|bnakar|kardo|krdo)\b/i.test(lower);
+  if (hasImg && hasAct) return 'image_direct';
+
+  // Context-active short reply (image topic)
+  if (chatState.mode === 'awaiting_image_details' && lower.length < 80 &&
+      !/\b(kya|kaise|kyun|why|how|nahi|nhi|mat)\b/i.test(lower)) {
+    return 'image_context_reply';
+  }
+
+  // Question
+  if (/\?/.test(lower) || /^(kya|kaise|kab|kahan|kyun|kaun|kitna|kitne|how|what|why|where|when|who)\b/i.test(lower)) return 'question';
+
+  return 'chat';
+}
+
+/* ============ SNARKY BUT CALM RESPONSES FOR FRUSTRATION ============ */
+function getCalmResponse(emotion, context) {
+  if (emotion === 'frustrated') {
+    return "Yaar, thoda deep saans lo. Main hoon na — batao exactly kya nahi ho raha, main abhi theek karta hoon.";
+  }
+  return null;
+}
+
+/* ============ SHOW MEMORY TOAST ============ */
+function showMemToast(text) {
+  memToastText.innerText = text;
+  memToast.classList.add('show');
+  clearTimeout(showMemToast._t);
+  showMemToast._t = setTimeout(() => memToast.classList.remove('show'), 2500);
+}
 
 /* ============ LIGHTBOX ============ */
 function openLightbox(url) { lightboxCurrentUrl = url; lightboxImg.src = url; lightbox.classList.add('show'); }
 function closeLightbox() { lightbox.classList.remove('show'); lightboxImg.src = ''; lightboxCurrentUrl = ''; }
-lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
-lightboxClose.addEventListener('click', (e) => { e.stopPropagation(); closeLightbox(); });
-lightboxDownload.addEventListener('click', async (e) => {
+lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+lightboxClose.addEventListener('click', e => { e.stopPropagation(); closeLightbox(); });
+lightboxDownload.addEventListener('click', async e => {
   e.stopPropagation();
   if (!lightboxCurrentUrl) return;
   try {
-    const res = await fetch(lightboxCurrentUrl); const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'jarvis-' + Date.now() + '.jpg';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-  } catch (err) {}
+    const r = await fetch(lightboxCurrentUrl); const b = await r.blob();
+    const u = URL.createObjectURL(b);
+    const a = document.createElement('a'); a.href = u; a.download = 'jarvis-' + Date.now() + '.jpg';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u);
+  } catch (e) {}
 });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && lightbox.classList.contains('show')) closeLightbox(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && lightbox.classList.contains('show')) closeLightbox(); });
 
 /* ============ SHARE / EXPORT ============ */
-function getChatMessagesForExport() { return conversation.slice(1).filter(m => m.role === 'user' || m.role === 'assistant'); }
-function formatTimestamp() { const d = new Date(); return d.toLocaleString('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }); }
-function downloadBlob(content, filename, mime) {
-  const blob = new Blob([content], { type: mime || 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = filename;
+function getMsgs() { return conversation.slice(1).filter(m => m.role === 'user' || m.role === 'assistant'); }
+function ts() { return new Date().toLocaleString('en-GB', { year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit' }); }
+function dlBlob(c, fn, mime) {
+  const b = new Blob([c], { type: mime || 'text/plain;charset=utf-8' });
+  const u = URL.createObjectURL(b);
+  const a = document.createElement('a'); a.href = u; a.download = fn;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  setTimeout(() => URL.revokeObjectURL(u), 1000);
 }
-function exportChatAsTxt() {
-  const msgs = getChatMessagesForExport(); if (!msgs.length) { showMemToast('Chat khali hai'); return; }
-  let out = 'Jarvis Chat Export\n=================\nDate: ' + formatTimestamp() + '\nMessages: ' + msgs.length + '\n\n';
-  for (const m of msgs) out += '[' + (m.role === 'user' ? 'You' : 'Jarvis') + ']\n' + (typeof m.content === 'string' ? m.content : '[attachment]') + '\n\n';
-  downloadBlob(out, 'jarvis-chat-' + Date.now() + '.txt', 'text/plain;charset=utf-8');
-  showMemToast('📥 TXT download ho gayi');
+function exportTxt() {
+  const ms = getMsgs(); if (!ms.length) { showMemToast('Chat khali hai'); return; }
+  let o = 'Jarvis Chat Export\n=================\nDate: ' + ts() + '\nMessages: ' + ms.length + '\n\n';
+  for (const m of ms) o += '[' + (m.role === 'user' ? 'You' : 'Jarvis') + ']\n' + (typeof m.content === 'string' ? m.content : '[attachment]') + '\n\n';
+  dlBlob(o, 'jarvis-chat-' + Date.now() + '.txt'); showMemToast('📥 TXT download ho gayi');
 }
-function exportChatAsMd() {
-  const msgs = getChatMessagesForExport(); if (!msgs.length) { showMemToast('Chat khali hai'); return; }
-  let out = '# Jarvis Chat\n\n**Date:** ' + formatTimestamp() + '  \n**Messages:** ' + msgs.length + '\n\n---\n\n';
-  for (const m of msgs) out += '### ' + (m.role === 'user' ? '🧑 **You**' : '🤖 **Jarvis**') + '\n\n' + (typeof m.content === 'string' ? m.content : '_\\[attachment\\]_') + '\n\n---\n\n';
-  downloadBlob(out, 'jarvis-chat-' + Date.now() + '.md', 'text/markdown;charset=utf-8');
-  showMemToast('📝 Markdown download ho gayi');
+function exportMd() {
+  const ms = getMsgs(); if (!ms.length) { showMemToast('Chat khali hai'); return; }
+  let o = '# Jarvis Chat\n\n**Date:** ' + ts() + '  \n**Messages:** ' + ms.length + '\n\n---\n\n';
+  for (const m of ms) o += '### ' + (m.role === 'user' ? '🧑 **You**' : '🤖 **Jarvis**') + '\n\n' + (typeof m.content === 'string' ? m.content : '_\\[attachment\\]_') + '\n\n---\n\n';
+  dlBlob(o, 'jarvis-chat-' + Date.now() + '.md', 'text/markdown;charset=utf-8'); showMemToast('📝 MD download ho gayi');
 }
-function copyAllChat() {
-  const msgs = getChatMessagesForExport(); if (!msgs.length) { showMemToast('Chat khali hai'); return; }
-  let out = '';
-  for (const m of msgs) out += '[' + (m.role === 'user' ? 'You' : 'Jarvis') + ']\n' + (typeof m.content === 'string' ? m.content : '[attachment]') + '\n\n';
-  navigator.clipboard.writeText(out).then(() => showMemToast('📋 Poori chat copy ho gayi')).catch(() => showMemToast('⚠️ Copy fail hui'));
+function copyAll() {
+  const ms = getMsgs(); if (!ms.length) { showMemToast('Chat khali hai'); return; }
+  let o = ''; for (const m of ms) o += '[' + (m.role === 'user' ? 'You' : 'Jarvis') + ']\n' + (typeof m.content === 'string' ? m.content : '[attachment]') + '\n\n';
+  navigator.clipboard.writeText(o).then(() => showMemToast('📋 Copy ho gaya')).catch(() => showMemToast('⚠️ Copy fail'));
 }
-function generateShareLink() {
-  const msgs = getChatMessagesForExport(); if (!msgs.length) { showMemToast('Chat khali hai'); return; }
+function shareLink() {
+  const ms = getMsgs(); if (!ms.length) { showMemToast('Chat khali hai'); return; }
   try {
-    const trimmed = msgs.slice(-20).map(m => ({ r: m.role === 'user' ? 'u' : 'a', c: (typeof m.content === 'string' ? m.content : '[attachment]').slice(0, 2000) }));
-    const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(trimmed))));
-    shareUrlInput.value = location.origin + location.pathname + SHARE_HASH_PREFIX + b64;
+    const t = ms.slice(-20).map(m => ({ r: m.role === 'user' ? 'u' : 'a', c: (typeof m.content === 'string' ? m.content : '[attachment]').slice(0, 2000) }));
+    const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(t))));
+    shareUrlInput.value = location.origin + location.pathname + SHARE_PREFIX + b64;
     shareModal.classList.add('show');
-  } catch (e) { showMemToast('⚠️ Share link nahi ban saki'); }
+  } catch (e) { showMemToast('⚠️ Fail'); }
 }
-function loadSharedChatFromUrl() {
-  const hash = location.hash;
-  if (!hash || !hash.startsWith(SHARE_HASH_PREFIX)) return false;
+function loadShared() {
+  const h = location.hash;
+  if (!h || !h.startsWith(SHARE_PREFIX)) return false;
   try {
-    const b64 = hash.slice(SHARE_HASH_PREFIX.length);
-    const arr = JSON.parse(decodeURIComponent(escape(atob(b64))));
+    const arr = JSON.parse(decodeURIComponent(escape(atob(h.slice(SHARE_PREFIX.length)))));
     if (!Array.isArray(arr) || !arr.length) return false;
     chatBox.innerHTML = '';
-    conversation = [{ role: 'system', content: buildSystemPrompt() }];
-    const infoRow = document.createElement('div'); infoRow.className = 'row ai';
-    infoRow.innerHTML = '<div class="avatar ai">J</div><div class="msg" style="background:rgba(245,158,122,0.1);border-color:rgba(245,158,122,0.3);color:#f59e7a;">🔗 Ye ek shared chat hai.</div>';
-    chatBox.appendChild(infoRow);
-    for (const item of arr) {
-      const isUser = item.r === 'u'; const content = String(item.c || '');
-      if (isUser) { addPlainMessage(content, true); conversation.push({ role: 'user', content: content }); }
-      else { const { bubble, textNode } = addStreamingMessage(); bubble.classList.remove('streaming'); textNode.innerText = content; conversation.push({ role: 'assistant', content: content }); }
+    conversation = [{ role: 'system', content: buildPrompt() }];
+    const ir = document.createElement('div'); ir.className = 'row ai';
+    ir.innerHTML = '<div class="avatar ai">J</div><div class="msg" style="background:rgba(245,158,122,0.1);border-color:rgba(245,158,122,0.3);color:#f59e7a;">🔗 Ye ek shared chat hai.</div>';
+    chatBox.appendChild(ir);
+    for (const it of arr) {
+      const c = String(it.c || '');
+      if (it.r === 'u') { addMsg(c, true); conversation.push({ role: 'user', content: c }); }
+      else { const { bubble, textNode } = addStream(); bubble.classList.remove('streaming'); textNode.innerText = c; conversation.push({ role: 'assistant', content: c }); }
     }
     chatBox.scrollTop = chatBox.scrollHeight;
-    setTimeout(() => showMemToast('🔗 Shared chat load ho gayi'), 300);
-    setTimeout(() => { try { history.replaceState(null, '', location.pathname); } catch (e) {} }, 1500);
+    setTimeout(() => showMemToast('🔗 Load ho gayi'), 300);
+    setTimeout(() => { try { history.replaceState(null, '', location.pathname); } catch(e){} }, 1500);
     return true;
   } catch (e) { return false; }
 }
-shareBtn.addEventListener('click', (e) => { e.stopPropagation(); shareSelector.classList.toggle('open'); });
-document.addEventListener('click', (e) => { if (!shareSelector.contains(e.target)) shareSelector.classList.remove('open'); });
-shareDropdown.addEventListener('click', (e) => {
-  const opt = e.target.closest('.share-option'); if (!opt) return;
-  const action = opt.dataset.action; shareSelector.classList.remove('open');
-  if (action === 'txt') exportChatAsTxt();
-  else if (action === 'md') exportChatAsMd();
-  else if (action === 'link') generateShareLink();
-  else if (action === 'copy') copyAllChat();
+shareBtn.addEventListener('click', e => { e.stopPropagation(); shareSelector.classList.toggle('open'); });
+document.addEventListener('click', e => { if (!shareSelector.contains(e.target)) shareSelector.classList.remove('open'); });
+shareDropdown.addEventListener('click', e => {
+  const o = e.target.closest('.share-option'); if (!o) return;
+  const a = o.dataset.action; shareSelector.classList.remove('open');
+  if (a === 'txt') exportTxt(); else if (a === 'md') exportMd(); else if (a === 'link') shareLink(); else if (a === 'copy') copyAll();
 });
-function closeShareModal() { shareModal.classList.remove('show'); }
-shareModalClose.addEventListener('click', closeShareModal);
-shareModalCloseBtn.addEventListener('click', closeShareModal);
-shareModal.addEventListener('click', (e) => { if (e.target === shareModal) closeShareModal(); });
+function closeShareM() { shareModal.classList.remove('show'); }
+shareModalClose.addEventListener('click', closeShareM);
+shareModalCloseBtn.addEventListener('click', closeShareM);
+shareModal.addEventListener('click', e => { if (e.target === shareModal) closeShareM(); });
 shareCopyBtn.addEventListener('click', () => {
   shareUrlInput.select();
-  navigator.clipboard.writeText(shareUrlInput.value).then(() => { showMemToast('📋 Link copy ho gayi!'); closeShareModal(); }).catch(() => showMemToast('⚠️ Copy fail hui'));
+  navigator.clipboard.writeText(shareUrlInput.value).then(() => { showMemToast('📋 Copy ho gaya!'); closeShareM(); }).catch(() => showMemToast('⚠️ Fail'));
 });
 
 /* ============ MODEL SELECTOR ============ */
-function loadModelState() { try { const s = localStorage.getItem(MODEL_KEY); if (s && MODELS.some(m => m.id === s)) currentModelId = s; } catch (e) {} updateModelBtnUI(); renderModelDropdown(); }
-function saveModelState() { try { localStorage.setItem(MODEL_KEY, currentModelId); } catch (e) {} }
-function getCurrentModel() { return MODELS.find(m => m.id === currentModelId) || MODELS[0]; }
-function updateModelBtnUI() { const m = getCurrentModel(); currentModelIcon.innerText = m.icon; currentModelName.innerText = m.name; }
-function renderModelDropdown() {
+function loadModel() {
+  try { const s = localStorage.getItem(MODEL_KEY); if (s && MODELS.some(m => m.id === s)) currentModelId = s; } catch (e) {}
+  updateModelUI(); renderModelDD();
+}
+function saveModel() { try { localStorage.setItem(MODEL_KEY, currentModelId); } catch (e) {} }
+function getModel() { return MODELS.find(m => m.id === currentModelId) || MODELS[0]; }
+function updateModelUI() { const m = getModel(); currentModelIcon.innerText = m.icon; currentModelName.innerText = m.name; }
+function renderModelDD() {
   modelDropdown.innerHTML = '';
   for (const m of MODELS) {
-    const div = document.createElement('div');
-    div.className = 'model-option' + (m.id === currentModelId ? ' active' : '');
-    const tag = m.provider === 'devtoolbox' ? '<span class="m-tag">FREE</span>' : '';
-    div.innerHTML = `<span class="m-icon">${m.icon}</span><div class="m-info"><div class="m-name">${m.name}${tag}</div><div class="m-desc">${m.desc}</div></div>${m.id === currentModelId ? '<span class="m-check">✓</span>' : ''}`;
-    div.onclick = () => { currentModelId = m.id; saveModelState(); updateModelBtnUI(); renderModelDropdown(); modelSelector.classList.remove('open'); showMemToast(`${m.icon} ${m.name} model select ho gaya`); };
-    modelDropdown.appendChild(div);
+    const d = document.createElement('div');
+    d.className = 'model-option' + (m.id === currentModelId ? ' active' : '');
+    const t = m.provider === 'devtoolbox' ? '<span class="m-tag">FREE</span>' : '';
+    d.innerHTML = `<span class="m-icon">${m.icon}</span><div class="m-info"><div class="m-name">${m.name}${t}</div><div class="m-desc">${m.desc}</div></div>${m.id === currentModelId ? '<span class="m-check">✓</span>' : ''}`;
+    d.onclick = () => { currentModelId = m.id; saveModel(); updateModelUI(); renderModelDD(); modelSelector.classList.remove('open'); showMemToast(`${m.icon} ${m.name}`); };
+    modelDropdown.appendChild(d);
   }
 }
-modelBtn.addEventListener('click', (e) => { e.stopPropagation(); modelSelector.classList.toggle('open'); });
-document.addEventListener('click', (e) => { if (!modelSelector.contains(e.target)) modelSelector.classList.remove('open'); });
+modelBtn.addEventListener('click', e => { e.stopPropagation(); modelSelector.classList.toggle('open'); });
+document.addEventListener('click', e => { if (!modelSelector.contains(e.target)) modelSelector.classList.remove('open'); });
 
 /* ============ IMAGE COMPRESSION ============ */
-function compressImage(file, maxDim = MAX_IMG_DIM, quality = JPEG_QUALITY) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        let { width, height } = img;
-        if (width > maxDim || height > maxDim) {
-          if (width > height) { height = Math.round((height * maxDim) / width); width = maxDim; }
-          else { width = Math.round((width * maxDim) / height); height = maxDim; }
+function compressImg(file, md = MAX_IMG_DIM, q = JPEG_Q) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => {
+      const i = new Image();
+      i.onload = () => {
+        let { width, height } = i;
+        if (width > md || height > md) {
+          if (width > height) { height = Math.round((height * md) / width); width = md; }
+          else { width = Math.round((width * md) / height); height = md; }
         }
-        const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
-        const ctx = canvas.getContext('2d'); ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, width, height);
-        ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
+        const c = document.createElement('canvas'); c.width = width; c.height = height;
+        const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, width, height);
+        x.drawImage(i, 0, 0, width, height);
+        res(c.toDataURL('image/jpeg', q));
       };
-      img.onerror = () => reject(new Error('Image load nahi hui'));
-      img.src = e.target.result;
+      i.onerror = () => rej(new Error('Load fail'));
+      i.src = e.target.result;
     };
-    reader.onerror = () => reject(new Error('File read error'));
-    reader.readAsDataURL(file);
+    r.onerror = () => rej(new Error('Read fail'));
+    r.readAsDataURL(file);
   });
 }
 
 /* ============ FILE EXTRACTION ============ */
-async function extractPdfText(file) {
-  const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-  let fullText = '';
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const textContent = await page.getTextContent();
-    fullText += textContent.items.map(item => item.str).join(' ') + '\n';
+async function pdfText(file) {
+  const ab = await file.arrayBuffer();
+  const p = await pdfjsLib.getDocument({ data: ab }).promise;
+  let t = '';
+  for (let i = 1; i <= p.numPages; i++) {
+    const pg = await p.getPage(i);
+    const c = await pg.getTextContent();
+    t += c.items.map(x => x.str).join(' ') + '\n';
   }
-  return fullText.trim();
+  return t.trim();
 }
-async function extractDocxText(file) {
-  const arrayBuffer = await file.arrayBuffer();
-  const result = await mammoth.extractRawText({ arrayBuffer });
-  return result.value.trim();
+async function docxText(file) { const ab = await file.arrayBuffer(); const r = await mammoth.extractRawText({ arrayBuffer: ab }); return r.value.trim(); }
+function txtText(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = e => res(e.target.result.trim()); r.onerror = () => rej(new Error('Fail')); r.readAsText(file); }); }
+async function extractText(file) {
+  const n = file.name.toLowerCase();
+  if (n.endsWith('.pdf')) return await pdfText(file);
+  if (n.endsWith('.docx')) return await docxText(file);
+  return await txtText(file);
 }
-function extractPlainText(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => resolve(e.target.result.trim());
-    reader.onerror = () => reject(new Error('File read error'));
-    reader.readAsText(file);
-  });
-}
-async function extractFileText(file) {
-  const name = file.name.toLowerCase();
-  if (name.endsWith('.pdf')) return await extractPdfText(file);
-  if (name.endsWith('.docx')) return await extractDocxText(file);
-  return await extractPlainText(file);
-}
-function truncateFileText(text, maxChars = MAX_DOC_CHARS) { if (text.length <= maxChars) return text; return text.slice(0, maxChars) + '\n\n[...truncated...]'; }
+function truncTxt(t, m = MAX_DOC_CHARS) { if (t.length <= m) return t; return t.slice(0, m) + '\n\n[...truncated...]'; }
 
-/* ============ SEARCH TOGGLE ============ */
-function loadSearchState() { try { searchEnabled = localStorage.getItem(SEARCH_KEY) === 'true'; } catch (e) { searchEnabled = false; } updateSearchBtnUI(); }
-function saveSearchState() { try { localStorage.setItem(SEARCH_KEY, searchEnabled ? 'true' : 'false'); } catch (e) {} }
-function updateSearchBtnUI() {
+/* ============ SEARCH ============ */
+function loadSearch() { try { searchEnabled = localStorage.getItem(SEARCH_KEY) === 'true'; } catch (e) { searchEnabled = false; } updateSearchUI(); }
+function saveSearch() { try { localStorage.setItem(SEARCH_KEY, searchEnabled ? 'true' : 'false'); } catch (e) {} }
+function updateSearchUI() {
   if (searchEnabled) { searchBtn.classList.add('active'); searchBtn.title = 'Web search ON'; }
   else { searchBtn.classList.remove('active'); searchBtn.title = 'Web search OFF'; }
 }
-searchBtn.addEventListener('click', () => { searchEnabled = !searchEnabled; saveSearchState(); updateSearchBtnUI(); showMemToast(searchEnabled ? '🌐 Web search ON' : 'Web search OFF'); });
+searchBtn.addEventListener('click', () => { searchEnabled = !searchEnabled; saveSearch(); updateSearchUI(); showMemToast(searchEnabled ? '🌐 Search ON' : 'Search OFF'); });
 
 /* ============ MEMORY ============ */
-function loadMemory() { try { const raw = localStorage.getItem(MEMORY_KEY); memory = raw ? JSON.parse(raw) : []; if (!Array.isArray(memory)) memory = []; } catch (e) { memory = []; } updateMemCount(); }
-function saveMemory() { try { localStorage.setItem(MEMORY_KEY, JSON.stringify(memory)); } catch (e) {} updateMemCount(); }
-function updateMemCount() { memCount.innerText = memory.length; }
-function buildSystemPrompt() {
-  if (!memory.length) return baseInstruction;
-  return baseInstruction + '\n\nUser ke baare mein facts:\n' + memory.map(f => '- ' + f).join('\n');
+function loadMem() {
+  try { const r = localStorage.getItem(MEMORY_KEY); memory = r ? JSON.parse(r) : []; if (!Array.isArray(memory)) memory = []; } catch (e) { memory = []; }
+  updateMemCount();
 }
-function refreshSystemPrompt() { conversation[0] = { role: 'system', content: buildSystemPrompt() }; }
-function showMemToast(text) { memToastText.innerText = text; memToast.classList.add('show'); clearTimeout(showMemToast._t); showMemToast._t = setTimeout(() => memToast.classList.remove('show'), 2500); }
+function saveMem() { try { localStorage.setItem(MEMORY_KEY, JSON.stringify(memory)); } catch (e) {} updateMemCount(); }
+function updateMemCount() { memCount.innerText = memory.length; }
+function buildPrompt() {
+  if (!memory.length) return baseInstruction;
+  return baseInstruction + '\n\n## USER KE BAARE MEIN YAAD (context ke liye)\n' + memory.map(f => '- ' + f).join('\n');
+}
+function refreshPrompt() { conversation[0] = { role: 'system', content: buildPrompt() }; }
+
 async function extractFacts() {
-  const recent = conversation.slice(-6).filter(m => m.role !== 'system');
-  if (recent.length < 2) return;
-  const chatLog = recent.map(m => (m.role === 'user' ? 'User' : 'Jarvis') + ': ' + (typeof m.content === 'string' ? m.content.slice(0, 300) : '(image)')).join('\n');
-  const existingFacts = memory.length ? 'Pehle se:\n' + memory.map(f => '- ' + f).join('\n') : 'Memory khali hai.';
-  const extractionPrompt = `Conversation se user ke baare mein IMPORTANT long-term facts nikaalo.\n\n${existingFacts}\n\nConversation:\n${chatLog}\n\nRules:\n- Sirf user ke baare mein facts.\n- Har fact max 15 words.\n- Naya fact nahi mila to sirf "NONE".\n- Warna har fact ek nayi line.\n- Roman Urdu/English.`;
+  const rec = conversation.slice(-8).filter(m => m.role !== 'system');
+  if (rec.length < 2) return;
+  const log = rec.map(m => (m.role === 'user' ? 'User' : 'Jarvis') + ': ' + (typeof m.content === 'string' ? m.content.slice(0, 300) : '(image)')).join('\n');
+  const ex = memory.length ? 'Pehle se:\n' + memory.map(f => '- ' + f).join('\n') : 'Khali.';
+  const p = `Conversation se user ke baare mein SIRF long-term facts nikaalo (naam, kaam, sheher, pasand, family, goals).\n\n${ex}\n\n${log}\n\nRules:\n- Sirf user ke facts\n- Har fact max 15 words\n- Kuch nahi mila to sirf "NONE"\n- Roman Urdu/English`;
   try {
-    const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` }, body: JSON.stringify({ model: FAST_MODEL, messages: [{ role: 'user', content: extractionPrompt }], max_completion_tokens: 200, temperature: 0.3 }) });
-    if (!res.ok) return;
-    const data = await res.json();
-    const raw = (data?.choices?.[0]?.message?.content || '').trim();
+    const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` }, body: JSON.stringify({ model: FAST_MODEL, messages: [{ role: 'user', content: p }], max_completion_tokens: 200, temperature: 0.3 }) });
+    if (!r.ok) return;
+    const d = await r.json();
+    const raw = (d?.choices?.[0]?.message?.content || '').trim();
     if (!raw || raw.toUpperCase() === 'NONE') return;
-    const newFacts = raw.split('\n').map(l => l.replace(/^[-•*\d.\s]+/, '').trim()).filter(f => f.length > 3 && f.length < 200);
-    if (!newFacts.length) return;
+    const nf = raw.split('\n').map(l => l.replace(/^[-•*\d.\s]+/, '').trim()).filter(f => f.length > 3 && f.length < 200);
     let added = 0;
-    for (const fact of newFacts) {
-      const lower = fact.toLowerCase();
-      const exists = memory.some(m => { const ml = m.toLowerCase(); return ml === lower || ml.includes(lower) || lower.includes(ml); });
-      if (!exists && memory.length < MAX_FACTS) { memory.push(fact); added++; }
+    for (const f of nf) {
+      const lo = f.toLowerCase();
+      const ex2 = memory.some(m => { const ml = m.toLowerCase(); return ml === lo || ml.includes(lo) || lo.includes(ml); });
+      if (!ex2 && memory.length < MAX_FACTS) { memory.push(f); added++; }
     }
-    if (added > 0) { saveMemory(); refreshSystemPrompt(); showMemToast(`${added} nayi baat yaad kar li`); }
+    if (added > 0) { saveMem(); refreshPrompt(); showMemToast(`${added} nayi baat yaad rakhi`); }
   } catch (e) {}
 }
-function renderMemoryModal() {
-  if (!memory.length) { memModalBody.innerHTML = '<div class="mem-empty">Abhi tak kuch yaad nahi hai.</div>'; return; }
-  memModalBody.innerHTML = memory.map(f => '<div class="mem-item"><span class="mem-dot">●</span><span class="mem-text">' + escapeHtml(f) + '</span></div>').join('');
+
+function renderMemModal() {
+  if (!memory.length) { memModalBody.innerHTML = '<div class="mem-empty">Kuch yaad nahi hai abhi.</div>'; return; }
+  memModalBody.innerHTML = memory.map(f => '<div class="mem-item"><span class="mem-dot">●</span><span class="mem-text">' + esc(f) + '</span></div>').join('');
 }
-function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-memoryBtn.addEventListener('click', () => { renderMemoryModal(); memModal.classList.add('show'); });
-function closeMemModal() { memModal.classList.remove('show'); }
-memModalClose.addEventListener('click', closeMemModal);
-memCloseBtn.addEventListener('click', closeMemModal);
-memModal.addEventListener('click', (e) => { if (e.target === memModal) closeMemModal(); });
+function esc(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+memoryBtn.addEventListener('click', () => { renderMemModal(); memModal.classList.add('show'); });
+function closeMemM() { memModal.classList.remove('show'); }
+memModalClose.addEventListener('click', closeMemM);
+memCloseBtn.addEventListener('click', closeMemM);
+memModal.addEventListener('click', e => { if (e.target === memModal) closeMemM(); });
 memClearBtn.addEventListener('click', () => {
-  if (!memory.length) { closeMemModal(); return; }
+  if (!memory.length) { closeMemM(); return; }
   if (!confirm('Saari memory bhula deni hai?')) return;
-  memory = []; saveMemory(); refreshSystemPrompt(); renderMemoryModal(); showMemToast('Memory clear ho gayi');
+  memory = []; saveMem(); refreshPrompt(); renderMemModal(); showMemToast('Memory clear');
 });
 
-/* ============ VOICE ============ */
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-if (SpeechRecognition) {
-  recognition = new SpeechRecognition();
+/* ============ VOICE INPUT ============ */
+const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (SpeechRec) {
+  recognition = new SpeechRec();
   recognition.continuous = false; recognition.interimResults = true; recognition.lang = 'ur-PK'; recognition.maxAlternatives = 1;
-} else { if (micBtn) micBtn.style.display = 'none'; }
-function toggleListening() {
+} else if (micBtn) micBtn.style.display = 'none';
+function toggleListen() {
   if (!recognition) return;
   if (isListening) { recognition.stop(); return; }
   try { recognition.start(); } catch (e) {}
@@ -668,68 +705,68 @@ function toggleListening() {
 if (recognition) {
   recognition.onstart = () => { isListening = true; micBtn.classList.add('listening'); };
   recognition.onend = () => { isListening = false; micBtn.classList.remove('listening'); };
-  recognition.onerror = (event) => {
+  recognition.onerror = e => {
     isListening = false; micBtn.classList.remove('listening');
-    let msg = 'Voice input mein error aaya.';
-    if (event.error === 'not-allowed') msg = 'Mic ki permission nahi mili.';
-    else if (event.error === 'no-speech') msg = 'Koi awaaz sunai nahi di.';
-    else if (event.error === 'network') msg = 'Network error.';
-    if (event.error !== 'aborted') addPlainMessage('⚠️ ' + msg, false);
+    let m = 'Voice error.';
+    if (e.error === 'not-allowed') m = 'Mic ki permission nahi mili.';
+    else if (e.error === 'no-speech') m = 'Koi awaaz nahi suni.';
+    else if (e.error === 'network') m = 'Network error.';
+    if (e.error !== 'aborted') addMsg('⚠️ ' + m, false);
   };
-  recognition.onresult = (event) => {
-    let finalTranscript = '';
-    for (let i = event.resultIndex; i < event.results.length; i++) { if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript; }
-    if (finalTranscript) { userInput.value = finalTranscript; setTimeout(() => { if (userInput.value.trim() && !isSending) sendMessage(); }, 400); }
+  recognition.onresult = e => {
+    let t = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) if (e.results[i].isFinal) t += e.results[i][0].transcript;
+    if (t) { userInput.value = t; setTimeout(() => { if (userInput.value.trim() && !isSending) sendMessage(); }, 400); }
   };
 }
-micBtn.addEventListener('click', toggleListening);
+micBtn.addEventListener('click', toggleListen);
 
-/* ============ TTS ============ */
-function speakText(text, btn) {
-  if (currentBtn === btn && currentAudio) { stopSpeaking(); return; }
-  stopSpeaking();
-  const cleanText = text.replace(/[*_`~>#\[\]()]/g, '').replace(/\s+/g, ' ').trim();
-  if (!cleanText) return;
-  const chunks = splitIntoChunks(cleanText, 180);
+/* ============ VOICE OUTPUT ============ */
+function speak(text, btn) {
+  if (currentBtn === btn && currentAudio) { stopSpeak(); return; }
+  stopSpeak();
+  const cl = text.replace(/[*_`~>#\[\]()]/g, '').replace(/\s+/g, ' ').trim();
+  if (!cl) return;
+  const ch = splitChunks(cl, 180);
   currentBtn = btn; isStoppingTTS = false;
   if (btn) btn.classList.add('speaking');
-  playChunksSequentially(chunks, btn, 0);
+  playChunks(ch, btn, 0);
 }
-function splitIntoChunks(text, maxLen) {
-  const chunks = []; const sentences = text.split(/(?<=[.!?۔])\s+/);
-  let current = '';
-  for (const sentence of sentences) {
-    if ((current + ' ' + sentence).length <= maxLen) { current = current ? current + ' ' + sentence : sentence; }
-    else { if (current) chunks.push(current);
-      if (sentence.length <= maxLen) current = sentence;
-      else { const words = sentence.split(' '); current = '';
-        for (const w of words) { if ((current + ' ' + w).length <= maxLen) current = current ? current + ' ' + w : w; else { if (current) chunks.push(current); current = w; } }
+function splitChunks(text, maxLen) {
+  const cs = []; const se = text.split(/(?<=[.!?۔])\s+/);
+  let cur = '';
+  for (const s of se) {
+    if ((cur + ' ' + s).length <= maxLen) cur = cur ? cur + ' ' + s : s;
+    else { if (cur) cs.push(cur);
+      if (s.length <= maxLen) cur = s;
+      else { const ws = s.split(' '); cur = '';
+        for (const w of ws) { if ((cur + ' ' + w).length <= maxLen) cur = cur ? cur + ' ' + w : w; else { if (cur) cs.push(cur); cur = w; } }
       }
     }
   }
-  if (current) chunks.push(current);
-  return chunks;
+  if (cur) cs.push(cur);
+  return cs;
 }
-function playChunksSequentially(chunks, btn, index) {
-  if (isStoppingTTS || index >= chunks.length) { if (btn) btn.classList.remove('speaking'); currentBtn = null; currentAudio = null; return; }
-  const url = 'https://translate.googleapis.com/translate_tts?ie=UTF-8&q=' + encodeURIComponent(chunks[index]) + '&tl=ur&client=tw-ob';
-  const audio = new Audio(url); currentAudio = audio;
-  audio.onended = () => { if (isStoppingTTS) return; setTimeout(() => playChunksSequentially(chunks, btn, index + 1), 120); };
-  audio.onerror = () => fallbackBrowserTTS(chunks.slice(index).join(' '), btn);
-  audio.play().catch(() => fallbackBrowserTTS(chunks.slice(index).join(' '), btn));
+function playChunks(cs, btn, i) {
+  if (isStoppingTTS || i >= cs.length) { if (btn) btn.classList.remove('speaking'); currentBtn = null; currentAudio = null; return; }
+  const u = 'https://translate.googleapis.com/translate_tts?ie=UTF-8&q=' + encodeURIComponent(cs[i]) + '&tl=ur&client=tw-ob';
+  const a = new Audio(u); currentAudio = a;
+  a.onended = () => { if (isStoppingTTS) return; setTimeout(() => playChunks(cs, btn, i + 1), 120); };
+  a.onerror = () => fallbackTTS(cs.slice(i).join(' '), btn);
+  a.play().catch(() => fallbackTTS(cs.slice(i).join(' '), btn));
 }
-function fallbackBrowserTTS(text, btn) {
+function fallbackTTS(text, btn) {
   if (!window.speechSynthesis) { if (btn) btn.classList.remove('speaking'); currentBtn = null; return; }
-  const utt = new SpeechSynthesisUtterance(text);
-  const voices = speechSynthesis.getVoices();
-  const urdu = voices.find(v => v.lang.startsWith('ur')) || voices.find(v => v.lang.startsWith('hi')) || voices.find(v => v.lang.startsWith('en-IN'));
-  if (urdu) utt.voice = urdu;
-  utt.lang = urdu ? urdu.lang : 'en-US';
-  utt.onend = () => { if (btn) btn.classList.remove('speaking'); currentBtn = null; };
-  utt.onerror = () => { if (btn) btn.classList.remove('speaking'); currentBtn = null; };
-  speechSynthesis.cancel(); speechSynthesis.speak(utt);
+  const u = new SpeechSynthesisUtterance(text);
+  const vs = speechSynthesis.getVoices();
+  const ur = vs.find(v => v.lang.startsWith('ur')) || vs.find(v => v.lang.startsWith('hi')) || vs.find(v => v.lang.startsWith('en-IN'));
+  if (ur) u.voice = ur;
+  u.lang = ur ? ur.lang : 'en-US';
+  u.onend = () => { if (btn) btn.classList.remove('speaking'); currentBtn = null; };
+  u.onerror = () => { if (btn) btn.classList.remove('speaking'); currentBtn = null; };
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
 }
-function stopSpeaking() {
+function stopSpeak() {
   isStoppingTTS = true;
   if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; currentAudio = null; }
   if (window.speechSynthesis) speechSynthesis.cancel();
@@ -739,538 +776,451 @@ function stopSpeaking() {
 /* ============ ATTACH IMAGE ============ */
 attachBtn.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', async () => {
-  const file = fileInput.files[0]; if (!file) return;
-  if (!file.type.startsWith('image/')) { addPlainMessage('⚠️ Sirf images.', false); fileInput.value = ''; return; }
-  if (file.size > 20 * 1024 * 1024) { addPlainMessage('⚠️ 20MB max.', false); fileInput.value = ''; return; }
-  attachName.innerText = file.name + ' — compress...'; attachPreview.classList.add('show');
+  const f = fileInput.files[0]; if (!f) return;
+  if (!f.type.startsWith('image/')) { addMsg('⚠️ Sirf images.', false); fileInput.value = ''; return; }
+  if (f.size > 20 * 1024 * 1024) { addMsg('⚠️ 20MB max.', false); fileInput.value = ''; return; }
+  attachName.innerText = f.name + ' — compress...'; attachPreview.classList.add('show');
   try {
-    const compressedDataUrl = await compressImage(file);
-    const sizeKB = Math.round((compressedDataUrl.length * 3) / 4 / 1024);
-    pendingImage = { dataUrl: compressedDataUrl, name: file.name };
-    attachThumb.src = compressedDataUrl; attachName.innerText = file.name + ' (~' + sizeKB + 'KB)';
-  } catch (err) { addPlainMessage('⚠️ Image error.', false); pendingImage = null; attachPreview.classList.remove('show'); fileInput.value = ''; }
+    const d = await compressImg(f);
+    const kb = Math.round((d.length * 3) / 4 / 1024);
+    pendingImage = { dataUrl: d, name: f.name };
+    attachThumb.src = d; attachName.innerText = f.name + ' (~' + kb + 'KB)';
+  } catch (e) { addMsg('⚠️ Image fail.', false); pendingImage = null; attachPreview.classList.remove('show'); fileInput.value = ''; }
 });
 
 /* ============ ATTACH FILE ============ */
 fileBtn.addEventListener('click', () => docInput.click());
 docInput.addEventListener('change', async () => {
-  const file = docInput.files[0]; if (!file) return;
-  if (file.size > MAX_DOC_SIZE) { addPlainMessage('⚠️ 10MB max.', false); docInput.value = ''; return; }
-  const name = file.name.toLowerCase();
-  const isSupported = name.endsWith('.pdf') || name.endsWith('.docx') || name.endsWith('.txt') || name.endsWith('.md') || name.endsWith('.csv') || name.endsWith('.json');
-  if (!isSupported) { addPlainMessage('⚠️ Sirf PDF, DOCX, TXT, MD, CSV, JSON.', false); docInput.value = ''; return; }
-  attachName.innerText = file.name + ' — padha ja raha hai...'; attachThumb.src = ''; attachPreview.classList.add('show');
+  const f = docInput.files[0]; if (!f) return;
+  if (f.size > MAX_DOC_SIZE) { addMsg('⚠️ 10MB max.', false); docInput.value = ''; return; }
+  const n = f.name.toLowerCase();
+  const ok = n.endsWith('.pdf') || n.endsWith('.docx') || n.endsWith('.txt') || n.endsWith('.md') || n.endsWith('.csv') || n.endsWith('.json');
+  if (!ok) { addMsg('⚠️ Sirf PDF, DOCX, TXT, MD, CSV, JSON.', false); docInput.value = ''; return; }
+  attachName.innerText = f.name + ' — padha ja raha hai...'; attachThumb.src = ''; attachPreview.classList.add('show');
   try {
-    const rawText = await extractFileText(file);
-    const text = truncateFileText(rawText, MAX_DOC_CHARS);
-    if (!text || text.length < 5) { addPlainMessage('⚠️ File se text nahi mila.', false); docInput.value = ''; attachPreview.classList.remove('show'); return; }
-    const sizeKB = Math.round(file.size / 1024);
-    pendingFile = { name: file.name, text: text, size: sizeKB, chars: text.length };
-    attachName.innerText = file.name + ' (' + sizeKB + 'KB)';
-  } catch (err) { addPlainMessage('⚠️ File error.', false); pendingFile = null; docInput.value = ''; attachPreview.classList.remove('show'); }
+    const t = truncTxt(await extractText(f));
+    if (!t || t.length < 5) { addMsg('⚠️ File se text nahi mila.', false); docInput.value = ''; attachPreview.classList.remove('show'); return; }
+    const kb = Math.round(f.size / 1024);
+    pendingFile = { name: f.name, text: t, size: kb };
+    attachName.innerText = f.name + ' (' + kb + 'KB)';
+  } catch (e) { addMsg('⚠️ File fail.', false); pendingFile = null; docInput.value = ''; attachPreview.classList.remove('show'); }
 });
 
 attachRemove.addEventListener('click', () => { pendingImage = null; pendingFile = null; fileInput.value = ''; docInput.value = ''; attachPreview.classList.remove('show'); });
-userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+userInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
 
 clearBtn.addEventListener('click', () => {
-  if (!confirm('Poori chat clear karni hai? (Memory save rahegi)')) return;
-  stopSpeaking(); chatBox.innerHTML = '';
-  conversation = [{ role: 'system', content: buildSystemPrompt() }];
-  messagesSinceExtract = 0;
-  imageContextActive = false;
-  try { localStorage.removeItem(HISTORY_KEY); } catch(e) {}
-  addPlainMessage('Chat clear ho gayi. Memory save hai.', false);
+  if (!confirm('Chat clear karni hai? (Memory save rahegi)')) return;
+  stopSpeak(); chatBox.innerHTML = '';
+  conversation = [{ role: 'system', content: buildPrompt() }];
+  messagesSinceExtract = 0; chatState.mode = 'normal'; chatState.turnCount = 0;
+  try { localStorage.removeItem(HISTORY_KEY); } catch (e) {}
+  addMsg('Chat clear ho gayi. Memory save hai.', false);
 });
 
 /* ============ UI HELPERS ============ */
-function addPlainMessage(text, isUser, imageDataUrl, fileInfo) {
-  const row = document.createElement('div'); row.className = 'row ' + (isUser ? 'user' : 'ai');
-  const avatar = document.createElement('div'); avatar.className = 'avatar ' + (isUser ? 'user' : 'ai'); avatar.innerText = isUser ? 'Y' : 'J';
-  const bubble = document.createElement('div'); bubble.className = 'msg';
-  if (imageDataUrl) { const img = document.createElement('img'); img.className = 'attached-img-inline'; img.src = imageDataUrl; bubble.appendChild(img); }
-  if (fileInfo) { const fdiv = document.createElement('div'); fdiv.className = 'attached-file-inline'; fdiv.innerText = '📄 ' + fileInfo.name + ' (' + fileInfo.size + 'KB)'; bubble.appendChild(fdiv); }
-  const textNode = document.createElement('div'); textNode.innerText = text; bubble.appendChild(textNode);
-  row.appendChild(avatar); row.appendChild(bubble);
-  chatBox.appendChild(row); chatBox.scrollTop = chatBox.scrollHeight;
-  return { row, bubble, textNode };
+function addMsg(text, isUser, imgUrl, fileInfo) {
+  const r = document.createElement('div'); r.className = 'row ' + (isUser ? 'user' : 'ai');
+  const a = document.createElement('div'); a.className = 'avatar ' + (isUser ? 'user' : 'ai'); a.innerText = isUser ? 'Y' : 'J';
+  const b = document.createElement('div'); b.className = 'msg';
+  if (imgUrl) { const i = document.createElement('img'); i.className = 'attached-img-inline'; i.src = imgUrl; b.appendChild(i); }
+  if (fileInfo) { const fd = document.createElement('div'); fd.className = 'attached-file-inline'; fd.innerText = '📄 ' + fileInfo.name + ' (' + fileInfo.size + 'KB)'; b.appendChild(fd); }
+  const tn = document.createElement('div'); tn.innerText = text; b.appendChild(tn);
+  r.appendChild(a); r.appendChild(b);
+  chatBox.appendChild(r); chatBox.scrollTop = chatBox.scrollHeight;
+  return { r, b, tn };
 }
 
-function addStreamingMessage(opts = {}) {
+function addStream(opts = {}) {
   const { withSearch = false, withFile = false, modelName = null, modelIcon = null, isCode = false } = opts;
-  const row = document.createElement('div'); row.className = 'row ai';
-  const avatar = document.createElement('div'); avatar.className = 'avatar ai'; avatar.innerText = 'J';
-  const bubble = document.createElement('div'); bubble.className = 'msg streaming';
-  if (modelName && modelIcon) { const mbadge = document.createElement('div'); mbadge.className = 'model-badge' + (isCode ? ' code' : ''); mbadge.innerText = modelIcon + ' ' + modelName; bubble.appendChild(mbadge); }
-  if (withSearch) { const badge = document.createElement('div'); badge.className = 'search-badge'; badge.innerHTML = '<span class="pulse"></span> Web search...'; bubble.appendChild(badge); }
-  if (withFile) { const badge = document.createElement('div'); badge.className = 'file-badge'; badge.innerHTML = '📄 File padh raha hoon...'; bubble.appendChild(badge); }
-  const textNode = document.createElement('div'); bubble.appendChild(textNode);
-  const actions = document.createElement('div'); actions.className = 'msg-actions';
-  const copyBtn = document.createElement('button'); copyBtn.className = 'action-btn'; copyBtn.innerText = 'Copy';
-  copyBtn.onclick = () => { navigator.clipboard.writeText(textNode.innerText).then(() => { copyBtn.innerText = 'Copied!'; setTimeout(() => copyBtn.innerText = 'Copy', 1500); }).catch(() => {}); };
-  const speakerBtn = document.createElement('button'); speakerBtn.className = 'speaker-btn'; speakerBtn.title = 'Bol kar sunao'; speakerBtn.innerHTML = '🔊';
-  speakerBtn.onclick = () => speakText(textNode.innerText, speakerBtn);
-  actions.appendChild(copyBtn); actions.appendChild(speakerBtn); bubble.appendChild(actions);
-  row.appendChild(avatar); row.appendChild(bubble);
-  chatBox.appendChild(row); chatBox.scrollTop = chatBox.scrollHeight;
-  return { row, bubble, textNode, actions, speakerBtn, badge: withSearch ? bubble.querySelector('.search-badge') : null };
+  const r = document.createElement('div'); r.className = 'row ai';
+  const a = document.createElement('div'); a.className = 'avatar ai'; a.innerText = 'J';
+  const b = document.createElement('div'); b.className = 'msg streaming';
+  if (modelName && modelIcon) { const mb = document.createElement('div'); mb.className = 'model-badge' + (isCode ? ' code' : ''); mb.innerText = modelIcon + ' ' + modelName; b.appendChild(mb); }
+  if (withSearch) { const bd = document.createElement('div'); bd.className = 'search-badge'; bd.innerHTML = '<span class="pulse"></span> Web search...'; b.appendChild(bd); }
+  if (withFile) { const bd = document.createElement('div'); bd.className = 'file-badge'; bd.innerHTML = '📄 File padh raha hoon...'; b.appendChild(bd); }
+  const tn = document.createElement('div'); b.appendChild(tn);
+  const ac = document.createElement('div'); ac.className = 'msg-actions';
+  const cb = document.createElement('button'); cb.className = 'action-btn'; cb.innerText = 'Copy';
+  cb.onclick = () => { navigator.clipboard.writeText(tn.innerText).then(() => { cb.innerText = 'Copied!'; setTimeout(() => cb.innerText = 'Copy', 1500); }).catch(() => {}); };
+  const sb = document.createElement('button'); sb.className = 'speaker-btn'; sb.title = 'Bol kar sunao'; sb.innerHTML = '🔊';
+  sb.onclick = () => speak(tn.innerText, sb);
+  ac.appendChild(cb); ac.appendChild(sb); b.appendChild(ac);
+  r.appendChild(a); r.appendChild(b);
+  chatBox.appendChild(r); chatBox.scrollTop = chatBox.scrollHeight;
+  return { r, b, tn, ac, sb, badge: withSearch ? b.querySelector('.search-badge') : null };
 }
 
-function addSourcesBlock(bubble, sources) {
+function addSrcs(bubble, sources) {
   if (!sources || !sources.length) return;
-  const block = document.createElement('div'); block.className = 'sources-block';
-  const title = document.createElement('div'); title.className = 'sources-title'; title.innerText = 'Sources'; block.appendChild(title);
-  const seen = new Set(); let count = 0;
+  const bl = document.createElement('div'); bl.className = 'sources-block';
+  const t = document.createElement('div'); t.className = 'sources-title'; t.innerText = 'Sources'; bl.appendChild(t);
+  const seen = new Set(); let c = 0;
   for (const s of sources) {
-    if (!s.url || seen.has(s.url) || count >= 6) continue;
+    if (!s.url || seen.has(s.url) || c >= 6) continue;
     seen.add(s.url);
     const a = document.createElement('a'); a.className = 'source-item'; a.href = s.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
-    a.innerText = '↗ ' + (s.title || s.url); block.appendChild(a); count++;
+    a.innerText = '↗ ' + (s.title || s.url); bl.appendChild(a); c++;
   }
-  if (count > 0) bubble.appendChild(block);
+  if (c > 0) bubble.appendChild(bl);
 }
 
 /* ============ IMAGE GENERATION ============ */
-function buildPollinationsUrl(enhancedPrompt, seed) {
-  const base = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(enhancedPrompt);
-  return base + `?width=768&height=768&nologo=true&enhance=true&seed=${seed}`;
-}
+function buildPollURL(p, seed) { return 'https://image.pollinations.ai/prompt/' + encodeURIComponent(p) + `?width=768&height=768&nologo=true&enhance=true&seed=${seed}`; }
 
-function createImageCell(url, altText, onDone) {
-  const cell = document.createElement('div'); cell.className = 'img-cell';
-  const loading = document.createElement('div'); loading.className = 'img-loading';
-  loading.innerHTML = '<div class="spinner"></div><div>Ban rahi hai...</div>'; cell.appendChild(loading);
-  const img = document.createElement('img'); img.className = 'generated-img'; img.alt = altText; img.loading = 'lazy'; img.style.opacity = '0';
-  img.onload = () => { loading.remove(); img.style.opacity = '1'; if (onDone) onDone(); };
-  img.onerror = () => { loading.innerHTML = '<div style="color:#e07a7a;font-size:12px;text-align:center;padding:10px;">⚠️ Load nahi hui<br><small style="opacity:0.7">Dobara try karo</small></div>'; };
-  img.addEventListener('click', () => { if (img.src) openLightbox(img.src); });
-  cell.appendChild(img);
-  const dl = document.createElement('button'); dl.className = 'img-download'; dl.innerHTML = '⬇'; dl.title = 'Download';
-  dl.onclick = async (e) => {
+function createCell(url, alt, onDone) {
+  const c = document.createElement('div'); c.className = 'img-cell';
+  const l = document.createElement('div'); l.className = 'img-loading'; l.innerHTML = '<div class="spinner"></div><div>Ban rahi hai...</div>'; c.appendChild(l);
+  const i = document.createElement('img'); i.className = 'generated-img'; i.alt = alt; i.style.opacity = '0';
+  i.onload = () => { l.remove(); i.style.opacity = '1'; if (onDone) onDone(); };
+  i.onerror = () => { l.innerHTML = '<div style="color:#e07a7a;font-size:12px;text-align:center;padding:10px;">⚠️ Load nahi hui<br><small>Dobara try karo</small></div>'; };
+  i.addEventListener('click', () => { if (i.src) openLightbox(i.src); });
+  c.appendChild(i);
+  const dl = document.createElement('button'); dl.className = 'img-download'; dl.innerHTML = '⬇';
+  dl.onclick = async e => {
     e.stopPropagation();
-    try {
-      const res = await fetch(img.src); const blob = await res.blob();
-      const u = URL.createObjectURL(blob);
+    try { const r = await fetch(i.src); const b = await r.blob(); const u = URL.createObjectURL(b);
       const a = document.createElement('a'); a.href = u; a.download = 'jarvis-' + Date.now() + '.jpg';
       document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u);
-    } catch (err) {}
+    } catch (e) {}
   };
-  cell.appendChild(dl);
-  img.src = url;
-  return cell;
+  c.appendChild(dl);
+  i.src = url;
+  return c;
 }
 
-function addImageGenerationMessage(rawPrompt, count, styleKey) {
-  const row = document.createElement('div'); row.className = 'row ai';
-  const avatar = document.createElement('div'); avatar.className = 'avatar ai'; avatar.innerText = 'J';
-  const bubble = document.createElement('div'); bubble.className = 'msg';
-  const styleLabel = styleKey ? ` [${styleKey}]` : '';
-  const countLabel = count > 1 ? ` (${count} images)` : '';
-  const caption = document.createElement('div'); caption.className = 'img-caption';
-  caption.innerText = `🎨 "${rawPrompt}"${styleLabel}${countLabel}`;
-  bubble.appendChild(caption);
-  const grid = document.createElement('div'); grid.className = 'img-grid ' + (count === 1 ? 'cols-1' : 'cols-2');
-  bubble.appendChild(grid);
-  const status = document.createElement('div'); status.className = 'img-status';
-  status.innerText = '✨ Image ban rahi hai...';
-  bubble.appendChild(status);
-  row.appendChild(avatar); row.appendChild(bubble);
-  chatBox.appendChild(row); chatBox.scrollTop = chatBox.scrollHeight;
-  let finalPrompt = rawPrompt;
-  if (styleKey && IMAGE_STYLES[styleKey]) finalPrompt = rawPrompt + ', ' + IMAGE_STYLES[styleKey];
-  let doneCount = 0;
+function addImgGen(prompt, count = 1, styleKey = null) {
+  const r = document.createElement('div'); r.className = 'row ai';
+  const a = document.createElement('div'); a.className = 'avatar ai'; a.innerText = 'J';
+  const b = document.createElement('div'); b.className = 'msg';
+  const sl = styleKey ? ` [${styleKey}]` : '';
+  const cl = count > 1 ? ` (${count} images)` : '';
+  const cap = document.createElement('div'); cap.className = 'img-caption';
+  cap.innerText = `🎨 "${prompt}"${sl}${cl}`; b.appendChild(cap);
+  const g = document.createElement('div'); g.className = 'img-grid ' + (count === 1 ? 'cols-1' : 'cols-2'); b.appendChild(g);
+  const st = document.createElement('div'); st.className = 'img-status'; st.innerText = '✨ Image ban rahi hai...'; b.appendChild(st);
+  r.appendChild(a); r.appendChild(b);
+  chatBox.appendChild(r); chatBox.scrollTop = chatBox.scrollHeight;
+  let fp = prompt;
+  if (styleKey && IMAGE_STYLES[styleKey]) fp = prompt + ', ' + IMAGE_STYLES[styleKey];
+  let done = 0;
   for (let i = 0; i < count; i++) {
     const seed = Math.floor(Math.random() * 1000000);
-    const url = buildPollinationsUrl(finalPrompt, seed);
-    const cell = createImageCell(url, rawPrompt, () => {
-      doneCount++;
-      if (doneCount === count) {
-        status.innerText = '✅ ' + count + ' image' + (count > 1 ? 's' : '') + ' ready';
-        setTimeout(() => { status.style.transition = 'opacity 0.5s ease'; status.style.opacity = '0'; setTimeout(() => status.remove(), 500); }, 3000);
+    const cell = createCell(buildPollURL(fp, seed), prompt, () => {
+      done++;
+      if (done === count) {
+        st.innerText = '✅ ' + count + ' image' + (count > 1 ? 's' : '') + ' ready';
+        setTimeout(() => { st.style.transition = 'opacity 0.5s'; st.style.opacity = '0'; setTimeout(() => st.remove(), 500); }, 3000);
       }
     });
-    grid.appendChild(cell);
+    g.appendChild(cell);
   }
 }
 
 /* ============ HISTORY ============ */
-function trimHistory() {
-  const system = conversation[0]; const rest = conversation.slice(1);
-  if (rest.length > MAX_HISTORY) conversation = [system, ...rest.slice(-MAX_HISTORY)];
+function trimHist() {
+  const s = conversation[0]; const rest = conversation.slice(1);
+  if (rest.length > MAX_HISTORY) conversation = [s, ...rest.slice(-MAX_HISTORY)];
   for (let i = 1; i < conversation.length; i++) {
     const c = conversation[i].content;
     if (typeof c === 'string' && c.length > MAX_MSG_LEN) conversation[i].content = c.slice(0, MAX_MSG_LEN) + '…';
   }
 }
-function saveHistory() { try { localStorage.setItem(HISTORY_KEY, JSON.stringify(conversation.slice(1))); } catch (e) {} }
-function loadHistory() {
+function saveHist() { try { localStorage.setItem(HISTORY_KEY, JSON.stringify(conversation.slice(1))); } catch (e) {} }
+function loadHist() {
   try {
-    const saved = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-    if (!Array.isArray(saved) || !saved.length) return;
-    for (const m of saved) {
-      if (m.role === 'user') { const txt = typeof m.content === 'string' ? m.content : '(message)'; addPlainMessage(txt.slice(0, 300), true); conversation.push({ role: 'user', content: txt.slice(0, MAX_MSG_LEN) }); }
-      else if (m.role === 'assistant') { const { bubble, textNode } = addStreamingMessage(); bubble.classList.remove('streaming'); textNode.innerText = typeof m.content === 'string' ? m.content.slice(0, 500) : ''; conversation.push({ role: 'assistant', content: (m.content || '').slice(0, MAX_MSG_LEN) }); }
+    const s = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    if (!Array.isArray(s) || !s.length) return;
+    for (const m of s) {
+      if (m.role === 'user') { const t = typeof m.content === 'string' ? m.content : '(message)'; addMsg(t.slice(0, 300), true); conversation.push({ role: 'user', content: t.slice(0, MAX_MSG_LEN) }); }
+      else if (m.role === 'assistant') { const { b, tn } = addStream(); b.classList.remove('streaming'); tn.innerText = typeof m.content === 'string' ? m.content.slice(0, 500) : ''; conversation.push({ role: 'assistant', content: (m.content || '').slice(0, MAX_MSG_LEN) }); }
     }
     chatBox.scrollTop = chatBox.scrollHeight;
   } catch (e) {}
 }
 
-/* ============ TAVILY ============ */
-async function performTavilySearch(query) {
-  const res = await fetch(TAVILY_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Tavily-Access-Mode': 'keyless' }, body: JSON.stringify({ query: query, max_results: 3, search_depth: 'basic' }) });
-  if (!res.ok) throw new Error('Tavily search failed: ' + res.status);
-  const data = await res.json();
-  const results = data?.results || [];
-  return results.map(r => ({ title: r.title, url: r.url, snippet: r.content || r.snippet || '' }));
+/* ============ TAVILY SEARCH ============ */
+async function tavily(q) {
+  const r = await fetch(TAVILY_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Tavily-Access-Mode': 'keyless' }, body: JSON.stringify({ query: q, max_results: 3, search_depth: 'basic' }) });
+  if (!r.ok) throw new Error('Search fail');
+  const d = await r.json();
+  return (d?.results || []).map(x => ({ title: x.title, url: x.url, snippet: x.content || x.snippet || '' }));
 }
 
-/* ============ IMAGE INTENT DETECTION (SMART) ============ */
-
-// Rejection: "nahi banao", "mat banao", "band karo image"
-function userRejectedImage(text) {
-  const lower = text.toLowerCase().trim();
-  const rejWord = /\b(nahi|nhi|mat|na|band|stop|rehne|chhod|don'?t|dont)\b/i.test(lower);
-  const imgWord = /\b(image|pic|photo|tasveer|bana|banao|bnado|bnao|bnay|bna)\b/i.test(lower);
-  return rejWord && imgWord;
-}
-
-// Compliment: "achi image", "nice pic", "wah kya baat"
-function userComplimented(text) {
-  const lower = text.toLowerCase().trim();
-  return /\b(achi|acha|accha|nice|good|great|wow|wah|bura|theek|thik|sahi|behtar|piyara|pyara|amazing|beautiful|zabardast|shukriya|thanks|thank\s*you)\b/i.test(lower);
-}
-
-// AI ne image ke details maange? (isi base pe context activate karte hain)
-function aiAskedForImageDetails(text) {
-  const lower = (text || '').toLowerCase();
-  const qWord = /\b(kaisi|kaisay|kis\s+type|kis\s+qism|konsi|kaunsi|kya\s+type|what\s+kind|batao|bata\s+dein|detail)\b/i.test(lower);
-  const imgWord = /\b(image|pic|photo|tasveer|scene|picture|art|wallpaper|landscape|abstract)\b/i.test(lower);
-  return qWord && imgWord;
-}
-
-// Direct image request — image word + action word dono
-function userDirectlyAskedImage(text) {
-  const lower = text.toLowerCase().trim();
-  if (userRejectedImage(text)) return false;
-  if (userComplimented(text)) return false;
-  // Pure capability question
-  if (/\b(kya\s+tum|kya\s+aap|kya\s+main|can\s+you|can\s+u|kar\s+sakte|sakte\s+ho|sakti\s+ho|bana\s+sakte|bana\s+sakti|bana\s+sakta|bna\s+sakte|bna\s+sakta)\b/i.test(lower) && /\?/.test(lower)) return false;
-  // Code
-  if (/\b(code|program|function|script|website|app|calculator|game|programming|snippet)\b/i.test(lower)) return false;
-
-  const hasImg = /\b(image|photo|picture|tasveer|chitra|pic|drawing|sketch|painting|artwork|wallpaper|poster|scene|scenery|landscape|drishya)\b/i.test(lower);
-  const hasAct = /\b(bana|banao|banaao|banai|banade|banado|bana\s*do|banaye|banay|generate|create|make|draw|paint|sketch|render|dikhao|dikha|dikhaao|bna|bnao|bnaao|bnado|bnade|bnay|bnaye|bnakr|bnakar|lagao)\b/i.test(lower);
-  return hasImg && hasAct;
-}
-
-// Short action-only reply (context active hone pe) — "koi si bhi bnado", "hiran ki"
-function userShortImageReply(text) {
-  const lower = text.toLowerCase().trim();
-  if (!lower) return false;
-  if (lower.length > 60) return false;
-  if (userRejectedImage(text)) return false;
-  if (userComplimented(text)) return false;
-  if (/\b(kya\s+tum|can\s+you|kaise|kese|how|kyun|why)\b/i.test(lower)) return false;
-  if (/\b(code|program|function|script)\b/i.test(lower)) return false;
-
-  // Action verb OR subject-only reply
-  const hasAct = /\b(bana|banao|banaao|banai|banade|banado|bana\s*do|banaye|banay|generate|create|draw|bna|bnao|bnaao|bnado|bnade|bnay|bnaye|bnakr|bnakar|kardo|krdo|kar\s*do|de\s*do|dedo)\b/i.test(lower);
-  const hasAnyNoun = lower.split(/\s+/).length >= 1;
-  return hasAct || hasAnyNoun;
-}
-
-// Main entry — kya image generate karni hai?
-function shouldGenerateImage(text) {
-  // 1. Explicit /image command
-  if (/^\/image/i.test(text.trim())) return false; // handled separately
-
-  // 2. Direct request
-  if (userDirectlyAskedImage(text)) return true;
-
-  // 3. Context active + short reply
-  if (imageContextActive && userShortImageReply(text)) return true;
-
-  return false;
-}
-
-/* ============ GET IMAGE PROMPT FROM AI ============ */
-async function getImagePromptFromAI(userRequest, recentContext) {
-  const sysPrompt = 'Convert the user request into a single detailed English image generation prompt. Output ONLY the prompt in English (max 100 words), nothing else. No explanation, no quotes, no prefix.';
-  const userMsg = `User request: ${userRequest}\n\nRecent chat context:\n${recentContext}\n\nWrite a detailed English image generation prompt. Include subject, composition, lighting, mood, style, quality keywords. Output ONLY the prompt.`;
-  try {
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` },
-      body: JSON.stringify({
-        model: FAST_MODEL,
-        messages: [{ role: 'system', content: sysPrompt }, { role: 'user', content: userMsg }],
-        max_completion_tokens: 250, temperature: 0.7
-      })
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    let prompt = (data?.choices?.[0]?.message?.content || '').trim();
-    if (!prompt) return null;
-    prompt = prompt.replace(/^["'`]+|["'`]+$/g, '').replace(/^(prompt|image\s*prompt)\s*:\s*/i, '').trim();
-    return prompt;
-  } catch (e) { return null; }
-}
-
-function getRecentContext() {
-  const recent = conversation.slice(-4).filter(m => m.role !== 'system');
-  return recent.map(m => (m.role === 'user' ? 'User' : 'Jarvis') + ': ' + (typeof m.content === 'string' ? m.content.slice(0, 200) : '(image)')).join('\n');
-}
-
-/* ============ STREAMING GROQ ============ */
-async function streamGroqCompletion(apiMessages, model, bubble, textNode) {
-  const maxTokens = MODEL_MAX_TOKENS[model] || 800;
-  const body = { model: model, messages: apiMessages, max_completion_tokens: maxTokens, stream: true };
-  if (model.startsWith('openai/gpt-oss')) body.reasoning_effort = "low";
-  const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` }, body: JSON.stringify(body) });
-  if (!res.ok) { let errMsg = `HTTP ${res.status}`; try { const j = await res.json(); errMsg = j?.error?.message || errMsg; } catch (e) {} throw new Error(errMsg); }
-  const reader = res.body.getReader(); const decoder = new TextDecoder();
-  let buffer = '', fullText = '';
+/* ============ STREAM GROQ ============ */
+async function streamGroq(msgs, model, bubble, tn) {
+  const mx = MODEL_MAX[model] || 800;
+  const body = { model, messages: msgs, max_completion_tokens: mx, stream: true };
+  if (model.startsWith('openai/gpt-oss')) body.reasoning_effort = 'low';
+  const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` }, body: JSON.stringify(body) });
+  if (!r.ok) { let e = `HTTP ${r.status}`; try { const j = await r.json(); e = j?.error?.message || e; } catch (x) {} throw new Error(e); }
+  const rd = r.body.getReader(); const dec = new TextDecoder();
+  let buf = '', full = '';
   while (true) {
-    const { done, value } = await reader.read(); if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n'); buffer = lines.pop() || '';
-    for (const rawLine of lines) {
-      const line = rawLine.trim(); if (!line.startsWith('data:')) continue;
-      const payload = line.slice(5).trim(); if (payload === '[DONE]') continue;
+    const { done, value } = await rd.read(); if (done) break;
+    buf += dec.decode(value, { stream: true });
+    const lines = buf.split('\n'); buf = lines.pop() || '';
+    for (const ln of lines) {
+      const l = ln.trim(); if (!l.startsWith('data:')) continue;
+      const p = l.slice(5).trim(); if (p === '[DONE]') continue;
       try {
-        const json = JSON.parse(payload);
-        const delta = json?.choices?.[0]?.delta?.content;
-        if (delta) {
-          fullText += delta;
-          textNode.innerText = cleanMarkdown(hideImageGenLine(fullText));
-          chatBox.scrollTop = chatBox.scrollHeight;
-        }
+        const j = JSON.parse(p);
+        const d = j?.choices?.[0]?.delta?.content;
+        if (d) { full += d; tn.innerText = clean(hideGen(full)); chatBox.scrollTop = chatBox.scrollHeight; }
       } catch (e) {}
     }
   }
-  if (!fullText.trim()) fullText = 'Koi response nahi mila.';
-  textNode.innerText = cleanMarkdown(hideImageGenLine(fullText));
+  if (!full.trim()) full = '';
+  tn.innerText = clean(hideGen(full));
   bubble.classList.remove('streaming');
-  return fullText;
+  return full;
+}
+function hideGen(t) { return t.replace(/^\s*IMAGE_GEN\s*:.*$/gim, '').replace(/\n{3,}/g, '\n\n').trim(); }
+
+/* ============ STREAM DEVTOOLBOX ============ */
+async function streamDT(msgs, bubble, tn) {
+  const lu = [...msgs].reverse().find(m => m.role === 'user');
+  const ut = typeof lu.content === 'string' ? lu.content : String(lu.content || '');
+  const p = `You are an expert coding assistant. Answer in Roman Urdu/English. Write clean code with explanation.\n\nQuestion: ${ut}`;
+  const r = await fetch(DEVTOOLBOX_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: p, max_tokens: 2048 }) });
+  if (!r.ok) { let e = `DT ${r.status}`; try { const j = await r.json(); e = j?.error?.message || j?.error || e; } catch (x) {} throw new Error(e); }
+  const d = await r.json();
+  const t = d?.text || d?.response || d?.result || d?.output || d?.message || d?.choices?.[0]?.message?.content || (typeof d === 'string' ? d : '');
+  if (!t) throw new Error('No reply');
+  const c = clean(t);
+  tn.innerText = '';
+  const ws = c.split(/(\s+)/); let a = '';
+  for (let i = 0; i < ws.length; i++) { a += ws[i]; tn.innerText = a; chatBox.scrollTop = chatBox.scrollHeight; if (i % 6 === 0) await new Promise(x => setTimeout(x, 20)); }
+  tn.innerText = c; bubble.classList.remove('streaming');
+  return t;
 }
 
-function hideImageGenLine(text) { return text.replace(/^\s*IMAGE_GEN\s*:.*$/gim, '').replace(/\n{3,}/g, '\n\n').trim(); }
+function clean(t) { return t.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/^#{1,6}\s+/gm, '').replace(/^[-•]\s+/gm, '• ').trim(); }
 
-/* ============ STREAMING DEVTOOLBOX ============ */
-async function streamDevToolboxCompletion(apiMessages, bubble, textNode) {
-  const lastUser = [...apiMessages].reverse().find(m => m.role === 'user');
-  if (!lastUser) throw new Error('Koi user message nahi mila.');
-  const userText = typeof lastUser.content === 'string' ? lastUser.content : (Array.isArray(lastUser.content) ? lastUser.content.map(c => c.text || '').join(' ') : String(lastUser.content || ''));
-  const codingPrompt = `You are an expert coding assistant. Answer in Roman Urdu/English. Write clean, working code with explanation.\n\nUser question: ${userText}`;
-  const res = await fetch(DEVTOOLBOX_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: codingPrompt, max_tokens: 2048 }) });
-  if (!res.ok) { let errMsg = `DevToolBox HTTP ${res.status}`; try { const j = await res.json(); errMsg = j?.error?.message || j?.error || errMsg; } catch (e) {} throw new Error(errMsg); }
-  const data = await res.json();
-  const text = data?.text || data?.response || data?.result || data?.output || data?.message || (data?.choices?.[0]?.message?.content) || (typeof data === 'string' ? data : '');
-  if (!text) throw new Error('DevToolBox se koi jawab nahi mila.');
-  const clean = cleanMarkdown(text);
-  textNode.innerText = '';
-  const words = clean.split(/(\s+)/);
-  let acc = '';
-  for (let i = 0; i < words.length; i++) {
-    acc += words[i]; textNode.innerText = acc; chatBox.scrollTop = chatBox.scrollHeight;
-    if (i % 6 === 0) await new Promise(r => setTimeout(r, 25));
-  }
-  textNode.innerText = clean;
-  bubble.classList.remove('streaming');
-  return text;
-}
-
-function cleanMarkdown(text) {
-  return text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/^#{1,6}\s+/gm, '').replace(/^[-•]\s+/gm, '• ').trim();
-}
-
-function parseImageCommand(text) {
+/* ============ IMAGE COMMAND ============ */
+function parseImgCmd(text) {
   const m = text.match(/^\/image(\d*)\s*:?\s*(.*)$/i);
   if (!m) return null;
-  const count = m[1] ? Math.min(Math.max(parseInt(m[1]), 1), 4) : 1;
-  let rest = (m[2] || '').trim(); let style = null;
-  const styleMatch = rest.match(/^([a-z0-9]+)\s*:\s*(.+)$/i);
-  if (styleMatch) {
-    const possibleStyle = styleMatch[1].toLowerCase();
-    if (IMAGE_STYLES[possibleStyle]) { style = possibleStyle; rest = styleMatch[2].trim(); }
+  const c = m[1] ? Math.min(Math.max(parseInt(m[1]), 1), 4) : 1;
+  let r = (m[2] || '').trim(); let s = null;
+  const sm = r.match(/^([a-z0-9]+)\s*:\s*(.+)$/i);
+  if (sm && IMAGE_STYLES[sm[1].toLowerCase()]) { s = sm[1].toLowerCase(); r = sm[2].trim(); }
+  return { count: c, style: s, prompt: r };
+}
+
+/* ============ AI: GET IMAGE PROMPT ============ */
+async function aiImgPrompt(userMsg, ctx) {
+  const p = `Convert this into a detailed English image generation prompt (max 100 words). Output ONLY the prompt, nothing else.\n\nUser: ${userMsg}\n\nContext:\n${ctx}`;
+  try {
+    const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` }, body: JSON.stringify({ model: FAST_MODEL, messages: [{ role: 'user', content: p }], max_completion_tokens: 250, temperature: 0.7 }) });
+    if (!r.ok) return null;
+    const d = await r.json();
+    let pr = (d?.choices?.[0]?.message?.content || '').trim();
+    if (!pr) return null;
+    return pr.replace(/^["'`]+|["'`]+$/g, '').replace(/^(prompt|image\s*prompt)\s*:\s*/i, '').trim();
+  } catch (e) { return null; }
+}
+function getCtx() {
+  const r = conversation.slice(-4).filter(m => m.role !== 'system');
+  return r.map(m => (m.role === 'user' ? 'User' : 'Jarvis') + ': ' + (typeof m.content === 'string' ? m.content.slice(0, 200) : '(image)')).join('\n');
+}
+
+/* ============ HANDLE IMAGE REQUEST ============ */
+async function handleImageRequest(userMsg) {
+  addMsg(userMsg, true);
+  userInput.value = '';
+  isSending = true; sendBtn.disabled = true;
+
+  const row = document.createElement('div'); row.className = 'row ai';
+  const av = document.createElement('div'); av.className = 'avatar ai'; av.innerText = 'J';
+  const bb = document.createElement('div'); bb.className = 'msg';
+  const tn = document.createElement('div'); tn.innerText = 'Ek second, banata hoon...';
+  bb.appendChild(tn);
+  row.appendChild(av); row.appendChild(bb);
+  chatBox.appendChild(row); chatBox.scrollTop = chatBox.scrollHeight;
+
+  try {
+    const ctx = getCtx();
+    let prompt = await aiImgPrompt(userMsg, ctx);
+    if (!prompt) prompt = userMsg;
+    tn.innerText = 'Yeh lo aapki image!';
+    addImgGen(prompt, 1, null);
+    // Track for context
+    chatState.lastImageTopic = userMsg;
+    chatState.mode = 'image_just_generated';
+    conversation.push({ role: 'user', content: userMsg });
+    conversation.push({ role: 'assistant', content: '[Image generated: ' + prompt + ']' });
+    trimHist(); saveHist();
+  } catch (e) {
+    tn.innerText = 'Yaar, image banane mein dikkat aa gayi. Dobara try karo.';
+  } finally {
+    isSending = false; sendBtn.disabled = false; userInput.focus();
   }
-  return { count, style, prompt: rest };
+}
+
+/* ============ HANDLE IMAGE REJECTION ============ */
+async function handleRejection(userMsg) {
+  addMsg(userMsg, true); userInput.value = '';
+  chatState.mode = 'normal'; chatState.lastImageTopic = null;
+  isSending = true; sendBtn.disabled = true;
+  const { b, tn, sb } = addStream({ modelName: getModel().name, modelIcon: getModel().icon });
+  try {
+    refreshPrompt();
+    const raw = await streamGroq([...conversation, { role: 'user', content: userMsg }], currentModelId, b, tn);
+    const c = clean(hideGen(raw)) || 'Theek hai. Aur kuch?';
+    tn.innerText = c; sb.onclick = () => speak(c, sb);
+    conversation.push({ role: 'user', content: userMsg });
+    conversation.push({ role: 'assistant', content: c.slice(0, MAX_MSG_LEN) });
+    trimHist(); saveHist();
+  } catch (e) { b.classList.remove('streaming'); tn.innerText = 'Theek hai. Aur kuch?'; }
+  finally { isSending = false; sendBtn.disabled = false; userInput.focus(); }
 }
 
 /* ============ MAIN SEND ============ */
 async function sendMessage() {
   if (isSending) return;
-  const text  = userInput.value.trim();
+  const text = userInput.value.trim();
   const image = pendingImage;
-  const file  = pendingFile;
+  const file = pendingFile;
   if (!text && !image && !file) return;
 
-  // Reset context on rejection
-  if (userRejectedImage(text)) {
-    imageContextActive = false;
-    addPlainMessage(text, true);
-    userInput.value = '';
-    isSending = true; sendBtn.disabled = true;
-    const { bubble, textNode, speakerBtn } = addStreamingMessage({ modelName: getCurrentModel().name, modelIcon: getCurrentModel().icon });
-    try {
-      refreshSystemPrompt();
-      const apiMessages = [...conversation, { role: 'user', content: text }];
-      const fullRawReply = await streamGroqCompletion(apiMessages, currentModelId, bubble, textNode);
-      const clean = cleanMarkdown(hideImageGenLine(fullRawReply)) || 'Theek hai.';
-      textNode.innerText = clean;
-      speakerBtn.onclick = () => speakText(clean, speakerBtn);
-      conversation.push({ role: 'user', content: text });
-      conversation.push({ role: 'assistant', content: clean.slice(0, MAX_MSG_LEN) });
-      trimHistory(); saveHistory();
-    } catch (err) {
-      bubble.classList.remove('streaming');
-      textNode.innerText = 'Theek hai. Aur kuch poocho?';
-    } finally {
-      isSending = false; sendBtn.disabled = false; userInput.focus();
-    }
-    return;
-  }
+  chatState.turnCount++;
 
-  // /image command
-  const imgCmd = !image && !file ? parseImageCommand(text) : null;
+  // Emotion check
+  const emotion = detectEmotion(text);
+  chatState.emotionalTone = emotion;
+
+  // Intent detection
+  const intent = detectIntent(text);
+
+  // === REJECTION ===
+  if (intent === 'reject_image') { await handleRejection(text); return; }
+
+  // === IMAGE COMMAND ===
+  const imgCmd = !image && !file ? parseImgCmd(text) : null;
   if (imgCmd) {
-    addPlainMessage(text, true); userInput.value = '';
-    if (!imgCmd.prompt) { addPlainMessage('Image ke liye kuch description bhi likho.', false); return; }
-    addImageGenerationMessage(imgCmd.prompt, imgCmd.count, imgCmd.style);
+    addMsg(text, true); userInput.value = '';
+    if (!imgCmd.prompt) { addMsg('Image ke liye kuch description bhi likho.', false); return; }
+    addImgGen(imgCmd.prompt, imgCmd.count, imgCmd.style);
+    chatState.mode = 'image_just_generated';
     return;
   }
 
-  // Direct image intent
-  const wantsImage = shouldGenerateImage(text);
-
-  if (wantsImage && !image && !file) {
-    addPlainMessage(text, true);
-    userInput.value = '';
-    isSending = true; sendBtn.disabled = true;
-    imageContextActive = false; // Reset after generating
-
-    (async () => {
-      try {
-        const context = getRecentContext();
-        let imgPrompt = await getImagePromptFromAI(text, context);
-        if (!imgPrompt) imgPrompt = text;
-        // Clean up image prompt from Roman Urdu if it looks too short
-        addImageGenerationMessage(imgPrompt, 1, null);
-        // History mein daalo
-        conversation.push({ role: 'user', content: text });
-        conversation.push({ role: 'assistant', content: '[image generated]' });
-        trimHistory(); saveHistory();
-      } catch (e) {
-        console.error(e);
-        addImageGenerationMessage(text, 1, null);
-      } finally {
-        isSending = false; sendBtn.disabled = false; userInput.focus();
-      }
-    })();
+  // === DIRECT IMAGE REQUEST ===
+  if ((intent === 'image_direct' || intent === 'image_context_reply') && !image && !file) {
+    await handleImageRequest(text);
     return;
   }
 
-  // Normal chat flow
-  let userContentForApi;
-  if (image) {
-    userContentForApi = [{ type: 'text', text: text || 'Is image mein kya hai?' }, { type: 'image_url', image_url: { url: image.dataUrl } }];
-  } else {
-    userContentForApi = text;
+  // === NORMAL CHAT ===
+  // Special handling for capability question
+  if (intent === 'capability_q') {
+    // Let AI answer naturally, but also set context
+    chatState.mode = 'awaiting_image_details';
   }
 
-  addPlainMessage(text || (file ? '(file attach ki)' : '(image bheji)'), true, image ? image.dataUrl : null, file ? { name: file.name, size: file.size } : null);
+  let userContent;
+  if (image) userContent = [{ type: 'text', text: text || 'Is image mein kya hai?' }, { type: 'image_url', image_url: { url: image.dataUrl } }];
+  else userContent = text;
+
+  addMsg(text || (file ? '(file attach ki)' : '(image bheji)'), true, image ? image.dataUrl : null, file ? { name: file.name, size: file.size } : null);
   userInput.value = ''; pendingImage = null; pendingFile = null;
   fileInput.value = ''; docInput.value = ''; attachPreview.classList.remove('show');
 
   isSending = true; sendBtn.disabled = true;
 
-  const curModel = getCurrentModel();
-  const isDevToolbox = curModel.provider === 'devtoolbox';
-  const useSearch = !image && !file && !isDevToolbox && searchEnabled;
+  const cm = getModel();
+  const isDT = cm.provider === 'devtoolbox';
+  const useSearch = !image && !file && !isDT && searchEnabled;
   const useFile = !!file;
 
-  const { bubble, textNode, speakerBtn, badge } = addStreamingMessage({
+  const { b, tn, sb, badge } = addStream({
     withSearch: useSearch, withFile: useFile,
-    modelName: !image ? curModel.name : null,
-    modelIcon: !image ? curModel.icon : null,
-    isCode: isDevToolbox
+    modelName: !image ? cm.name : null,
+    modelIcon: !image ? cm.icon : null,
+    isCode: isDT
   });
 
-  refreshSystemPrompt();
-  let apiMessages = [...conversation, { role: 'user', content: userContentForApi }];
-  let clean = null; let fullRawReply = null;
+  refreshPrompt();
+  let msgs = [...conversation, { role: 'user', content: userContent }];
+  let full = null;
 
   try {
     if (useFile) {
-      const filePrompt = `User ne ek file attach ki hai: "${file.name}"\n\nFile ka content:\n---\n${file.text}\n---\n\nUser ka sawaal: "${text || 'Is file ke baare mein batao'}"\n\nInstructions:\n- File ke content ke base pe jawab do.\n- Roman Urdu mein.`;
-      apiMessages = [{ role: 'system', content: baseInstruction }, { role: 'user', content: filePrompt }];
-      if (isDevToolbox) { fullRawReply = await streamDevToolboxCompletion(apiMessages, bubble, textNode); clean = fullRawReply; }
-      else { fullRawReply = await streamGroqCompletion(apiMessages, currentModelId, bubble, textNode); clean = cleanMarkdown(hideImageGenLine(fullRawReply)); }
-    } else if (isDevToolbox) {
-      fullRawReply = await streamDevToolboxCompletion(apiMessages, bubble, textNode); clean = fullRawReply;
+      const fp = `User ne file attach ki: "${file.name}"\n\nContent:\n---\n${file.text}\n---\n\nSawaal: "${text || 'Is file ke baare mein batao'}"\n\nFile ke content ke base pe Roman Urdu mein jawab do.`;
+      msgs = [{ role: 'system', content: baseInstruction }, { role: 'user', content: fp }];
+      if (isDT) full = await streamDT(msgs, b, tn);
+      else full = await streamGroq(msgs, currentModelId, b, tn);
+    } else if (isDT) {
+      full = await streamDT(msgs, b, tn);
     } else if (useSearch) {
-      const searchResults = await performTavilySearch(text);
-      if (searchResults.length === 0) { fullRawReply = await streamGroqCompletion(apiMessages, currentModelId, bubble, textNode); clean = cleanMarkdown(hideImageGenLine(fullRawReply)); }
+      const sr = await tavily(text);
+      if (!sr.length) full = await streamGroq(msgs, currentModelId, b, tn);
       else {
-        const searchContext = searchResults.map((r, i) => `[${i+1}] ${r.title}\n${r.snippet}\nURL: ${r.url}`).join('\n\n');
-        const searchPrompt = `User ne poocha: "${text}"\n\nWeb search results:\n${searchContext}\n\nInka istemaal karke natural Roman Urdu mein jawab do. Sources URLs include mat karo.`;
-        apiMessages = [{ role: 'system', content: baseInstruction }, { role: 'user', content: searchPrompt }];
-        fullRawReply = await streamGroqCompletion(apiMessages, currentModelId, bubble, textNode);
-        clean = cleanMarkdown(hideImageGenLine(fullRawReply));
-        if (clean) addSourcesBlock(bubble, searchResults);
+        const sc = sr.map((r, i) => `[${i+1}] ${r.title}\n${r.snippet}\nURL: ${r.url}`).join('\n\n');
+        const sp = `User ne poocha: "${text}"\n\nWeb search results:\n${sc}\n\nNatural Roman Urdu mein jawab do. Sources ka URL include mat karo.`;
+        msgs = [{ role: 'system', content: baseInstruction }, { role: 'user', content: sp }];
+        full = await streamGroq(msgs, currentModelId, b, tn);
+        const c = clean(hideGen(full));
+        if (c) addSrcs(b, sr);
       }
     } else {
       const model = image ? VISION_MODEL : currentModelId;
-      fullRawReply = await streamGroqCompletion(apiMessages, model, bubble, textNode);
-      clean = cleanMarkdown(hideImageGenLine(fullRawReply));
+      full = await streamGroq(msgs, model, b, tn);
     }
 
-    if (!clean || !clean.trim()) {
-      clean = 'Samajh gaya. Aur kuch poochna hai?';
-      textNode.innerText = clean;
-    } else {
-      textNode.innerText = clean;
+    let cleaned = clean(hideGen(full));
+
+    // If empty, provide smart fallback
+    if (!cleaned || !cleaned.trim()) {
+      const fallbacks = {
+        greeting: 'Wa Alaikum Assalam! Kaise hain aap? Kya madad karoon?',
+        thanks: 'Koi baat nahi yaar! Aur kuch chahiye to batao.',
+        compliment: 'Shukriya! Aap ko pasand aayi to maza aa gaya. 😊',
+        question: 'Achha sawaal hai. Thoda aur detail do taaki main behtar jawab de sakoon.',
+        chat: 'Samajh gaya. Aur kuch poochna hai?'
+      };
+      cleaned = fallbacks[intent] || 'Hmm, samajh gaya. Aur kuch batao?';
+      tn.innerText = cleaned;
     }
 
-    // Check agar AI ne image details maangi → context activate karo
-    if (aiAskedForImageDetails(clean)) {
-      imageContextActive = true;
-    } else if (userDirectlyAskedImage(text) && !/\bIMAGE_GEN\b/i.test(fullRawReply || '')) {
-      // AI ne image banane se inkar kiya ya bhool gaya → force generate
-      imageContextActive = true;
-    } else {
-      // koi aur response — context reset nahi karte agar direct image intent tha
-      if (!userDirectlyAskedImage(text)) imageContextActive = false;
+    // Update state based on response
+    if (intent === 'capability_q') {
+      chatState.mode = 'awaiting_image_details';
+    } else if (chatState.mode === 'image_just_generated') {
+      chatState.mode = 'normal';
     }
 
-    speakerBtn.onclick = () => speakText(clean, speakerBtn);
+    sb.onclick = () => speak(cleaned, sb);
 
-    const historyUserContent = image
-      ? (text ? `${text} [image attach ki thi]` : '[image attach ki thi]')
-      : (file ? (text ? `${text} [file: ${file.name}]` : `[file: ${file.name}]`) : text);
-    conversation.push({ role: 'user', content: historyUserContent });
-    conversation.push({ role: 'assistant', content: clean.slice(0, MAX_MSG_LEN) });
-
-    trimHistory(); saveHistory();
+    const hu = image ? (text ? `${text} [image]` : '[image]') : (file ? `${text} [file: ${file.name}]` : text);
+    conversation.push({ role: 'user', content: hu });
+    conversation.push({ role: 'assistant', content: cleaned.slice(0, MAX_MSG_LEN) });
+    trimHist(); saveHist();
 
     if (!image && !file) {
       messagesSinceExtract++;
-      if (messagesSinceExtract >= MEM_EXTRACT_EVERY) { messagesSinceExtract = 0; extractFacts(); }
+      if (messagesSinceExtract >= 6) { messagesSinceExtract = 0; extractFacts(); }
     }
   } catch (err) {
     console.error(err);
-    bubble.classList.remove('streaming');
+    b.classList.remove('streaming');
     if (badge) badge.remove();
-    textNode.innerText = 'Error: ' + (err.message || 'kuch ghalat ho gaya.');
+    // Smart error recovery
+    const em = chatState.emotionalTone;
+    let emsg = 'Yaar, thodi dikkat aa gayi. Dobara try karo.';
+    if (em === 'frustrated') emsg = 'Arre, network issue lag raha hai. Ek baar aur try karo, main hoon na.';
+    else if (err.message?.includes('rate')) emsg = 'Thodi der ruko, bahut requests aa gayi hain. 1 minute baad try karo.';
+    tn.innerText = emsg;
   } finally {
     isSending = false; sendBtn.disabled = false; userInput.focus();
   }
 }
 
 /* ============ INIT ============ */
-loadMemory(); loadSearchState(); loadModelState(); refreshSystemPrompt();
-const loadedFromShare = loadSharedChatFromUrl();
-if (!loadedFromShare) { loadHistory(); }
+loadMem(); loadSearch(); loadModel(); refreshPrompt();
+const shared = loadShared();
+if (!shared) loadHist();
 </script>
 
 </body>
