@@ -380,8 +380,8 @@ const GROQ_KEY = "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";
 const TEXT_MODEL    = "openai/gpt-oss-120b";
 const VISION_MODEL  = "meta-llama/llama-4-scout-17b-16e-instruct";
 const FAST_MODEL    = "llama-3.1-8b-instant";
-const SEARCH_MODEL  = "groq/compound";
 const API_URL       = "https://api.groq.com/openai/v1/chat/completions";
+const TAVILY_URL    = "https://api.tavily.com/search";
 const HISTORY_KEY   = "jarvis_history_v1";
 const MEMORY_KEY    = "jarvis_memory_v1";
 const SEARCH_KEY    = "jarvis_search_enabled_v1";
@@ -391,7 +391,6 @@ const MAX_FACTS     = 15;
 const MAX_IMG_DIM   = 1024;
 const JPEG_QUALITY  = 0.75;
 const MAX_MSG_LEN   = 1500;
-const SEARCH_HISTORY_DEPTH = 2;   // search mode: sirf last 2 messages
 
 const chatBox       = document.getElementById('chatBox');
 const userInput     = document.getElementById('userInput');
@@ -925,72 +924,37 @@ function loadHistory() {
   } catch (e) {}
 }
 
-/* ============ WEB SEARCH (ultra-compact) ============ */
-async function sendSearchMessage(apiMessages, bubble, textNode, badge) {
-  // Sirf base system prompt (memory facts ke bina) + last 2 messages
-  const systemMsg = { role: 'system', content: baseInstruction };
-  const rest = apiMessages.slice(1);
-  const trimmed = [systemMsg, ...rest.slice(-SEARCH_HISTORY_DEPTH)];
+/* ============ TAVILY WEB SEARCH ============ */
+async function performTavilySearch(query) {
+  // Tavily keyless endpoint — no API key required
+  const res = await fetch(TAVILY_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Tavily-Access-Mode': 'keyless'
+    },
+    body: JSON.stringify({
+      query: query,
+      max_results: 3,
+      search_depth: 'basic'
+    })
+  });
 
-  try {
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GROQ_KEY}`
-      },
-      body: JSON.stringify({
-        model: SEARCH_MODEL,
-        messages: trimmed,
-        max_completion_tokens: 256,   // <-- reduced from 800 to 256
-        stream: false
-      })
-    });
-
-    if (!res.ok) {
-      let errMsg = `HTTP ${res.status}`;
-      try {
-        const j = await res.json();
-        errMsg = j?.error?.message || errMsg;
-        if (res.status === 413 || /too large|entity too large/i.test(errMsg)) {
-          errMsg = 'Search ka message size zyada hai. "Clear" dabao ya chhota sawaal poocho.';
-        }
-      } catch (e) {}
-      throw new Error(errMsg);
-    }
-
-    const data = await res.json();
-    const msg = data?.choices?.[0]?.message || {};
-    const rawText = msg.content || '';
-
-    const sources = [];
-    const tools = msg.executed_tools || [];
-    for (const tool of tools) {
-      const results = tool?.search_results?.results
-                   || tool?.output?.search_results?.results
-                   || tool?.results
-                   || [];
-      for (const r of results) {
-        if (r?.url) sources.push({ title: r.title, url: r.url });
-      }
-    }
-
-    const clean = cleanMarkdown(rawText) || 'Jawab nahi mila. Dobara try karein.';
-    textNode.innerText = clean;
-    bubble.classList.remove('streaming');
-    if (badge) badge.remove();
-
-    if (sources.length) addSourcesBlock(bubble, sources);
-    return clean;
-  } catch (err) {
-    bubble.classList.remove('streaming');
-    if (badge) badge.remove();
-    textNode.innerText = 'Error: ' + (err.message || 'kuch ghalat ho gaya.');
-    return null;
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error('Tavily search failed: ' + res.status + ' ' + errText);
   }
+
+  const data = await res.json();
+  const results = data?.results || [];
+  return results.map(r => ({
+    title: r.title,
+    url: r.url,
+    snippet: r.content || r.snippet || ''
+  }));
 }
 
-/* ============ STREAMING ============ */
+/* ============ STREAMING (regular chat, no search) ============ */
 async function streamChatCompletion(apiMessages, model, bubble, textNode) {
   const body = {
     model: model,
@@ -1011,9 +975,6 @@ async function streamChatCompletion(apiMessages, model, bubble, textNode) {
     try {
       const j = await res.json();
       errMsg = j?.error?.message || errMsg;
-      if (res.status === 413 || /too large|entity too large/i.test(errMsg)) {
-        errMsg = 'Request bohot bari hai. Chat clear karo ya image chhoti karo.';
-      }
     } catch (e) {}
     throw new Error(errMsg);
   }
@@ -1094,14 +1055,48 @@ async function sendMessage() {
   const { bubble, textNode, speakerBtn, badge } = addStreamingMessage({ withSearch: useSearch });
 
   refreshSystemPrompt();
-  const apiMessages = [...conversation, { role: 'user', content: userContentForApi }];
+  let apiMessages = [...conversation, { role: 'user', content: userContentForApi }];
 
   let clean = null;
 
   try {
     if (useSearch) {
-      clean = await sendSearchMessage(apiMessages, bubble, textNode, badge);
+      // 1. Pehle Tavily se search karo
+      const searchResults = await performTavilySearch(text);
+
+      if (searchResults.length === 0) {
+        // Agar kuch nahi mila, to normal chat ki tarah jawab do
+        clean = await streamChatCompletion(apiMessages, TEXT_MODEL, bubble, textNode);
+      } else {
+        // 2. Search results ko prompt mein daal kar Groq ko bhejo
+        const searchContext = searchResults
+          .map((r, i) => `[${i+1}] ${r.title}\n${r.snippet}\nURL: ${r.url}`)
+          .join('\n\n');
+
+        const searchPrompt = `User ne ye sawaal poocha: "${text}"
+
+Neeche web search ke results hain. Inka istemaal karke user ko ek saaf, natural jawab do. Jawab Roman Urdu mein ho.
+
+Search Results:
+${searchContext}
+
+Instru: Sources ke URLs ko include mat karo, sirf natural jawab do. Agar search results sawaal ka jawab nahi de rahe, to apni knowledge se jawab do.`;
+
+        // 3. Groq ko bhejo (system prompt + search prompt)
+        apiMessages = [
+          { role: 'system', content: baseInstruction },
+          { role: 'user', content: searchPrompt }
+        ];
+
+        clean = await streamChatCompletion(apiMessages, TEXT_MODEL, bubble, textNode);
+
+        // 4. Sources block add karo
+        if (clean) {
+          addSourcesBlock(bubble, searchResults);
+        }
+      }
     } else {
+      // Normal chat (no search)
       const model = image ? VISION_MODEL : TEXT_MODEL;
       clean = await streamChatCompletion(apiMessages, model, bubble, textNode);
     }
