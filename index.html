@@ -13,6 +13,7 @@
     --border: #2a2e39; --text: #e9eaee; --text-dim: #8b91a3;
     --accent: #4f9dde; --accent-dim: #2c4b64;
     --online: #3fbfa0; --danger: #e07a7a; --search: #c9a84c;
+    --code: #a78bfa;
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
@@ -108,11 +109,11 @@
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 6px;
-    min-width: 240px;
+    min-width: 260px;
     box-shadow: 0 8px 30px rgba(0,0,0,0.5);
     z-index: 300;
     display: none;
-    max-height: 400px;
+    max-height: 420px;
     overflow-y: auto;
   }
   .model-selector.open .model-dropdown { display: block; }
@@ -154,6 +155,15 @@
     color: var(--online);
     font-size: 14px;
     flex-shrink: 0;
+  }
+  .model-option .m-tag {
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: var(--panel-2);
+    color: var(--text-dim);
+    margin-left: 4px;
+    vertical-align: middle;
   }
 
   .chat-wrap {
@@ -253,6 +263,7 @@
     border: 1px solid var(--border);
     padding: 2px 8px; border-radius: 6px; margin-bottom: 6px;
   }
+  .model-badge.code { color: var(--code); border-color: rgba(167,139,250,0.3); background: rgba(167,139,250,0.1); }
   .input-bar { width: 100%; max-width: 720px; padding: 14px 20px 22px; }
   .input-shell {
     display: flex; align-items: center; gap: 8px;
@@ -434,7 +445,7 @@
         <div class="avatar ai">J</div>
         <div class="msg">Assalam-o-Alaikum! Main Jarvis hoon. Kuch bhi pooch sakte hain.
 
-Upar dropdown se model choose karo — Fast, Smart, ya Code.
+Upar dropdown se model choose karo — Smart, Fast, ya 💻 Coding (Free).
 
 Image: 📎 | File: 📄 | Voice: 🎙️ | Search: 🌐 | Image gen: /image</div>
       </div>
@@ -476,7 +487,7 @@ Image: 📎 | File: 📄 | Voice: 🎙️ | Search: 🌐 | Image gen: /image</di
         </svg>
       </button>
     </div>
-    <div class="hint">Model badalne ke liye upar dropdown. Search: 🌐 | File: 📄 | Voice: 🎙️ | Image gen: <code>/image</code></div>
+    <div class="hint">Coding ke liye upar dropdown se <b>💻 Coding (Free)</b> select karo — unlimited aur bina signup. Search: 🌐 | File: 📄 | Voice: 🎙️</div>
   </div>
 
   <div class="mem-toast" id="memToast"><span class="dot"></span><span id="memToastText">Memory update ho gayi</span></div>
@@ -504,6 +515,8 @@ const FAST_MODEL    = "llama-3.1-8b-instant";
 const VISION_MODEL  = "meta-llama/llama-4-scout-17b-16e-instruct";
 const API_URL       = "https://api.groq.com/openai/v1/chat/completions";
 const TAVILY_URL    = "https://api.tavily.com/search";
+const KEYLESS_URL   = "https://keylessai.thryx.workers.dev/v1/chat/completions";
+const KEYLESS_KEY   = "not-needed";
 const HISTORY_KEY   = "jarvis_history_v1";
 const MEMORY_KEY    = "jarvis_memory_v1";
 const SEARCH_KEY    = "jarvis_search_enabled_v1";
@@ -523,37 +536,43 @@ const MODELS = [
     id: "openai/gpt-oss-120b",
     name: "Smart",
     icon: "✨",
-    desc: "Best for reasoning, analysis, general chat"
+    desc: "Best for reasoning, analysis, general chat",
+    provider: "groq"
   },
   {
     id: "llama-3.1-8b-instant",
     name: "Fast",
     icon: "⚡",
-    desc: "Instant replies, simple sawaal, quick tasks"
+    desc: "Instant replies, simple sawaal",
+    provider: "groq"
   },
   {
     id: "llama-3.3-70b-versatile",
     name: "Balanced",
     icon: "⚖️",
-    desc: "Good balance of speed & quality"
+    desc: "Good balance of speed & quality",
+    provider: "groq"
   },
   {
     id: "openai/gpt-oss-20b",
     name: "Compact",
     icon: "🌱",
-    desc: "Fast reasoning, chhota model"
-  },
-  {
-    id: "qwen/qwen3-32b",
-    name: "Code",
-    icon: "💻",
-    desc: "Best for coding, debugging, technical tasks"
+    desc: "Fast reasoning, chhota model",
+    provider: "groq"
   },
   {
     id: "moonshotai/kimi-k2-instruct-0905",
     name: "Long Context",
     icon: "📚",
-    desc: "Bada documents aur long chats ke liye"
+    desc: "Bada documents aur long chats ke liye",
+    provider: "groq"
+  },
+  {
+    id: "gpt-4o",
+    name: "Coding (Free)",
+    icon: "💻",
+    desc: "KeylessAI se free unlimited coding — no signup",
+    provider: "keyless"
   }
 ];
 
@@ -640,10 +659,11 @@ function renderModelDropdown() {
   for (const m of MODELS) {
     const div = document.createElement('div');
     div.className = 'model-option' + (m.id === currentModelId ? ' active' : '');
+    const tag = m.provider === 'keyless' ? '<span class="m-tag">FREE</span>' : '';
     div.innerHTML = `
       <span class="m-icon">${m.icon}</span>
       <div class="m-info">
-        <div class="m-name">${m.name}</div>
+        <div class="m-name">${m.name}${tag}</div>
         <div class="m-desc">${m.desc}</div>
       </div>
       ${m.id === currentModelId ? '<span class="m-check">✓</span>' : ''}
@@ -1111,7 +1131,7 @@ function addPlainMessage(text, isUser, imageDataUrl, fileInfo) {
 }
 
 function addStreamingMessage(opts = {}) {
-  const { withSearch = false, withFile = false, modelName = null, modelIcon = null } = opts;
+  const { withSearch = false, withFile = false, modelName = null, modelIcon = null, isCode = false } = opts;
   const row = document.createElement('div');
   row.className = 'row ai';
   const avatar = document.createElement('div');
@@ -1122,7 +1142,7 @@ function addStreamingMessage(opts = {}) {
 
   if (modelName && modelIcon) {
     const mbadge = document.createElement('div');
-    mbadge.className = 'model-badge';
+    mbadge.className = 'model-badge' + (isCode ? ' code' : '');
     mbadge.innerText = modelIcon + ' ' + modelName;
     bubble.appendChild(mbadge);
   }
@@ -1292,15 +1312,14 @@ async function performTavilySearch(query) {
   }));
 }
 
-/* ============ STREAMING ============ */
-async function streamChatCompletion(apiMessages, model, bubble, textNode) {
+/* ============ STREAMING (Groq) ============ */
+async function streamGroqCompletion(apiMessages, model, bubble, textNode) {
   const body = {
     model: model,
     messages: apiMessages,
     max_completion_tokens: 1024,
     stream: true
   };
-  // reasoning_effort sirf gpt-oss models ke liye
   if (model.startsWith('openai/gpt-oss')) body.reasoning_effort = "low";
 
   const res = await fetch(API_URL, {
@@ -1311,6 +1330,62 @@ async function streamChatCompletion(apiMessages, model, bubble, textNode) {
 
   if (!res.ok) {
     let errMsg = `HTTP ${res.status}`;
+    try { const j = await res.json(); errMsg = j?.error?.message || errMsg; } catch (e) {}
+    throw new Error(errMsg);
+  }
+
+  const reader  = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer   = '';
+  let fullText = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line.startsWith('data:')) continue;
+      const payload = line.slice(5).trim();
+      if (payload === '[DONE]') continue;
+      try {
+        const json = JSON.parse(payload);
+        const delta = json?.choices?.[0]?.delta?.content;
+        if (delta) {
+          fullText += delta;
+          textNode.innerText = cleanMarkdown(fullText);
+          chatBox.scrollTop = chatBox.scrollHeight;
+        }
+      } catch (e) {}
+    }
+  }
+
+  if (!fullText.trim()) fullText = 'Koi response nahi mila.';
+  const clean = cleanMarkdown(fullText);
+  textNode.innerText = clean;
+  bubble.classList.remove('streaming');
+  return clean;
+}
+
+/* ============ STREAMING (KeylessAI) ============ */
+async function streamKeylessCompletion(apiMessages, bubble, textNode) {
+  const res = await fetch(KEYLESS_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${KEYLESS_KEY}`
+    },
+    body: JSON.stringify({
+      model: "gpt-4o",
+      messages: apiMessages,
+      stream: true
+    })
+  });
+
+  if (!res.ok) {
+    let errMsg = `KeylessAI HTTP ${res.status}`;
     try { const j = await res.json(); errMsg = j?.error?.message || errMsg; } catch (e) {}
     throw new Error(errMsg);
   }
@@ -1390,15 +1465,19 @@ async function sendMessage() {
   isSending = true;
   sendBtn.disabled = true;
 
-  const useSearch = !image && !file && searchEnabled;
-  const useFile   = !!file;
   const curModel  = getCurrentModel();
+  const isKeyless = curModel.provider === 'keyless';
+  const isCode    = isKeyless;
+
+  const useSearch = !image && !file && !isKeyless && searchEnabled;
+  const useFile   = !!file;
 
   const { bubble, textNode, speakerBtn, badge } = addStreamingMessage({
     withSearch: useSearch,
     withFile: useFile,
     modelName: !image ? curModel.name : null,
-    modelIcon: !image ? curModel.icon : null
+    modelIcon: !image ? curModel.icon : null,
+    isCode: isCode
   });
 
   refreshSystemPrompt();
@@ -1428,13 +1507,21 @@ Instructions:
         { role: 'user', content: filePrompt }
       ];
 
-      clean = await streamChatCompletion(apiMessages, currentModelId, bubble, textNode);
+      if (isKeyless) {
+        clean = await streamKeylessCompletion(apiMessages, bubble, textNode);
+      } else {
+        clean = await streamGroqCompletion(apiMessages, currentModelId, bubble, textNode);
+      }
+
+    } else if (isKeyless) {
+      // === KeylessAI coding model ===
+      clean = await streamKeylessCompletion(apiMessages, bubble, textNode);
 
     } else if (useSearch) {
       const searchResults = await performTavilySearch(text);
 
       if (searchResults.length === 0) {
-        clean = await streamChatCompletion(apiMessages, currentModelId, bubble, textNode);
+        clean = await streamGroqCompletion(apiMessages, currentModelId, bubble, textNode);
       } else {
         const searchContext = searchResults
           .map((r, i) => `[${i+1}] ${r.title}\n${r.snippet}\nURL: ${r.url}`)
@@ -1454,15 +1541,13 @@ Instru: Sources ke URLs ko include mat karo, sirf natural jawab do. Agar search 
           { role: 'user', content: searchPrompt }
         ];
 
-        clean = await streamChatCompletion(apiMessages, currentModelId, bubble, textNode);
+        clean = await streamGroqCompletion(apiMessages, currentModelId, bubble, textNode);
         if (clean) addSourcesBlock(bubble, searchResults);
       }
 
     } else {
-      // Normal chat / Vision
-      // Image ke liye always vision model
       const model = image ? VISION_MODEL : currentModelId;
-      clean = await streamChatCompletion(apiMessages, model, bubble, textNode);
+      clean = await streamGroqCompletion(apiMessages, model, bubble, textNode);
     }
 
     if (!clean) return;
