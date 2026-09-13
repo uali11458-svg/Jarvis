@@ -385,13 +385,13 @@ const API_URL       = "https://api.groq.com/openai/v1/chat/completions";
 const HISTORY_KEY   = "jarvis_history_v1";
 const MEMORY_KEY    = "jarvis_memory_v1";
 const SEARCH_KEY    = "jarvis_search_enabled_v1";
-const MAX_HISTORY   = 12;
+const MAX_HISTORY   = 10;
 const MEM_EXTRACT_EVERY = 6;
-const MAX_FACTS     = 20;
+const MAX_FACTS     = 15;
 const MAX_IMG_DIM   = 1024;
 const JPEG_QUALITY  = 0.75;
-const MAX_MSG_LEN   = 2000;   // history mein har message max length
-const SEARCH_HISTORY_DEPTH = 4;  // search mode mein kitne purane messages bhejne hain
+const MAX_MSG_LEN   = 1500;
+const SEARCH_HISTORY_DEPTH = 2;   // search mode: sirf last 2 messages
 
 const chatBox       = document.getElementById('chatBox');
 const userInput     = document.getElementById('userInput');
@@ -523,7 +523,7 @@ async function extractFacts() {
   if (recent.length < 2) return;
   const chatLog = recent.map(m => {
     const role = m.role === 'user' ? 'User' : 'Jarvis';
-    const content = typeof m.content === 'string' ? m.content.slice(0, 500) : '(image)';
+    const content = typeof m.content === 'string' ? m.content.slice(0, 300) : '(image)';
     return role + ': ' + content;
   }).join('\n');
   const existingFacts = memory.length
@@ -549,7 +549,7 @@ Rules:
       body: JSON.stringify({
         model: FAST_MODEL,
         messages: [{ role: 'user', content: extractionPrompt }],
-        max_completion_tokens: 250,
+        max_completion_tokens: 200,
         temperature: 0.3
       })
     });
@@ -895,7 +895,6 @@ function trimHistory() {
   const system = conversation[0];
   const rest = conversation.slice(1);
   if (rest.length > MAX_HISTORY) conversation = [system, ...rest.slice(-MAX_HISTORY)];
-  // also cap individual message lengths
   for (let i = 1; i < conversation.length; i++) {
     const c = conversation[i].content;
     if (typeof c === 'string' && c.length > MAX_MSG_LEN) {
@@ -913,12 +912,12 @@ function loadHistory() {
     for (const m of saved) {
       if (m.role === 'user') {
         const txt = typeof m.content === 'string' ? m.content : '(message)';
-        addPlainMessage(txt.slice(0, 500), true);
+        addPlainMessage(txt.slice(0, 300), true);
         conversation.push({ role: 'user', content: txt.slice(0, MAX_MSG_LEN) });
       } else if (m.role === 'assistant') {
         const { bubble, textNode } = addStreamingMessage();
         bubble.classList.remove('streaming');
-        textNode.innerText = typeof m.content === 'string' ? m.content : '';
+        textNode.innerText = typeof m.content === 'string' ? m.content.slice(0, 500) : '';
         conversation.push({ role: 'assistant', content: (m.content || '').slice(0, MAX_MSG_LEN) });
       }
     }
@@ -926,10 +925,10 @@ function loadHistory() {
   } catch (e) {}
 }
 
-/* ============ WEB SEARCH (compact payload) ============ */
+/* ============ WEB SEARCH (ultra-compact) ============ */
 async function sendSearchMessage(apiMessages, bubble, textNode, badge) {
-  // Sirf system + last N messages bhejo search ke liye
-  const systemMsg = apiMessages[0];
+  // Sirf base system prompt (memory facts ke bina) + last 2 messages
+  const systemMsg = { role: 'system', content: baseInstruction };
   const rest = apiMessages.slice(1);
   const trimmed = [systemMsg, ...rest.slice(-SEARCH_HISTORY_DEPTH)];
 
@@ -943,7 +942,7 @@ async function sendSearchMessage(apiMessages, bubble, textNode, badge) {
       body: JSON.stringify({
         model: SEARCH_MODEL,
         messages: trimmed,
-        max_completion_tokens: 800,
+        max_completion_tokens: 256,   // <-- reduced from 800 to 256
         stream: false
       })
     });
@@ -954,7 +953,7 @@ async function sendSearchMessage(apiMessages, bubble, textNode, badge) {
         const j = await res.json();
         errMsg = j?.error?.message || errMsg;
         if (res.status === 413 || /too large|entity too large/i.test(errMsg)) {
-          errMsg = 'Request bohot bari thi. Chat clear karo ya thoda chhota sawaal poocho.';
+          errMsg = 'Search ka message size zyada hai. "Clear" dabao ya chhota sawaal poocho.';
         }
       } catch (e) {}
       throw new Error(errMsg);
