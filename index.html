@@ -385,9 +385,13 @@ const API_URL       = "https://api.groq.com/openai/v1/chat/completions";
 const HISTORY_KEY   = "jarvis_history_v1";
 const MEMORY_KEY    = "jarvis_memory_v1";
 const SEARCH_KEY    = "jarvis_search_enabled_v1";
-const MAX_HISTORY   = 20;
+const MAX_HISTORY   = 12;
 const MEM_EXTRACT_EVERY = 6;
-const MAX_FACTS     = 25;
+const MAX_FACTS     = 20;
+const MAX_IMG_DIM   = 1024;
+const JPEG_QUALITY  = 0.75;
+const MAX_MSG_LEN   = 2000;   // history mein har message max length
+const SEARCH_HISTORY_DEPTH = 4;  // search mode mein kitne purane messages bhejne hain
 
 const chatBox       = document.getElementById('chatBox');
 const userInput     = document.getElementById('userInput');
@@ -422,9 +426,44 @@ let messagesSinceExtract = 0;
 let memory = [];
 let searchEnabled = false;
 
-const baseInstruction = 'Tumhara naam Jarvis hai. Tum ek helpful AI assistant ho. Agar koi tumhara naam pooche, to hamesha "Jarvis" bolna. Tum kisi company ke banaye hue nahi ho — tumhe user ne banaya hai. Hamesha seedha, saaf jawab do — apna internal soch-vichar (thinking/reasoning process) kabhi mat dikhana, sirf final jawab do. Natural tarike se baat karo jaise ek insaan karta hai — normal conversation mein har cheez ko numbered list, bullet points, ya bold text mein mat todo, seedhe paragraph mein baat karo. Sirf tab list use karo jab user steps ya multiple items specifically maange. Hamesha sirf Roman Urdu/Hindi aur English mein jawab do — kisi aur language (Chinese, Arabic script, etc) ka koi lafz kabhi mat likhna.';
+const baseInstruction = 'Tumhara naam Jarvis hai. Tum ek helpful AI assistant ho. Agar koi tumhara naam pooche, to hamesha "Jarvis" bolna. Tum kisi company ke banaye hue nahi ho — tumhe user ne banaya hai. Hamesha seedha, saaf jawab do — apna internal soch-vichar (thinking/reasoning process) kabhi mat dikhana, sirf final jawab do. Natural tarike se baat karo jaise ek insaan karta hai — normal conversation mein har cheez ko numbered list, bullet points, ya bold text mein mat todo, seedhe paragraph mein baat karo. Sirf tab list use karo jab user steps ya multiple items specifically maange. Hamesha sirf Roman Urdu/Hindi aur English mein jawab do.';
 
 let conversation = [{ role: 'system', content: baseInstruction }];
+
+/* ============ IMAGE COMPRESSION ============ */
+function compressImage(file, maxDim = MAX_IMG_DIM, quality = JPEG_QUALITY) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl);
+      };
+      img.onerror = () => reject(new Error('Image load nahi hui'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('File read error'));
+    reader.readAsDataURL(file);
+  });
+}
 
 /* ============ WEB SEARCH TOGGLE ============ */
 function loadSearchState() {
@@ -467,7 +506,7 @@ function updateMemCount() { memCount.innerText = memory.length; }
 function buildSystemPrompt() {
   if (!memory.length) return baseInstruction;
   const facts = memory.map(f => '- ' + f).join('\n');
-  return baseInstruction + '\n\nUser ke baare mein tumhe ye facts yaad hain (inhe natural tarike se use karo, har baar repeat mat karo):\n' + facts;
+  return baseInstruction + '\n\nUser ke baare mein tumhe ye facts yaad hain:\n' + facts;
 }
 function refreshSystemPrompt() {
   conversation[0] = { role: 'system', content: buildSystemPrompt() };
@@ -480,30 +519,29 @@ function showMemToast(text) {
 }
 
 async function extractFacts() {
-  const recent = conversation.slice(-8).filter(m => m.role !== 'system');
+  const recent = conversation.slice(-6).filter(m => m.role !== 'system');
   if (recent.length < 2) return;
   const chatLog = recent.map(m => {
     const role = m.role === 'user' ? 'User' : 'Jarvis';
-    const content = typeof m.content === 'string' ? m.content : '(image)';
+    const content = typeof m.content === 'string' ? m.content.slice(0, 500) : '(image)';
     return role + ': ' + content;
   }).join('\n');
   const existingFacts = memory.length
-    ? 'Pehle se ye facts memory mein hain (inhe repeat mat karo):\n' + memory.map(f => '- ' + f).join('\n')
-    : 'Memory abhi khali hai.';
-  const extractionPrompt = `Neeche ek conversation hai. Isme se user ke baare mein IMPORTANT, LONG-TERM facts nikaalo — jaise user ka naam, pasand/na-pasand, kaam, sheher, goals, family, hobbies, important preferences, ya koi bhi cheez jo future conversations mein kaam aaye.
+    ? 'Pehle se:\n' + memory.map(f => '- ' + f).join('\n')
+    : 'Memory khali hai.';
+  const extractionPrompt = `Conversation se user ke baare mein IMPORTANT long-term facts nikaalo.
 
 ${existingFacts}
 
 Conversation:
 ${chatLog}
 
-Instructions:
-- Sirf user ke baare mein facts nikaalo, Jarvis ke baare mein nahi.
-- Har fact ek chhoti si line honi chahiye (max 15 words).
-- Sirf wo facts jo long-term useful hain.
-- Agar koi naya fact nahi mila, to sirf "NONE" likho.
-- Warna har naya fact ek nayi line mein likho, koi bullet ya numbering ke bina.
-- Sirf Roman Urdu/English mein likho.`;
+Rules:
+- Sirf user ke baare mein facts.
+- Har fact max 15 words.
+- Naya fact nahi mila to sirf "NONE".
+- Warna har fact ek nayi line.
+- Roman Urdu/English.`;
   try {
     const res = await fetch(API_URL, {
       method: 'POST',
@@ -511,7 +549,7 @@ Instructions:
       body: JSON.stringify({
         model: FAST_MODEL,
         messages: [{ role: 'user', content: extractionPrompt }],
-        max_completion_tokens: 300,
+        max_completion_tokens: 250,
         temperature: 0.3
       })
     });
@@ -576,7 +614,6 @@ if (SpeechRecognition) {
   recognition.lang = 'ur-PK';
   recognition.maxAlternatives = 1;
 } else {
-  console.warn('SpeechRecognition not supported.');
   if (micBtn) micBtn.style.display = 'none';
 }
 function toggleListening() {
@@ -675,19 +712,32 @@ function stopSpeaking() {
 
 /* ============ ATTACH ============ */
 attachBtn.addEventListener('click', () => fileInput.click());
-fileInput.addEventListener('change', () => {
+fileInput.addEventListener('change', async () => {
   const file = fileInput.files[0];
   if (!file) return;
-  if (!file.type.startsWith('image/')) { addPlainMessage('⚠️ Abhi sirf images attach ki ja sakti hain.', false); fileInput.value = ''; return; }
-  if (file.size > 5 * 1024 * 1024) { addPlainMessage('⚠️ Image 5MB se choti honi chahiye.', false); fileInput.value = ''; return; }
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    pendingImage = { dataUrl: e.target.result, name: file.name };
-    attachThumb.src = pendingImage.dataUrl;
-    attachName.innerText = file.name;
-    attachPreview.classList.add('show');
-  };
-  reader.readAsDataURL(file);
+  if (!file.type.startsWith('image/')) {
+    addPlainMessage('⚠️ Abhi sirf images attach ki ja sakti hain.', false);
+    fileInput.value = ''; return;
+  }
+  if (file.size > 20 * 1024 * 1024) {
+    addPlainMessage('⚠️ Image 20MB se choti honi chahiye.', false);
+    fileInput.value = ''; return;
+  }
+  attachName.innerText = file.name + ' — compress...';
+  attachPreview.classList.add('show');
+  try {
+    const compressedDataUrl = await compressImage(file);
+    const sizeKB = Math.round((compressedDataUrl.length * 3) / 4 / 1024);
+    pendingImage = { dataUrl: compressedDataUrl, name: file.name };
+    attachThumb.src = compressedDataUrl;
+    attachName.innerText = file.name + ' (~' + sizeKB + 'KB)';
+  } catch (err) {
+    console.error(err);
+    addPlainMessage('⚠️ Image process nahi ho saki.', false);
+    pendingImage = null;
+    attachPreview.classList.remove('show');
+    fileInput.value = '';
+  }
 });
 attachRemove.addEventListener('click', () => { pendingImage = null; fileInput.value = ''; attachPreview.classList.remove('show'); });
 
@@ -845,6 +895,13 @@ function trimHistory() {
   const system = conversation[0];
   const rest = conversation.slice(1);
   if (rest.length > MAX_HISTORY) conversation = [system, ...rest.slice(-MAX_HISTORY)];
+  // also cap individual message lengths
+  for (let i = 1; i < conversation.length; i++) {
+    const c = conversation[i].content;
+    if (typeof c === 'string' && c.length > MAX_MSG_LEN) {
+      conversation[i].content = c.slice(0, MAX_MSG_LEN) + '…';
+    }
+  }
 }
 function saveHistory() {
   try { localStorage.setItem(HISTORY_KEY, JSON.stringify(conversation.slice(1))); } catch (e) {}
@@ -856,21 +913,26 @@ function loadHistory() {
     for (const m of saved) {
       if (m.role === 'user') {
         const txt = typeof m.content === 'string' ? m.content : '(message)';
-        addPlainMessage(txt, true);
-        conversation.push({ role: 'user', content: txt });
+        addPlainMessage(txt.slice(0, 500), true);
+        conversation.push({ role: 'user', content: txt.slice(0, MAX_MSG_LEN) });
       } else if (m.role === 'assistant') {
         const { bubble, textNode } = addStreamingMessage();
         bubble.classList.remove('streaming');
-        textNode.innerText = m.content;
-        conversation.push({ role: 'assistant', content: m.content });
+        textNode.innerText = typeof m.content === 'string' ? m.content : '';
+        conversation.push({ role: 'assistant', content: (m.content || '').slice(0, MAX_MSG_LEN) });
       }
     }
     chatBox.scrollTop = chatBox.scrollHeight;
   } catch (e) {}
 }
 
-/* ============ WEB SEARCH (non-streaming) ============ */
+/* ============ WEB SEARCH (compact payload) ============ */
 async function sendSearchMessage(apiMessages, bubble, textNode, badge) {
+  // Sirf system + last N messages bhejo search ke liye
+  const systemMsg = apiMessages[0];
+  const rest = apiMessages.slice(1);
+  const trimmed = [systemMsg, ...rest.slice(-SEARCH_HISTORY_DEPTH)];
+
   try {
     const res = await fetch(API_URL, {
       method: 'POST',
@@ -880,15 +942,21 @@ async function sendSearchMessage(apiMessages, bubble, textNode, badge) {
       },
       body: JSON.stringify({
         model: SEARCH_MODEL,
-        messages: apiMessages,
-        max_completion_tokens: 1024,
+        messages: trimmed,
+        max_completion_tokens: 800,
         stream: false
       })
     });
 
     if (!res.ok) {
       let errMsg = `HTTP ${res.status}`;
-      try { const j = await res.json(); errMsg = j?.error?.message || errMsg; } catch (e) {}
+      try {
+        const j = await res.json();
+        errMsg = j?.error?.message || errMsg;
+        if (res.status === 413 || /too large|entity too large/i.test(errMsg)) {
+          errMsg = 'Request bohot bari thi. Chat clear karo ya thoda chhota sawaal poocho.';
+        }
+      } catch (e) {}
       throw new Error(errMsg);
     }
 
@@ -896,7 +964,6 @@ async function sendSearchMessage(apiMessages, bubble, textNode, badge) {
     const msg = data?.choices?.[0]?.message || {};
     const rawText = msg.content || '';
 
-    // Extract sources from executed_tools
     const sources = [];
     const tools = msg.executed_tools || [];
     for (const tool of tools) {
@@ -915,7 +982,6 @@ async function sendSearchMessage(apiMessages, bubble, textNode, badge) {
     if (badge) badge.remove();
 
     if (sources.length) addSourcesBlock(bubble, sources);
-
     return clean;
   } catch (err) {
     bubble.classList.remove('streaming');
@@ -925,7 +991,7 @@ async function sendSearchMessage(apiMessages, bubble, textNode, badge) {
   }
 }
 
-/* ============ STREAMING (regular / vision) ============ */
+/* ============ STREAMING ============ */
 async function streamChatCompletion(apiMessages, model, bubble, textNode) {
   const body = {
     model: model,
@@ -943,7 +1009,13 @@ async function streamChatCompletion(apiMessages, model, bubble, textNode) {
 
   if (!res.ok) {
     let errMsg = `HTTP ${res.status}`;
-    try { const j = await res.json(); errMsg = j?.error?.message || errMsg; } catch (e) {}
+    try {
+      const j = await res.json();
+      errMsg = j?.error?.message || errMsg;
+      if (res.status === 413 || /too large|entity too large/i.test(errMsg)) {
+        errMsg = 'Request bohot bari hai. Chat clear karo ya image chhoti karo.';
+      }
+    } catch (e) {}
     throw new Error(errMsg);
   }
 
@@ -1035,10 +1107,7 @@ async function sendMessage() {
       clean = await streamChatCompletion(apiMessages, model, bubble, textNode);
     }
 
-    if (!clean) {
-      // error already displayed
-      return;
-    }
+    if (!clean) return;
 
     speakerBtn.onclick = () => speakText(clean, speakerBtn);
 
@@ -1046,7 +1115,7 @@ async function sendMessage() {
       ? (text ? `${text} [user ne image attach ki thi]` : '[user ne image attach ki thi]')
       : text;
     conversation.push({ role: 'user', content: historyUserContent });
-    conversation.push({ role: 'assistant', content: clean });
+    conversation.push({ role: 'assistant', content: clean.slice(0, MAX_MSG_LEN) });
 
     trimHistory();
     saveHistory();
@@ -1075,9 +1144,6 @@ loadMemory();
 loadSearchState();
 refreshSystemPrompt();
 loadHistory();
-
-if (!SpeechRecognition) console.warn('Voice input is not supported in this browser.');
-if (!window.speechSynthesis) console.warn('Speech synthesis is not supported in this browser.');
 </script>
 
 </body>
