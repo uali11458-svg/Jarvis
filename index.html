@@ -68,7 +68,12 @@
     background: var(--online);
     box-shadow: 0 0 0 3px rgba(63, 191, 160, 0.15);
   }
-  .clear-btn {
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .clear-btn, .memory-btn {
     background: transparent;
     border: 1px solid var(--border);
     color: var(--text-dim);
@@ -78,8 +83,21 @@
     font-family: inherit;
     cursor: pointer;
     transition: color 0.15s ease, border-color 0.15s ease;
+    position: relative;
   }
   .clear-btn:hover { color: var(--text); border-color: var(--accent); }
+  .memory-btn:hover { color: var(--text); border-color: var(--online); }
+  .memory-btn .mem-count {
+    display: inline-block;
+    background: var(--online);
+    color: #0d0f14;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 8px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
 
   /* Chat area */
   .chat-wrap {
@@ -323,6 +341,131 @@
     margin-left: 1px;
   }
   @keyframes blink { 50% { opacity: 0; } }
+
+  /* Memory toast notification */
+  .mem-toast {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--panel-2);
+    border: 1px solid var(--online);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+  .mem-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .mem-toast .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--online);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  /* Memory modal */
+  .mem-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .mem-modal.show { display: flex; }
+  .mem-modal-inner {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .mem-modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .mem-modal-header h3 {
+    margin: 0;
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .mem-modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 22px;
+    cursor: pointer;
+    padding: 0 6px;
+    line-height: 1;
+  }
+  .mem-modal-close:hover { color: var(--text); }
+  .mem-modal-body {
+    padding: 16px 20px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .mem-item {
+    display: flex;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    line-height: 1.5;
+    align-items: flex-start;
+  }
+  .mem-item:last-child { border-bottom: none; }
+  .mem-item .mem-dot {
+    color: var(--online);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .mem-item .mem-text { flex: 1; color: var(--text); }
+  .mem-empty {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 14px;
+    padding: 30px 10px;
+  }
+  .mem-modal-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .mem-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .mem-btn:hover { color: var(--text); border-color: var(--text); }
+  .mem-btn.danger:hover { color: var(--danger); border-color: var(--danger); }
 </style>
 </head>
 <body>
@@ -335,7 +478,10 @@
         <div class="status-line"><span class="status-dot"></span>Online</div>
       </div>
     </div>
-    <button class="clear-btn" id="clearBtn">Chat Clear</button>
+    <div class="header-actions">
+      <button class="memory-btn" id="memoryBtn">🧠 Memory<span class="mem-count" id="memCount">0</span></button>
+      <button class="clear-btn" id="clearBtn">Clear</button>
+    </div>
   </div>
 
   <div class="chat-wrap">
@@ -380,21 +526,38 @@ Image banwani ho to "/image" likh kar shuru karo, jaise: /image ek sher jungle m
     <div class="hint">Image ke liye <code>/image</code> se message shuru karo, ya 📎 se photo attach karo. 🎙️ se bol kar baat karo.</div>
   </div>
 
+  <div class="mem-toast" id="memToast"><span class="dot"></span><span id="memToastText">Memory update ho gayi</span></div>
+
+  <div class="mem-modal" id="memModal">
+    <div class="mem-modal-inner">
+      <div class="mem-modal-header">
+        <h3>🧠 Jarvis ki Memory</h3>
+        <button class="mem-modal-close" id="memModalClose">×</button>
+      </div>
+      <div class="mem-modal-body" id="memModalBody"></div>
+      <div class="mem-modal-footer">
+        <button class="mem-btn danger" id="memClearBtn">Sab bhula do</button>
+        <button class="mem-btn" id="memCloseBtn">Band karo</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 /* =========================================================
-   ⚠️⚠️⚠️  ZAROORI WARNING  ⚠️⚠️⚠️
-   Ye API key BROWSER mein expose hai — koi bhi View Source
-   karke ise chura sakta hai. Production ke liye backend
-   proxy zaroor lagayein (neeche comments mein code diya
-   hai). Filhaal key ko rotate karke apni nayi key daalein.
+   ⚠️ API key BROWSER mein expose hai — production ke liye
+   backend proxy zaroor lagayein.
    ========================================================= */
 const GROQ_KEY = "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";
 
 const TEXT_MODEL   = "openai/gpt-oss-120b";
 const VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
+const FAST_MODEL   = "llama-3.1-8b-instant";   // memory extraction ke liye
 const API_URL      = "https://api.groq.com/openai/v1/chat/completions";
 const HISTORY_KEY  = "jarvis_history_v1";
+const MEMORY_KEY   = "jarvis_memory_v1";
 const MAX_HISTORY  = 20;
+const MEM_EXTRACT_EVERY = 6;   // har 6 messages ke baad extraction
+const MAX_FACTS    = 25;        // max memory facts
 
 /* ---------------- DOM refs ---------------- */
 const chatBox       = document.getElementById('chatBox');
@@ -408,6 +571,15 @@ const attachName    = document.getElementById('attachName');
 const attachRemove  = document.getElementById('attachRemove');
 const clearBtn      = document.getElementById('clearBtn');
 const micBtn        = document.getElementById('micBtn');
+const memoryBtn     = document.getElementById('memoryBtn');
+const memCount      = document.getElementById('memCount');
+const memModal      = document.getElementById('memModal');
+const memModalBody  = document.getElementById('memModalBody');
+const memModalClose = document.getElementById('memModalClose');
+const memCloseBtn   = document.getElementById('memCloseBtn');
+const memClearBtn   = document.getElementById('memClearBtn');
+const memToast      = document.getElementById('memToast');
+const memToastText  = document.getElementById('memToastText');
 
 /* ---------------- State ---------------- */
 let pendingImage = null;
@@ -417,12 +589,176 @@ let recognition  = null;
 let currentAudio = null;
 let currentBtn   = null;
 let isStoppingTTS = false;
+let messagesSinceExtract = 0;
+let memory = [];   // array of fact strings
 
-const systemInstruction = 'Tumhara naam Jarvis hai. Tum ek helpful AI assistant ho. Agar koi tumhara naam pooche, to hamesha "Jarvis" bolna. Tum kisi company ke banaye hue nahi ho — tumhe user ne banaya hai. Hamesha seedha, saaf jawab do — apna internal soch-vichar (thinking/reasoning process) kabhi mat dikhana, sirf final jawab do. Natural tarike se baat karo jaise ek insaan karta hai — normal conversation mein har cheez ko numbered list, bullet points, ya bold text mein mat todo, seedhe paragraph mein baat karo. Sirf tab list use karo jab user steps ya multiple items specifically maange. Hamesha sirf Roman Urdu/Hindi aur English mein jawab do — kisi aur language (Chinese, Arabic script, etc) ka koi lafz kabhi mat likhna.';
+const baseInstruction = 'Tumhara naam Jarvis hai. Tum ek helpful AI assistant ho. Agar koi tumhara naam pooche, to hamesha "Jarvis" bolna. Tum kisi company ke banaye hue nahi ho — tumhe user ne banaya hai. Hamesha seedha, saaf jawab do — apna internal soch-vichar (thinking/reasoning process) kabhi mat dikhana, sirf final jawab do. Natural tarike se baat karo jaise ek insaan karta hai — normal conversation mein har cheez ko numbered list, bullet points, ya bold text mein mat todo, seedhe paragraph mein baat karo. Sirf tab list use karo jab user steps ya multiple items specifically maange. Hamesha sirf Roman Urdu/Hindi aur English mein jawab do — kisi aur language (Chinese, Arabic script, etc) ka koi lafz kabhi mat likhna.';
 
-let conversation = [{ role: 'system', content: systemInstruction }];
+let conversation = [{ role: 'system', content: baseInstruction }];
 
-/* ================= VOICE RECOGNITION (Speech-to-Text) ================= */
+/* ============ MEMORY SYSTEM ============ */
+function loadMemory() {
+  try {
+    const raw = localStorage.getItem(MEMORY_KEY);
+    memory = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(memory)) memory = [];
+  } catch (e) { memory = []; }
+  updateMemCount();
+}
+
+function saveMemory() {
+  try {
+    localStorage.setItem(MEMORY_KEY, JSON.stringify(memory));
+  } catch (e) {}
+  updateMemCount();
+}
+
+function updateMemCount() {
+  memCount.innerText = memory.length;
+}
+
+function buildSystemPrompt() {
+  if (!memory.length) return baseInstruction;
+  const facts = memory.map(f => '- ' + f).join('\n');
+  return baseInstruction + '\n\nUser ke baare mein tumhe ye facts yaad hain (inhe natural tarike se use karo, har baar repeat mat karo):\n' + facts;
+}
+
+function refreshSystemPrompt() {
+  conversation[0] = { role: 'system', content: buildSystemPrompt() };
+}
+
+function showMemToast(text) {
+  memToastText.innerText = text;
+  memToast.classList.add('show');
+  clearTimeout(showMemToast._t);
+  showMemToast._t = setTimeout(() => memToast.classList.remove('show'), 2500);
+}
+
+async function extractFacts() {
+  // Sirf last few messages se facts nikaalo
+  const recent = conversation.slice(-8).filter(m => m.role !== 'system');
+  if (recent.length < 2) return;
+
+  const chatLog = recent.map(m => {
+    const role = m.role === 'user' ? 'User' : 'Jarvis';
+    const content = typeof m.content === 'string' ? m.content : '(image)';
+    return role + ': ' + content;
+  }).join('\n');
+
+  const existingFacts = memory.length
+    ? 'Pehle se ye facts memory mein hain (inhe repeat mat karo):\n' + memory.map(f => '- ' + f).join('\n')
+    : 'Memory abhi khali hai.';
+
+  const extractionPrompt = `Neeche ek conversation hai. Isme se user ke baare mein IMPORTANT, LONG-TERM facts nikaalo — jaise user ka naam, pasand/na-pasand, kaam, sheher, goals, family, hobbies, important preferences, ya koi bhi cheez jo future conversations mein kaam aaye.
+
+${existingFacts}
+
+Conversation:
+${chatLog}
+
+Instructions:
+- Sirf user ke baare mein facts nikaalo, Jarvis ke baare mein nahi.
+- Har fact ek chhoti si line honi chahiye (max 15 words).
+- Sirf wo facts jo long-term useful hain — chhoti baatein (jaise "user ne salam kaha") skip karo.
+- Agar koi naya fact nahi mila, to sirf "NONE" likho.
+- Warna har naya fact ek nayi line mein likho, koi bullet ya numbering ke bina.
+- Sirf Roman Urdu/English mein likho.`;
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${GROQ_KEY}`
+      },
+      body: JSON.stringify({
+        model: FAST_MODEL,
+        messages: [{ role: 'user', content: extractionPrompt }],
+        max_completion_tokens: 300,
+        temperature: 0.3
+      })
+    });
+
+    if (!res.ok) return;
+    const data = await res.json();
+    const raw = (data?.choices?.[0]?.message?.content || '').trim();
+
+    if (!raw || raw.toUpperCase() === 'NONE') return;
+
+    const newFacts = raw
+      .split('\n')
+      .map(l => l.replace(/^[-•*\d.\s]+/, '').trim())
+      .filter(f => f.length > 3 && f.length < 200);
+
+    if (!newFacts.length) return;
+
+    let added = 0;
+    for (const fact of newFacts) {
+      // Simple dedupe: check if similar fact already exists
+      const lower = fact.toLowerCase();
+      const exists = memory.some(m => {
+        const ml = m.toLowerCase();
+        return ml === lower || ml.includes(lower) || lower.includes(ml);
+      });
+      if (!exists && memory.length < MAX_FACTS) {
+        memory.push(fact);
+        added++;
+      }
+    }
+
+    if (added > 0) {
+      saveMemory();
+      refreshSystemPrompt();
+      showMemToast(`${added} nayi baat yaad kar li`);
+    }
+  } catch (e) {
+    console.warn('Memory extraction failed:', e);
+  }
+}
+
+/* -------- Memory modal -------- */
+function renderMemoryModal() {
+  if (!memory.length) {
+    memModalBody.innerHTML = '<div class="mem-empty">Abhi tak kuch yaad nahi hai.<br>Jarvis se baat karo, wo khud yaad rakhega.</div>';
+    return;
+  }
+  memModalBody.innerHTML = memory.map(f =>
+    '<div class="mem-item"><span class="mem-dot">●</span><span class="mem-text">' +
+    escapeHtml(f) + '</span></div>'
+  ).join('');
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+memoryBtn.addEventListener('click', () => {
+  renderMemoryModal();
+  memModal.classList.add('show');
+});
+
+function closeMemModal() {
+  memModal.classList.remove('show');
+}
+memModalClose.addEventListener('click', closeMemModal);
+memCloseBtn.addEventListener('click', closeMemModal);
+memModal.addEventListener('click', (e) => {
+  if (e.target === memModal) closeMemModal();
+});
+
+memClearBtn.addEventListener('click', () => {
+  if (!memory.length) { closeMemModal(); return; }
+  if (!confirm('Saari memory bhula deni hai?')) return;
+  memory = [];
+  saveMemory();
+  refreshSystemPrompt();
+  renderMemoryModal();
+  showMemToast('Memory clear ho gayi');
+});
+
+/* ================= VOICE RECOGNITION ================= */
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 if (SpeechRecognition) {
@@ -438,60 +774,32 @@ if (SpeechRecognition) {
 
 function toggleListening() {
   if (!recognition) return;
-  if (isListening) {
-    recognition.stop();
-    return;
-  }
-  try {
-    recognition.start();
-  } catch (e) {
-    console.error('Mic start error:', e);
-  }
+  if (isListening) { recognition.stop(); return; }
+  try { recognition.start(); } catch (e) { console.error('Mic start error:', e); }
 }
 
 if (recognition) {
-  recognition.onstart = () => {
-    isListening = true;
-    micBtn.classList.add('listening');
-  };
-
-  recognition.onend = () => {
-    isListening = false;
-    micBtn.classList.remove('listening');
-  };
-
+  recognition.onstart = () => { isListening = true; micBtn.classList.add('listening'); };
+  recognition.onend = () => { isListening = false; micBtn.classList.remove('listening'); };
   recognition.onerror = (event) => {
     console.error('Speech recognition error:', event.error);
     isListening = false;
     micBtn.classList.remove('listening');
-
     let msg = 'Voice input mein error aaya.';
-    if (event.error === 'not-allowed') {
-      msg = 'Mic ki permission nahi mili. Browser settings se allow karein.';
-    } else if (event.error === 'no-speech') {
-      msg = 'Koi awaaz sunai nahi di. Dobara try karein.';
-    } else if (event.error === 'network') {
-      msg = 'Network error. Internet check karein.';
-    }
-    if (event.error !== 'aborted') {
-      addPlainMessage('⚠️ ' + msg, false);
-    }
+    if (event.error === 'not-allowed') msg = 'Mic ki permission nahi mili. Browser settings se allow karein.';
+    else if (event.error === 'no-speech') msg = 'Koi awaaz sunai nahi di. Dobara try karein.';
+    else if (event.error === 'network') msg = 'Network error. Internet check karein.';
+    if (event.error !== 'aborted') addPlainMessage('⚠️ ' + msg, false);
   };
-
   recognition.onresult = (event) => {
     let finalTranscript = '';
     for (let i = event.resultIndex; i < event.results.length; i++) {
-      const transcript = event.results[i][0].transcript;
-      if (event.results[i].isFinal) {
-        finalTranscript += transcript;
-      }
+      if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
     }
     if (finalTranscript) {
       userInput.value = finalTranscript;
       setTimeout(() => {
-        if (userInput.value.trim() && !isSending) {
-          sendMessage();
-        }
+        if (userInput.value.trim() && !isSending) sendMessage();
       }, 400);
     }
   };
@@ -499,29 +807,18 @@ if (recognition) {
 
 micBtn.addEventListener('click', toggleListening);
 
-/* ================= TEXT-TO-SPEECH (Google Translate Urdu Voice) ================= */
+/* ================= TEXT-TO-SPEECH (Google Translate Urdu) ================= */
 function speakText(text, btn) {
-  // Same button dobara click → stop (toggle)
-  if (currentBtn === btn && currentAudio) {
-    stopSpeaking();
-    return;
-  }
-
+  if (currentBtn === btn && currentAudio) { stopSpeaking(); return; }
   stopSpeaking();
 
-  const cleanText = text
-    .replace(/[*_`~>#\[\]()]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-
+  const cleanText = text.replace(/[*_`~>#\[\]()]/g, '').replace(/\s+/g, ' ').trim();
   if (!cleanText) return;
 
   const chunks = splitIntoChunks(cleanText, 180);
-
   currentBtn = btn;
   isStoppingTTS = false;
   if (btn) btn.classList.add('speaking');
-
   playChunksSequentially(chunks, btn, 0);
 }
 
@@ -529,24 +826,18 @@ function splitIntoChunks(text, maxLen) {
   const chunks = [];
   const sentences = text.split(/(?<=[.!?۔])\s+/);
   let current = '';
-
   for (const sentence of sentences) {
     if ((current + ' ' + sentence).length <= maxLen) {
       current = current ? current + ' ' + sentence : sentence;
     } else {
       if (current) chunks.push(current);
-      if (sentence.length <= maxLen) {
-        current = sentence;
-      } else {
+      if (sentence.length <= maxLen) { current = sentence; }
+      else {
         const words = sentence.split(' ');
         current = '';
         for (const w of words) {
-          if ((current + ' ' + w).length <= maxLen) {
-            current = current ? current + ' ' + w : w;
-          } else {
-            if (current) chunks.push(current);
-            current = w;
-          }
+          if ((current + ' ' + w).length <= maxLen) { current = current ? current + ' ' + w : w; }
+          else { if (current) chunks.push(current); current = w; }
         }
       }
     }
@@ -558,40 +849,25 @@ function splitIntoChunks(text, maxLen) {
 function playChunksSequentially(chunks, btn, index) {
   if (isStoppingTTS || index >= chunks.length) {
     if (btn) btn.classList.remove('speaking');
-    currentBtn = null;
-    currentAudio = null;
+    currentBtn = null; currentAudio = null;
     return;
   }
-
-  const text = chunks[index];
   const url = 'https://translate.googleapis.com/translate_tts?ie=UTF-8&q='
-    + encodeURIComponent(text)
-    + '&tl=ur&client=tw-ob';
-
+    + encodeURIComponent(chunks[index]) + '&tl=ur&client=tw-ob';
   const audio = new Audio(url);
   currentAudio = audio;
-
   audio.onended = () => {
     if (isStoppingTTS) return;
     setTimeout(() => playChunksSequentially(chunks, btn, index + 1), 120);
   };
-
-  audio.onerror = (e) => {
-    console.error('Google TTS error:', e);
-    fallbackBrowserTTS(chunks.slice(index).join(' '), btn);
-  };
-
-  audio.play().catch(err => {
-    console.error('Audio play failed:', err);
-    fallbackBrowserTTS(chunks.slice(index).join(' '), btn);
-  });
+  audio.onerror = () => fallbackBrowserTTS(chunks.slice(index).join(' '), btn);
+  audio.play().catch(() => fallbackBrowserTTS(chunks.slice(index).join(' '), btn));
 }
 
 function fallbackBrowserTTS(text, btn) {
   if (!window.speechSynthesis) {
     if (btn) btn.classList.remove('speaking');
-    currentBtn = null;
-    return;
+    currentBtn = null; return;
   }
   const utt = new SpeechSynthesisUtterance(text);
   const voices = speechSynthesis.getVoices();
@@ -600,32 +876,17 @@ function fallbackBrowserTTS(text, btn) {
             || voices.find(v => v.lang.startsWith('en-IN'));
   if (urdu) utt.voice = urdu;
   utt.lang = urdu ? urdu.lang : 'en-US';
-  utt.onend = () => {
-    if (btn) btn.classList.remove('speaking');
-    currentBtn = null;
-  };
-  utt.onerror = () => {
-    if (btn) btn.classList.remove('speaking');
-    currentBtn = null;
-  };
+  utt.onend = () => { if (btn) btn.classList.remove('speaking'); currentBtn = null; };
+  utt.onerror = () => { if (btn) btn.classList.remove('speaking'); currentBtn = null; };
   speechSynthesis.cancel();
   speechSynthesis.speak(utt);
 }
 
 function stopSpeaking() {
   isStoppingTTS = true;
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio.currentTime = 0;
-    currentAudio = null;
-  }
-  if (window.speechSynthesis) {
-    speechSynthesis.cancel();
-  }
-  if (currentBtn) {
-    currentBtn.classList.remove('speaking');
-    currentBtn = null;
-  }
+  if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; currentAudio = null; }
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  if (currentBtn) { currentBtn.classList.remove('speaking'); currentBtn = null; }
 }
 
 /* ---------------- Attach handling ---------------- */
@@ -636,13 +897,11 @@ fileInput.addEventListener('change', () => {
   if (!file) return;
   if (!file.type.startsWith('image/')) {
     addPlainMessage('⚠️ Abhi sirf images attach ki ja sakti hain.', false);
-    fileInput.value = '';
-    return;
+    fileInput.value = ''; return;
   }
   if (file.size > 5 * 1024 * 1024) {
     addPlainMessage('⚠️ Image 5MB se choti honi chahiye.', false);
-    fileInput.value = '';
-    return;
+    fileInput.value = ''; return;
   }
   const reader = new FileReader();
   reader.onload = (e) => {
@@ -670,12 +929,13 @@ userInput.addEventListener('keydown', (e) => {
 
 /* ---------------- Clear chat ---------------- */
 clearBtn.addEventListener('click', () => {
-  if (!confirm('Poori chat clear karni hai?')) return;
+  if (!confirm('Poori chat clear karni hai? (Memory save rahegi)')) return;
   stopSpeaking();
   chatBox.innerHTML = '';
-  conversation = [{ role: 'system', content: systemInstruction }];
+  conversation = [{ role: 'system', content: buildSystemPrompt() }];
+  messagesSinceExtract = 0;
   try { localStorage.removeItem(HISTORY_KEY); } catch(e) {}
-  addPlainMessage('Chat clear ho gayi. Naya sawaal poochein.', false);
+  addPlainMessage('Chat clear ho gayi. Memory save hai. Naya sawaal poochein.', false);
 });
 
 /* ---------------- UI helpers ---------------- */
@@ -733,9 +993,7 @@ function addStreamingMessage() {
   speakerBtn.className = 'speaker-btn';
   speakerBtn.title = 'Bol kar sunao';
   speakerBtn.innerHTML = '🔊';
-  speakerBtn.onclick = () => {
-    speakText(textNode.innerText, speakerBtn);
-  };
+  speakerBtn.onclick = () => speakText(textNode.innerText, speakerBtn);
 
   actions.appendChild(copyBtn);
   actions.appendChild(speakerBtn);
@@ -812,7 +1070,6 @@ function loadHistory() {
   try {
     const saved = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
     if (!Array.isArray(saved) || !saved.length) return;
-
     for (const m of saved) {
       if (m.role === 'user') {
         const txt = typeof m.content === 'string' ? m.content : '(message)';
@@ -873,6 +1130,8 @@ async function sendMessage() {
 
   const { bubble, textNode, speakerBtn } = addStreamingMessage();
 
+  // Make sure system prompt has latest memory
+  refreshSystemPrompt();
   const apiMessages = [...conversation, { role: 'user', content: userContentForApi }];
 
   try {
@@ -938,9 +1197,7 @@ async function sendMessage() {
     textNode.innerText = clean;
     bubble.classList.remove('streaming');
 
-    speakerBtn.onclick = () => {
-      speakText(clean, speakerBtn);
-    };
+    speakerBtn.onclick = () => speakText(clean, speakerBtn);
 
     const historyUserContent = image
       ? (text ? `${text} [user ne image attach ki thi]` : '[user ne image attach ki thi]')
@@ -950,6 +1207,15 @@ async function sendMessage() {
 
     trimHistory();
     saveHistory();
+
+    // Memory extraction every N messages (only text messages)
+    if (!image) {
+      messagesSinceExtract++;
+      if (messagesSinceExtract >= MEM_EXTRACT_EVERY) {
+        messagesSinceExtract = 0;
+        extractFacts();  // fire & forget
+      }
+    }
 
   } catch (err) {
     console.error(err);
@@ -963,14 +1229,12 @@ async function sendMessage() {
 }
 
 /* ---------------- Init ---------------- */
+loadMemory();
+refreshSystemPrompt();
 loadHistory();
 
-if (!SpeechRecognition) {
-  console.warn('Voice input is not supported in this browser. Chrome or Edge recommended.');
-}
-if (!window.speechSynthesis) {
-  console.warn('Speech synthesis is not supported in this browser.');
-}
+if (!SpeechRecognition) console.warn('Voice input is not supported in this browser.');
+if (!window.speechSynthesis) console.warn('Speech synthesis is not supported in this browser.');
 </script>
 
 </body>
