@@ -72,8 +72,6 @@
     padding: 1px 5px; border-radius: 8px;
     margin-left: 2px; vertical-align: middle;
   }
-
-  /* Share dropdown */
   .share-selector { position: relative; display: inline-block; }
   .share-dropdown {
     position: absolute; top: calc(100% + 6px); right: 0;
@@ -94,7 +92,6 @@
   .share-option .s-info { flex: 1; min-width: 0; }
   .share-option .s-name { font-weight: 500; }
   .share-option .s-desc { font-size: 10.5px; color: var(--text-dim); margin-top: 1px; }
-
   .model-selector { position: relative; display: inline-block; }
   .model-btn {
     background: var(--panel-2); border: 1px solid var(--border);
@@ -135,7 +132,6 @@
     background: var(--panel-2); color: var(--text-dim);
     margin-left: 4px; vertical-align: middle;
   }
-
   .chat-wrap {
     width: 100%; max-width: 720px; flex: 1;
     display: flex; flex-direction: column;
@@ -171,7 +167,6 @@
     background: var(--accent-dim); color: #eaf3fb;
     border-top-right-radius: 4px;
   }
-
   .img-grid { display: grid; gap: 8px; margin-top: 8px; max-width: 100%; }
   .img-grid.cols-1 { grid-template-columns: 1fr; }
   .img-grid.cols-2 { grid-template-columns: 1fr 1fr; }
@@ -214,7 +209,6 @@
   .img-caption { font-size: 13px; color: var(--text-dim); margin-bottom: 6px; word-wrap: break-word; }
   .img-error { color: var(--danger); font-size: 13px; margin-top: 6px; }
   .img-status { font-size: 11px; color: var(--text-dim); margin-top: 6px; font-style: italic; }
-
   .lightbox {
     display: none; position: fixed; inset: 0;
     background: rgba(0,0,0,0.92); z-index: 500;
@@ -240,7 +234,6 @@
     cursor: pointer; display: flex; align-items: center; justify-content: center;
   }
   .lightbox-download:hover { background: rgba(79,157,222,0.6); }
-
   .msg-actions { display: flex; gap: 14px; margin-top: 8px; align-items: center; }
   .action-btn {
     background: transparent; border: none; color: var(--text-dim);
@@ -446,8 +439,6 @@
   .mem-btn.danger:hover { color: var(--danger); border-color: var(--danger); }
   .mem-btn.accent { color: var(--accent); border-color: var(--accent-dim); }
   .mem-btn.accent:hover { color: #6bb0e8; border-color: var(--accent); }
-
-  /* Share URL input in modal */
   .share-url-box {
     display: flex; gap: 8px; margin-top: 8px;
   }
@@ -524,10 +515,9 @@
         <div class="avatar ai">J</div>
         <div class="msg">Assalam-o-Alaikum! Main Jarvis hoon. Kuch bhi pooch sakte hain.
 
-🎨 Image banane ke liye: <b>/image</b> ek sher jungle mein baitha hai
-🖼️ Ek saath zyada: <b>/image2</b> ya <b>/image4</b>
-🎭 Style ke saath: <b>/image anime:</b> sher jungle mein
-📎 Image attach | 📄 File | 🎙️ Voice | 🌐 Search | 📤 Share
+🎨 Image: /image ek sher jungle mein baitha hai | /image2 ya /image4
+🎭 Style: /image anime: sher jungle mein
+📎 Image | 📄 File | 🎙️ Voice | 🌐 Search | 📤 Share
 
 Upar dropdown se model choose karo — Smart, Fast, ya 💻 Coding (Free).</div>
       </div>
@@ -550,7 +540,7 @@ Upar dropdown se model choose karo — Smart, Fast, ya 💻 Coding (Free).</div>
       </button>
       <button class="file-btn" id="fileBtn" aria-label="File attach">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 4.9 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
           <path d="M14 2V8H20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
@@ -620,7 +610,7 @@ Upar dropdown se model choose karo — Smart, Fast, ya 💻 Coding (Free).</div>
 <script>
 const GROQ_KEY = "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";
 
-const FAST_MODEL    = "llama-3.1-8b-instant";
+const FAST_MODEL    = "openai/gpt-oss-20b";
 const VISION_MODEL  = "meta-llama/llama-4-scout-17b-16e-instruct";
 const API_URL       = "https://api.groq.com/openai/v1/chat/completions";
 const TAVILY_URL    = "https://api.tavily.com/search";
@@ -654,10 +644,10 @@ const IMAGE_STYLES = {
 
 const MODELS = [
   { id: "openai/gpt-oss-120b", name: "Smart", icon: "✨", desc: "Best for reasoning, analysis, general chat", provider: "groq" },
-  { id: "llama-3.1-8b-instant", name: "Fast", icon: "⚡", desc: "Instant replies, simple sawaal", provider: "groq" },
-  { id: "llama-3.3-70b-versatile", name: "Balanced", icon: "⚖️", desc: "Good balance of speed & quality", provider: "groq" },
+  { id: "openai/gpt-oss-20b", name: "Fast", icon: "⚡", desc: "Instant replies, simple sawaal", provider: "groq" },
+  { id: "qwen/qwen3.6-27b", name: "Balanced", icon: "⚖️", desc: "Good balance of speed & quality (Preview)", provider: "groq" },
   { id: "openai/gpt-oss-20b", name: "Compact", icon: "🌱", desc: "Fast reasoning, chhota model", provider: "groq" },
-  { id: "moonshotai/kimi-k2-instruct-0905", name: "Long Context", icon: "📚", desc: "Bada documents aur long chats ke liye", provider: "groq" },
+  { id: "qwen/qwen3.6-27b", name: "Long Context", icon: "📚", desc: "Bada documents aur long chats ke liye (131K context)", provider: "groq" },
   { id: "devtoolbox-coding", name: "Coding (Free)", icon: "💻", desc: "DevToolBox se free coding — no signup", provider: "devtoolbox" }
 ];
 
@@ -760,7 +750,6 @@ document.addEventListener('keydown', (e) => {
 function getChatMessagesForExport() {
   return conversation.slice(1).filter(m => m.role === 'user' || m.role === 'assistant');
 }
-
 function formatTimestamp() {
   const d = new Date();
   return d.toLocaleString('en-GB', {
@@ -768,7 +757,6 @@ function formatTimestamp() {
     hour: '2-digit', minute: '2-digit'
   });
 }
-
 function downloadBlob(content, filename, mime) {
   const blob = new Blob([content], { type: mime || 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
@@ -777,14 +765,10 @@ function downloadBlob(content, filename, mime) {
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-
 function exportChatAsTxt() {
   const msgs = getChatMessagesForExport();
   if (!msgs.length) { showMemToast('Chat khali hai'); return; }
-  let out = 'Jarvis Chat Export\n';
-  out += '=================\n';
-  out += 'Date: ' + formatTimestamp() + '\n';
-  out += 'Messages: ' + msgs.length + '\n\n';
+  let out = 'Jarvis Chat Export\n=================\nDate: ' + formatTimestamp() + '\nMessages: ' + msgs.length + '\n\n';
   for (const m of msgs) {
     const speaker = m.role === 'user' ? 'You' : 'Jarvis';
     const content = typeof m.content === 'string' ? m.content : '[attachment]';
@@ -794,13 +778,10 @@ function exportChatAsTxt() {
   downloadBlob(out, 'jarvis-chat-' + Date.now() + '.txt', 'text/plain;charset=utf-8');
   showMemToast('📥 TXT download ho gayi');
 }
-
 function exportChatAsMd() {
   const msgs = getChatMessagesForExport();
   if (!msgs.length) { showMemToast('Chat khali hai'); return; }
-  let out = '# Jarvis Chat\n\n';
-  out += '**Date:** ' + formatTimestamp() + '  \n';
-  out += '**Messages:** ' + msgs.length + '\n\n---\n\n';
+  let out = '# Jarvis Chat\n\n**Date:** ' + formatTimestamp() + '  \n**Messages:** ' + msgs.length + '\n\n---\n\n';
   for (const m of msgs) {
     const speaker = m.role === 'user' ? '🧑 **You**' : '🤖 **Jarvis**';
     const content = typeof m.content === 'string' ? m.content : '_\\[attachment\\]_';
@@ -810,7 +791,6 @@ function exportChatAsMd() {
   downloadBlob(out, 'jarvis-chat-' + Date.now() + '.md', 'text/markdown;charset=utf-8');
   showMemToast('📝 Markdown download ho gayi');
 }
-
 function copyAllChat() {
   const msgs = getChatMessagesForExport();
   if (!msgs.length) { showMemToast('Chat khali hai'); return; }
@@ -820,61 +800,39 @@ function copyAllChat() {
     const content = typeof m.content === 'string' ? m.content : '[attachment]';
     out += '[' + speaker + ']\n' + content + '\n\n';
   }
-  navigator.clipboard.writeText(out).then(() => {
-    showMemToast('📋 Poori chat copy ho gayi');
-  }).catch(() => {
-    showMemToast('⚠️ Copy fail hui — browser permission check karein');
-  });
+  navigator.clipboard.writeText(out).then(() => showMemToast('📋 Poori chat copy ho gayi')).catch(() => showMemToast('⚠️ Copy fail hui'));
 }
-
 function generateShareLink() {
   const msgs = getChatMessagesForExport();
   if (!msgs.length) { showMemToast('Chat khali hai'); return; }
   try {
-    // Sirf last 20 messages share karo (URL length safe rakhne ke liye)
     const trimmed = msgs.slice(-20).map(m => ({
       r: m.role === 'user' ? 'u' : 'a',
       c: (typeof m.content === 'string' ? m.content : '[attachment]').slice(0, 2000)
     }));
-
     const json = JSON.stringify(trimmed);
-    // UTF-8 safe base64
     const b64 = btoa(unescape(encodeURIComponent(json)));
     const baseUrl = location.origin + location.pathname;
     const shareUrl = baseUrl + SHARE_HASH_PREFIX + b64;
-
-    if (shareUrl.length > 8000) {
-      showMemToast('⚠️ Chat bohot lambi hai — sirf last 20 share honge');
-    }
-
+    if (shareUrl.length > 8000) showMemToast('⚠️ Chat bohot lambi hai — sirf last 20 share honge');
     shareUrlInput.value = shareUrl;
     shareModal.classList.add('show');
-  } catch (e) {
-    console.error(e);
-    showMemToast('⚠️ Share link nahi ban saki');
-  }
+  } catch (e) { console.error(e); showMemToast('⚠️ Share link nahi ban saki'); }
 }
-
 function loadSharedChatFromUrl() {
   const hash = location.hash;
   if (!hash || !hash.startsWith(SHARE_HASH_PREFIX)) return false;
-
   try {
     const b64 = hash.slice(SHARE_HASH_PREFIX.length);
     const json = decodeURIComponent(escape(atob(b64)));
     const arr = JSON.parse(json);
     if (!Array.isArray(arr) || !arr.length) return false;
-
-    // Purani chat clear karo (lekin memory rakhna)
     chatBox.innerHTML = '';
     conversation = [{ role: 'system', content: buildSystemPrompt() }];
-
-    // Intro
     const infoRow = document.createElement('div');
     infoRow.className = 'row ai';
     infoRow.innerHTML = '<div class="avatar ai">J</div><div class="msg" style="background:rgba(245,158,122,0.1);border-color:rgba(245,158,122,0.3);color:#f59e7a;">🔗 Ye ek shared chat hai. Aap isse continue kar sakte hain.</div>';
     chatBox.appendChild(infoRow);
-
     for (const item of arr) {
       const isUser = item.r === 'u';
       const content = String(item.c || '');
@@ -888,13 +846,9 @@ function loadSharedChatFromUrl() {
         conversation.push({ role: 'assistant', content: content });
       }
     }
-
     chatBox.scrollTop = chatBox.scrollHeight;
     setTimeout(() => showMemToast('🔗 Shared chat load ho gayi'), 300);
-    // Hash saaf kar do (privacy) — lekin turant nahi, thoda wait karo
-    setTimeout(() => {
-      try { history.replaceState(null, '', location.pathname); } catch (e) {}
-    }, 1500);
+    setTimeout(() => { try { history.replaceState(null, '', location.pathname); } catch (e) {} }, 1500);
     return true;
   } catch (e) {
     console.error('Shared chat load failed:', e);
@@ -902,15 +856,8 @@ function loadSharedChatFromUrl() {
     return false;
   }
 }
-
-// Share dropdown toggle
-shareBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  shareSelector.classList.toggle('open');
-});
-document.addEventListener('click', (e) => {
-  if (!shareSelector.contains(e.target)) shareSelector.classList.remove('open');
-});
+shareBtn.addEventListener('click', (e) => { e.stopPropagation(); shareSelector.classList.toggle('open'); });
+document.addEventListener('click', (e) => { if (!shareSelector.contains(e.target)) shareSelector.classList.remove('open'); });
 shareDropdown.addEventListener('click', (e) => {
   const opt = e.target.closest('.share-option');
   if (!opt) return;
@@ -921,8 +868,6 @@ shareDropdown.addEventListener('click', (e) => {
   else if (action === 'link') generateShareLink();
   else if (action === 'copy') copyAllChat();
 });
-
-// Share modal
 function closeShareModal() { shareModal.classList.remove('show'); }
 shareModalClose.addEventListener('click', closeShareModal);
 shareModalCloseBtn.addEventListener('click', closeShareModal);
@@ -932,9 +877,7 @@ shareCopyBtn.addEventListener('click', () => {
   navigator.clipboard.writeText(shareUrlInput.value).then(() => {
     showMemToast('📋 Link copy ho gayi!');
     closeShareModal();
-  }).catch(() => {
-    showMemToast('⚠️ Copy fail hui — manually select karein');
-  });
+  }).catch(() => showMemToast('⚠️ Copy fail hui'));
 });
 
 /* ============ MODEL SELECTOR ============ */
@@ -982,13 +925,8 @@ function renderModelDropdown() {
     modelDropdown.appendChild(div);
   }
 }
-modelBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  modelSelector.classList.toggle('open');
-});
-document.addEventListener('click', (e) => {
-  if (!modelSelector.contains(e.target)) modelSelector.classList.remove('open');
-});
+modelBtn.addEventListener('click', (e) => { e.stopPropagation(); modelSelector.classList.toggle('open'); });
+document.addEventListener('click', (e) => { if (!modelSelector.contains(e.target)) modelSelector.classList.remove('open'); });
 
 /* ============ IMAGE COMPRESSION ============ */
 function compressImage(file, maxDim = MAX_IMG_DIM, quality = JPEG_QUALITY) {
@@ -1917,7 +1855,6 @@ loadSearchState();
 loadModelState();
 refreshSystemPrompt();
 
-// Check karo URL mein shared chat hai?
 const loadedFromShare = loadSharedChatFromUrl();
 if (!loadedFromShare) {
   loadHistory();
