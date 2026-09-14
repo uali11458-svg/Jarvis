@@ -397,7 +397,7 @@ let memory = [];
 let searchEnabled = false;
 let lightboxCurrentUrl = '';
 
-const chatState = { mode: 'normal', lastImageTopic: null, lastIntent: null, emotionalTone: 'neutral', turnCount: 0 };
+const chatState = { mode: 'normal', lastImageTopic: null, lastIntent: null, emotionalTone: 'neutral', turnCount: 0, pendingTopic: null };
 
 const baseInstruction = `Tum "Jarvis" ho — ek smart, warm, helpful AI assistant. Tumhe MATRIX STUDIOS ki team ne banaya hai, jiske lead "Ali Akbar" hain. Insaan jaise baat karte ho, robotic nahi.
 
@@ -1312,7 +1312,25 @@ async function sendMessage() {
 
   const cm = getModel();
   const isDT = cm.provider === 'devtoolbox';
-  const useSearch = !image && !file && !isDT && (searchEnabled || needsSearch(text));
+
+  // Agar pichla sawaal clarifying tha (jaise "kaunsa shehar?") aur ab chhota
+  // sa jawab aaya hai (jaise sirf "karachi ka"), to context yaad rakh ke
+  // proper search query banao, taake sahi topic pe search ho.
+  const TOPIC_HINTS = {
+    mosam: 'weather today', weather: 'weather today',
+    qeemat: 'price today', price: 'price today', rate: 'rate today today',
+    score: 'live score today', match: 'match score today',
+    khabar: 'latest news', news: 'latest news today'
+  };
+  const looksLikeShortReply = text && text.trim().split(/\s+/).length <= 4 && !text.includes('?');
+  let searchQuery = text;
+  let forceSearch = false;
+  if (chatState.pendingTopic && looksLikeShortReply && !image && !file) {
+    searchQuery = `${text} ${chatState.pendingTopic}`;
+    forceSearch = true;
+  }
+
+  const useSearch = !image && !file && !isDT && (searchEnabled || needsSearch(text) || forceSearch);
   const useFile = !!file;
 
   const { b, tn, sb, badge } = addStream({
@@ -1335,7 +1353,7 @@ async function sendMessage() {
     } else if (isDT) {
       full = await streamDT(msgs, b, tn);
     } else if (useSearch) {
-      const sr = await tavily(text);
+      const sr = await tavily(searchQuery);
       if (!sr.length) full = await streamGroq(msgs, currentModelId, b, tn);
       else {
         const sc = sr.map((r, i) => `[${i+1}] ${r.title}\n${r.snippet}\nURL: ${r.url}`).join('\n\n');
@@ -1344,8 +1362,16 @@ async function sendMessage() {
         full = await streamGroq(msgs, currentModelId, b, tn);
         const c = clean(hideMeta(full));
         // Sources links jaan-boojh kar nahi dikhaye ja rahe
+
+        // Agla topic yaad rakho agar yeh ek clarifying sawaal tha (jaise "kaunsa shehar?")
+        const lowerText = text.toLowerCase();
+        const matchedHint = Object.keys(TOPIC_HINTS).find(k => lowerText.includes(k));
+        const isClarifying = /\?/.test(c) && /\b(kaunsa|konsa|kis\s+shehar|kis\s+area|kaunse|batao)\b/i.test(c);
+        if (matchedHint && isClarifying) chatState.pendingTopic = TOPIC_HINTS[matchedHint];
+        else chatState.pendingTopic = null;
       }
     } else {
+      chatState.pendingTopic = null; // is turn mein search nahi hui, stale topic clear karo
       const model = image ? VISION_MODEL : currentModelId;
       full = await streamGroq(msgs, model, b, tn);
     }
