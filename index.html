@@ -254,6 +254,14 @@ Mujhe MATRIX STUDIOS ki team ne banaya hai, jiske lead Ali Akbar hain.
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/0.3.26/mammoth.browser.min.js"></script>
+<script type="module">
+  import { InferenceClient } from "https://cdn.jsdelivr.net/npm/@huggingface/inference@3/+esm";
+  window.__hfTextToVideo = async function(prompt, token, model) {
+    const client = new InferenceClient(token);
+    const result = await client.textToVideo({ inputs: prompt, model: model, provider: "fal-ai" });
+    return result; // Blob
+  };
+</script>
 <script>
 /* =========================================================
    JARVIS — SMART AI ASSISTANT
@@ -261,7 +269,7 @@ Mujhe MATRIX STUDIOS ki team ne banaya hai, jiske lead Ali Akbar hain.
    ========================================================= */
 
 const GROQ_KEY = "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";
-const HF_TOKEN = "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";
+const HF_TOKEN = "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";
 const VIDEO_MODEL = "Lightricks/LTX-Video-0.9.8-13B-distilled";
 const HF_VIDEO_URL = "https://api-inference.huggingface.co/models/" + VIDEO_MODEL;
 const FAST_MODEL = "openai/gpt-oss-20b";
@@ -971,24 +979,12 @@ async function addVideoGen(prompt) {
   chatBox.appendChild(r); chatBox.scrollTop = chatBox.scrollHeight;
 
   try {
-    const res = await fetch(HF_VIDEO_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${HF_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ inputs: prompt })
-    });
-
-    if (!res.ok) {
-      let errMsg = `HTTP ${res.status}`;
-      try { const ej = await res.json(); errMsg = ej?.error || errMsg; } catch (e) {}
-      st.innerText = '❌ Error aaya: ' + errMsg;
+    if (!window.__hfTextToVideo) {
+      st.innerText = '❌ Video library abhi load ho rahi hai, 2 second baad dobara try karo.';
       st.style.color = 'var(--danger)';
       return;
     }
-
-    const blob = await res.blob();
+    const blob = await window.__hfTextToVideo(prompt, HF_TOKEN, VIDEO_MODEL);
     const videoUrl = URL.createObjectURL(blob);
     const vid = document.createElement('video');
     vid.src = videoUrl;
