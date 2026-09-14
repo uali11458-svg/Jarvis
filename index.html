@@ -261,6 +261,9 @@ Mujhe MATRIX STUDIOS ki team ne banaya hai, jiske lead Ali Akbar hain.
    ========================================================= */
 
 const GROQ_KEY = "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";
+const HF_TOKEN = "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";
+const VIDEO_MODEL = "Lightricks/LTX-Video-0.9.8-13B-distilled";
+const HF_VIDEO_URL = "https://api-inference.huggingface.co/models/" + VIDEO_MODEL;
 const FAST_MODEL = "openai/gpt-oss-20b";
 const VISION_MODEL = "qwen/qwen3.6-27b";
 const API_URL = "https://api.groq.com/openai/v1/chat/completions";
@@ -955,6 +958,56 @@ function createCell(url, alt, onDone) {
   return c;
 }
 
+async function addVideoGen(prompt) {
+  const r = document.createElement('div'); r.className = 'row ai';
+  const a = document.createElement('div'); a.className = 'avatar ai'; a.innerText = 'J';
+  const b = document.createElement('div'); b.className = 'msg';
+  const cap = document.createElement('div'); cap.className = 'img-caption';
+  cap.innerText = `🎬 "${prompt}"`; b.appendChild(cap);
+  const st = document.createElement('div'); st.className = 'img-status';
+  st.innerText = '🎬 Video ban rahi hai... isme 30-90 second lag sakte hain, thoda sabar karo';
+  b.appendChild(st);
+  r.appendChild(a); r.appendChild(b);
+  chatBox.appendChild(r); chatBox.scrollTop = chatBox.scrollHeight;
+
+  try {
+    const res = await fetch(HF_VIDEO_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${HF_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ inputs: prompt })
+    });
+
+    if (!res.ok) {
+      let errMsg = `HTTP ${res.status}`;
+      try { const ej = await res.json(); errMsg = ej?.error || errMsg; } catch (e) {}
+      st.innerText = '❌ Error aaya: ' + errMsg;
+      st.style.color = 'var(--danger)';
+      return;
+    }
+
+    const blob = await res.blob();
+    const videoUrl = URL.createObjectURL(blob);
+    const vid = document.createElement('video');
+    vid.src = videoUrl;
+    vid.controls = true;
+    vid.autoplay = false;
+    vid.style.maxWidth = '100%';
+    vid.style.borderRadius = '10px';
+    vid.style.marginTop = '6px';
+    vid.style.border = '1px solid var(--border)';
+    b.appendChild(vid);
+    st.innerText = '✅ Video ready';
+    setTimeout(() => { st.style.transition = 'opacity 0.5s'; st.style.opacity = '0'; setTimeout(() => st.remove(), 500); }, 3000);
+  } catch (err) {
+    console.error(err);
+    st.innerText = '❌ Error aaya: ' + (err.message || 'kuch ghalat ho gaya');
+    st.style.color = 'var(--danger)';
+  }
+}
+
 function addImgGen(prompt, count = 1, styleKey = null) {
   const r = document.createElement('div'); r.className = 'row ai';
   const a = document.createElement('div'); a.className = 'avatar ai'; a.innerText = 'J';
@@ -1092,6 +1145,12 @@ async function streamDT(msgs, bubble, tn) {
 }
 
 function clean(t) { return t.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/^#{1,6}\s+/gm, '').replace(/^[-•]\s+/gm, '• ').trim(); }
+
+function parseVideoCmd(text) {
+  const m = text.match(/^\/video\s*:?\s*(.*)$/i);
+  if (!m) return null;
+  return { prompt: (m[1] || '').trim() };
+}
 
 function parseImgCmd(text) {
   const m = text.match(/^\/image(\d*)\s*:?\s*(.*)$/i);
@@ -1268,6 +1327,14 @@ async function sendMessage() {
   const intent = detectIntent(text);
 
   if (intent === 'reject_image') { await handleRejection(text); return; }
+
+  const videoCmd = !image && !file ? parseVideoCmd(text) : null;
+  if (videoCmd) {
+    addMsg(text, true); userInput.value = '';
+    if (!videoCmd.prompt) { addMsg('Video ke liye description bhi likho, jaise: /video ek cat ghar mein khel rahi hai', false); return; }
+    await addVideoGen(videoCmd.prompt);
+    return;
+  }
 
   const imgCmd = !image && !file ? parseImgCmd(text) : null;
   if (imgCmd) {
