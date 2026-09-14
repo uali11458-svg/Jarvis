@@ -1221,12 +1221,47 @@ function needsSearch(text) {
   return false;
 }
 
+function detectTimeQuery(text) {
+  const t = (text || '').toLowerCase();
+  const isTimeQ = /\b(time\s+kia|time\s+kya|kitne\s+baje|waqt\s+kya|waqt\s+kia|current\s+time|abhi\s+kitne\s+baje|what.?s\s+the\s+time)\b/.test(t);
+  const isDateQ = /\b(aaj\s+ki\s+tareek|aaj\s+ka\s+din|today.?s\s+date|kaunsa\s+din|kya\s+din)\b/.test(t);
+  if (!isTimeQ && !isDateQ) return null;
+
+  // City → IANA timezone mapping (extend as needed)
+  const cityTZ = {
+    karachi: 'Asia/Karachi', lahore: 'Asia/Karachi', islamabad: 'Asia/Karachi', pakistan: 'Asia/Karachi',
+    dubai: 'Asia/Dubai', london: 'Europe/London', 'new york': 'America/New_York', newyork: 'America/New_York',
+    delhi: 'Asia/Kolkata', mumbai: 'Asia/Kolkata', india: 'Asia/Kolkata', tokyo: 'Asia/Tokyo', 'saudi arab': 'Asia/Riyadh', riyadh: 'Asia/Riyadh'
+  };
+  let tz = 'Asia/Karachi'; // default
+  for (const city in cityTZ) { if (t.includes(city)) { tz = cityTZ[city]; break; } }
+
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-US', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: true });
+  const dateStr = now.toLocaleDateString('en-US', { timeZone: tz, weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  if (isTimeQ && isDateQ) return `Abhi ${timeStr} ho rahe hain, aur aaj ${dateStr} hai.`;
+  if (isTimeQ) return `Abhi ${timeStr} ho rahe hain.`;
+  return `Aaj ${dateStr} hai.`;
+}
+
 async function sendMessage() {
   if (isSending) return;
   const text = userInput.value.trim();
   const image = pendingImage;
   const file = pendingFile;
   if (!text && !image && !file) return;
+
+  // Time/date sawaal seedha device se answer karo, AI/search ke bina
+  if (!image && !file) {
+    const timeAns = detectTimeQuery(text);
+    if (timeAns) {
+      addMsg(text, true);
+      userInput.value = '';
+      addMsg(timeAns, false);
+      return;
+    }
+  }
 
   chatState.turnCount++;
   chatState.emotionalTone = detectEmotion(text);
