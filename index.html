@@ -1207,6 +1207,20 @@ async function handleRejection(userMsg) {
   finally { isSending = false; sendBtn.disabled = false; userInput.focus(); }
 }
 
+function needsSearch(text) {
+  const t = (text || '').toLowerCase();
+  // Time/recency signals
+  const timeWords = /\b(aaj|abhi|is\s+waqt|current|latest|naya|nayi|recent|ab\s+tak|is\s+saal|2025|2026|is\s+hafte|is\s+mahine)\b/;
+  // Fact-lookup / real-world data signals
+  const factWords = /\b(kaun\s+hai|kya\s+hai|price|rate|qeemat|score|match|news|khabar|weather|mausam|stock|kitna\s+hai|kab\s+hai|schedule|release|launch|update)\b/;
+  // Explicit "search karo" style asks
+  const explicitAsk = /\b(search\s+karo|dhoondo|internet\s+pe|google\s+karo|check\s+karo)\b/;
+  if (explicitAsk.test(t)) return true;
+  if (timeWords.test(t) && factWords.test(t)) return true;
+  if (timeWords.test(t) && /\b(kaun|kya|kahan|kab|kitna)\b/.test(t)) return true;
+  return false;
+}
+
 async function sendMessage() {
   if (isSending) return;
   const text = userInput.value.trim();
@@ -1263,7 +1277,7 @@ async function sendMessage() {
 
   const cm = getModel();
   const isDT = cm.provider === 'devtoolbox';
-  const useSearch = !image && !file && !isDT && searchEnabled;
+  const useSearch = !image && !file && !isDT && (searchEnabled || needsSearch(text));
   const useFile = !!file;
 
   const { b, tn, sb, badge } = addStream({
@@ -1294,7 +1308,7 @@ async function sendMessage() {
         msgs = [{ role: 'system', content: baseInstruction }, { role: 'user', content: sp }];
         full = await streamGroq(msgs, currentModelId, b, tn);
         const c = clean(hideMeta(full));
-        if (c) addSrcs(b, sr);
+        // Sources links jaan-boojh kar nahi dikhaye ja rahe
       }
     } else {
       const model = image ? VISION_MODEL : currentModelId;
