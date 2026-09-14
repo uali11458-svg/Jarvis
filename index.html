@@ -279,7 +279,7 @@ const MAX_DOC_CHARS = 8000;
 const MAX_DOC_SIZE = 10 * 1024 * 1024;
 const SHARE_PREFIX = '#share=';
 
-const MODEL_MAX = { "openai/gpt-oss-120b": 900, "openai/gpt-oss-20b": 900, "qwen/qwen3.6-27b": 800, "devtoolbox-coding": 2048 };
+const MODEL_MAX = { "openai/gpt-oss-120b": 2000, "openai/gpt-oss-20b": 900, "qwen/qwen3.6-27b": 800, "devtoolbox-coding": 2048 };
 
 const IMAGE_STYLES = {
   realistic: "ultra realistic photograph, cinematic lighting, 8k, highly detailed, photorealistic",
@@ -437,6 +437,9 @@ IMAGE_GEN: <detailed English prompt>
 
 ## PERSONALITY
 Warm, helpful, witty. Frustration samjho. Chhoti baat ka lamba jawab mat.
+
+## SOCH-VICHAR
+Mushkil ya technical sawaalon (coding, maths, analysis, decisions) mein poora dhyan se socho, edge cases aur galtiyon ka khayal rakho, sahi aur complete jawab do — chhote/casual sawaalon (salam, thanks, chhoti baat) mein chhota hi jawab do, unnecessarily lamba mat karo.
 
 ## MEMORY
 User ke facts yaad rakho.`;
@@ -1045,7 +1048,7 @@ async function tavily(q) {
 async function streamGroq(msgs, model, bubble, tn) {
   const mx = MODEL_MAX[model] || 800;
   const body = { model, messages: msgs, max_completion_tokens: mx, stream: true };
-  if (model.startsWith('openai/gpt-oss')) body.reasoning_effort = 'low';
+  if (model.startsWith('openai/gpt-oss')) body.reasoning_effort = 'high';
   const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` }, body: JSON.stringify(body) });
   if (!r.ok) { let e = `HTTP ${r.status}`; try { const j = await r.json(); e = j?.error?.message || e; } catch (x) {} throw new Error(e); }
   const rd = r.body.getReader(); const dec = new TextDecoder();
