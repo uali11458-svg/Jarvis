@@ -67,20 +67,17 @@
   <label>OPENROUTER API KEY</label>
   <input type="password" id="apiKey" placeholder="sk-or-v1-..."/>
 
-  <h4>VOICE — Edge-TTS (Free, No Key)</h4>
-  <label>URDU VOICE</label>
+  <h4>VOICE — Browser Voice</h4>
+  <label>AWAZ CHUNO (Male/Female jo bhi available ho)</label>
   <select id="voiceSelect">
-    <option value="ur-PK-AsadNeural">Asad (Male, Urdu Pakistan)</option>
-    <option value="ur-PK-UzmaNeural">Uzma (Female, Urdu Pakistan)</option>
-    <option value="hi-IN-MadhurNeural">Madhur (Male, Hindi — Urdu ke qareeb)</option>
-    <option value="hi-IN-SwaraNeural">Swara (Female, Hindi — Urdu ke qareeb)</option>
+    <option value="">Auto (best match)</option>
   </select>
 
   <button id="saveSettings">SAVE</button>
   <button id="testVoice" style="background:rgba(0,200,150,0.25);">TEST VOICE</button>
 
   <div style="font-size:10px; color:#4a7ea4; margin-top:8px; line-height:1.5;">
-    Edge-TTS bilkul free hai. Koi API key nahi chahiye.
+    Ye tumhare browser/device mein jitni bhi awazein installed hain unki list hai. Agar Urdu/Hindi mein koi male awaz nahi dikh rahi, to apne phone/PC ki Language Settings mein Urdu ya Hindi TTS voice pack install karo — phir yahan dikhne lagegi.
   </div>
 </div>
 
@@ -196,7 +193,7 @@ function showToast(msg) {
 
 const settings = {
   apiKey: localStorage.getItem('jarvis_apiKey') || '',
-  voice: localStorage.getItem('jarvis_voice') || 'ur-PK-AsadNeural'
+  voice: localStorage.getItem('jarvis_voice') || ''
 };
 
 apiKeyInput.value = settings.apiKey;
@@ -267,14 +264,29 @@ function pickUrduVoice(vs) {
       || vs.find(v => v.lang.toLowerCase().startsWith('en-in'))
       || null;
 }
+async function populateVoiceList() {
+  const vs = await getVoicesAsync();
+  const relevant = vs.filter(v => /^(ur|hi|en-in)/i.test(v.lang));
+  const rest = vs.filter(v => !/^(ur|hi|en-in)/i.test(v.lang));
+  voiceSelect.innerHTML = '<option value="">Auto (best match)</option>';
+  [...relevant, ...rest].forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v.voiceURI;
+    opt.textContent = `${v.name} (${v.lang})`;
+    voiceSelect.appendChild(opt);
+  });
+  if (settings.voice) voiceSelect.value = settings.voice;
+}
+populateVoiceList();
 
 async function speak(text) {
   speechSynthesis.cancel();
   if (!window.speechSynthesis) { addMessage('jarvis', 'Is browser mein awaz support nahi hai.'); setState('idle'); return; }
   setState('speaking');
   const vs = await getVoicesAsync();
-  const ur = pickUrduVoice(vs);
   if (vs.length === 0) { addMessage('jarvis', 'Is browser/device mein koi bhi awaz install nahi hai. Chrome ya Edge browser try karo.'); setState('idle'); return; }
+  const chosen = settings.voice ? vs.find(v => v.voiceURI === settings.voice) : null;
+  const ur = chosen || pickUrduVoice(vs);
   if (!ur) addMessage('jarvis', 'Is device mein Urdu/Hindi awaz install nahi hai, default awaz bol rahi hai.');
   const u = new SpeechSynthesisUtterance(text);
   if (ur) { u.voice = ur; u.lang = ur.lang; } else { u.lang = 'ur-PK'; }
