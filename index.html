@@ -37,7 +37,6 @@
   .settings-panel button { width:100%; margin-top:16px; padding:10px; border-radius:8px; border:1px solid rgba(0,180,255,0.5); background:rgba(0,120,255,0.25); color:#bfe9ff; font-size:12px; letter-spacing:2px; cursor:pointer; }
   .settings-panel button:hover { background:rgba(0,160,255,0.4); }
   .settings-panel .hint { font-size:10px; color:#4a7ea4; margin-top:8px; line-height:1.5; }
-  .settings-panel .hint a { color:#7dd3fc; }
   .toast { position:fixed; bottom:110px; left:50%; transform:translateX(-50%); background:rgba(0,200,150,0.9); color:#000; padding:8px 20px; border-radius:20px; font-size:13px; font-weight:600; z-index:50; opacity:0; transition:opacity 0.3s; pointer-events:none; }
   .toast.show { opacity:1; }
 </style>
@@ -65,22 +64,20 @@
 <div class="settings-panel" id="settingsPanel">
   <h3>CONFIGURATION</h3>
 
-  <h4>PRIMARY — Groq (14,400 req/day FREE)</h4>
-  <label>GROQ API KEY</label>
-  <input type="password" id="groqKey" placeholder="gsk_..."/>
-  <label>GROQ MODEL</label>
-  <select id="groqModel">
-    <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Best)</option>
-    <option value="llama-3.1-8b-instant">Llama 3.1 8B (Fastest)</option>
-    <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
-    <option value="gemma2-9b-it">Gemma 2 9B</option>
+  <h4>BRAIN — GitHub Models</h4>
+  <label>GITHUB PERSONAL ACCESS TOKEN</label>
+  <input type="password" id="githubToken" placeholder="ghp_..."/>
+  <label>MODEL</label>
+  <select id="modelSelect">
+    <option value="openai/gpt-4.1">GPT-4.1 (Most Intelligent — 90.2% MMLU)</option>
+    <option value="openai/gpt-4o">GPT-4o (Fast & Smart)</option>
+    <option value="openai/o3">OpenAI o3 (Reasoning)</option>
+    <option value="deepseek/deepseek-r1">DeepSeek R1 (Reasoning)</option>
+    <option value="meta/llama-3.3-70b-instruct">Llama 3.3 70B</option>
+    <option value="mistral/mistral-large-2411">Mistral Large</option>
   </select>
 
-  <h4>BACKUP — OpenRouter (optional)</h4>
-  <label>OPENROUTER API KEY</label>
-  <input type="password" id="apiKey" placeholder="sk-or-v1-..."/>
-
-  <h4>VOICE</h4>
+  <h4>VOICE — Browser Voice</h4>
   <label>AWAZ CHUNO</label>
   <select id="voiceSelect">
     <option value="">Auto (best match)</option>
@@ -90,11 +87,12 @@
   <button id="testVoice" style="background:rgba(0,200,150,0.25);">TEST VOICE</button>
 
   <div class="hint">
-    Groq key: <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a><br>
-    Groq free: <b>14,400 requests/day</b> — OpenRouter se 300x zyada.
+    Token: <a href="https://github.com/settings/tokens" target="_blank" style="color:#7dd3fc;">github.com/settings/tokens</a> → Generate new token (classic) → <b>models:read</b> scope tick karo.<br>
+    Free tier: 15 requests/min, 150 requests/day. Koi credit card nahi.
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script type="importmap">
 {
   "imports": {
@@ -193,9 +191,8 @@ const statusDot = document.getElementById('statusDot');
 const statusText = document.getElementById('statusText');
 const settingsToggle = document.getElementById('settingsToggle');
 const settingsPanel = document.getElementById('settingsPanel');
-const groqKeyInput = document.getElementById('groqKey');
-const groqModelSelect = document.getElementById('groqModel');
-const apiKeyInput = document.getElementById('apiKey');
+const githubTokenInput = document.getElementById('githubToken');
+const modelSelect = document.getElementById('modelSelect');
 const voiceSelect = document.getElementById('voiceSelect');
 const saveBtn = document.getElementById('saveSettings');
 const testVoiceBtn = document.getElementById('testVoice');
@@ -208,25 +205,21 @@ function showToast(msg) {
 }
 
 const settings = {
-  groqKey: localStorage.getItem('jarvis_groqKey') || '',
-  groqModel: localStorage.getItem('jarvis_groqModel') || 'llama-3.3-70b-versatile',
-  apiKey: localStorage.getItem('jarvis_apiKey') || '',
+  githubToken: localStorage.getItem('jarvis_githubToken') || '',
+  model: localStorage.getItem('jarvis_model') || 'openai/gpt-4.1',
   voice: localStorage.getItem('jarvis_voice') || ''
 };
 
-groqKeyInput.value = settings.groqKey;
-groqModelSelect.value = settings.groqModel;
-apiKeyInput.value = settings.apiKey;
+githubTokenInput.value = settings.githubToken;
+modelSelect.value = settings.model;
 voiceSelect.value = settings.voice;
 
 saveBtn.addEventListener('click', ()=>{
-  settings.groqKey = groqKeyInput.value.trim();
-  settings.groqModel = groqModelSelect.value;
-  settings.apiKey = apiKeyInput.value.trim();
+  settings.githubToken = githubTokenInput.value.trim();
+  settings.model = modelSelect.value;
   settings.voice = voiceSelect.value;
-  localStorage.setItem('jarvis_groqKey', settings.groqKey);
-  localStorage.setItem('jarvis_groqModel', settings.groqModel);
-  localStorage.setItem('jarvis_apiKey', settings.apiKey);
+  localStorage.setItem('jarvis_githubToken', settings.githubToken);
+  localStorage.setItem('jarvis_model', settings.model);
   localStorage.setItem('jarvis_voice', settings.voice);
   settingsPanel.classList.remove('open');
   showToast('Saved!');
@@ -419,61 +412,66 @@ async function speak(text) {
   }, 1500);
 }
 
-// ============ AI BRAIN — Groq Primary, OpenRouter Fallback ============
-async function callGroq(userText) {
-  if (!settings.groqKey) throw new Error('groq_missing');
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${settings.groqKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: settings.groqModel,
-      messages: history,
-      temperature: 0.7,
-      max_tokens: 400
-    })
-  });
-  if (!res.ok) {
-    const t = await res.text();
-    console.error('Groq error:', res.status, t);
-    if (res.status === 401) throw new Error('Groq key invalid');
-    if (res.status === 429) throw new Error('groq_rate_limit');
-    throw new Error(`Groq ${res.status}`);
-  }
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content?.trim() || '(no reply)';
-}
+// ============ GITHUB MODELS API (via CORS proxy) ============
+const CORS_PROXIES = [
+  (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+  (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+];
 
-async function callOpenRouter(userText) {
-  if (!settings.apiKey) throw new Error('openrouter_missing');
-  const models = [
-    'google/gemini-2.0-flash-exp:free',
-    'meta-llama/llama-3.3-70b-instruct:free',
-    'qwen/qwen-2.5-72b-instruct:free',
-    'openrouter/free'
-  ];
-  let lastErr = null;
-  for (const model of models) {
+async function callGitHubModels(userText) {
+  if (!settings.githubToken) throw new Error('GitHub token missing');
+
+  const apiUrl = 'https://models.github.ai/inference/chat/completions';
+
+  const body = {
+    model: settings.model,
+    messages: history,
+    temperature: 0.7,
+    max_tokens: 500
+  };
+
+  let lastError = null;
+
+  for (let i = 0; i < CORS_PROXIES.length; i++) {
     try {
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const proxyUrl = CORS_PROXIES[i](apiUrl);
+      console.log(`Trying proxy ${i+1}/${CORS_PROXIES.length}...`);
+
+      const res = await fetch(proxyUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${settings.apiKey}`,
+          'Authorization': `Bearer ${settings.githubToken}`,
           'Content-Type': 'application/json',
-          'HTTP-Referer': location.origin,
-          'X-Title': 'JARVIS'
+          'Accept': 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2026-03-10'
         },
-        body: JSON.stringify({ model, messages: history, temperature: 0.7, max_tokens: 400 })
+        body: JSON.stringify(body)
       });
-      if (res.status === 429) { lastErr = 'openrouter_rate_limit'; continue; }
-      if (!res.ok) { lastErr = `OpenRouter ${res.status}`; continue; }
+
+      if (res.status === 401) throw new Error('GitHub token invalid. models:read scope check karo.');
+      if (res.status === 429) throw new Error('rate limit');
+      if (!res.ok) {
+        const t = await res.text();
+        console.error(`Proxy ${i+1} error ${res.status}:`, t);
+        lastError = `HTTP ${res.status}`;
+        continue;
+      }
+
       const data = await res.json();
-      return data.choices?.[0]?.message?.content?.trim() || '(no reply)';
-    } catch (e) { lastErr = e.message; }
+      const reply = data.choices?.[0]?.message?.content?.trim() || '(no reply)';
+      console.log(`Proxy ${i+1} SUCCESS!`);
+      return reply;
+
+    } catch (e) {
+      console.warn(`Proxy ${i+1} failed:`, e.message);
+      lastError = e.message;
+      if (e.message.includes('token invalid')) throw e;
+      continue;
+    }
   }
-  throw new Error(lastErr || 'openrouter_failed');
+
+  throw new Error(lastError || 'All proxies failed');
 }
 
 async function askJarvis(userText) {
@@ -484,49 +482,24 @@ async function askJarvis(userText) {
     return;
   }
 
+  if (!settings.githubToken) { addMessage('jarvis', 'Settings mein GitHub token daalo.'); return; }
+
   history.push({ role: 'user', content: userText });
   setState('thinking');
 
-  let reply = null;
-  let groqErr = null, orErr = null;
-
-  // Try Groq first
-  if (settings.groqKey) {
-    try {
-      console.log('Trying Groq...');
-      reply = await callGroq(userText);
-    } catch (e) {
-      groqErr = e.message;
-      console.warn('Groq failed:', e.message);
-    }
-  }
-
-  // Fallback to OpenRouter
-  if (!reply && settings.apiKey) {
-    try {
-      console.log('Trying OpenRouter...');
-      reply = await callOpenRouter(userText);
-    } catch (e) {
-      orErr = e.message;
-      console.warn('OpenRouter failed:', e.message);
-    }
-  }
-
-  if (reply) {
+  try {
+    const reply = await callGitHubModels(userText);
     history.push({ role: 'assistant', content: reply });
     addMessage('jarvis', reply);
     await speak(reply);
-    return;
-  }
-
-  // Both failed
-  setState('idle');
-  if (!settings.groqKey && !settings.apiKey) {
-    addMessage('jarvis', 'Settings mein Groq ya OpenRouter API key daalo.');
-  } else if (groqErr === 'Groq key invalid') {
-    addMessage('jarvis', 'Groq key invalid hai. console.groq.com/keys se nayi banao.');
-  } else {
-    addMessage('jarvis', 'Dono providers busy hain. Thodi der baad try karo, ya nayi Groq key banao.');
+  } catch (e) {
+    console.error('GitHub Models error:', e);
+    setState('idle');
+    if (e.message === 'rate limit') {
+      addMessage('jarvis', 'GitHub Models ka rate limit (15/min, 150/day) khatam ho gaya. Thodi der baad try karo.');
+    } else {
+      addMessage('jarvis', `Error: ${e.message}`);
+    }
   }
 }
 
@@ -558,7 +531,7 @@ if (SR) {
   micBtn.addEventListener('click', () => addMessage('jarvis', 'Mic support nahi. Chrome ya Edge use karo.'));
 }
 
-setTimeout(() => addMessage('jarvis', 'Systems online. Groq key daalo settings mein for best speed.'), 800);
+setTimeout(() => addMessage('jarvis', 'Systems online. GitHub token daalo settings mein.'), 800);
 </script>
 </body>
 </html>
