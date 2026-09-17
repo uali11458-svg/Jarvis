@@ -36,6 +36,8 @@
   .settings-panel input, .settings-panel select { width:100%; background:rgba(0,30,60,0.8); border:1px solid rgba(0,150,255,0.3); border-radius:8px; padding:9px 12px; color:#dbeeff; font-size:13px; outline:none; }
   .settings-panel button { width:100%; margin-top:16px; padding:10px; border-radius:8px; border:1px solid rgba(0,180,255,0.5); background:rgba(0,120,255,0.25); color:#bfe9ff; font-size:12px; letter-spacing:2px; cursor:pointer; }
   .settings-panel button:hover { background:rgba(0,160,255,0.4); }
+  .toast { position:fixed; bottom:110px; left:50%; transform:translateX(-50%); background:rgba(0,200,150,0.9); color:#000; padding:8px 20px; border-radius:20px; font-size:13px; font-weight:600; z-index:50; opacity:0; transition:opacity 0.3s; pointer-events:none; }
+  .toast.show { opacity:1; }
 </style>
 </head>
 <body>
@@ -44,6 +46,7 @@
 <div class="header"><h1>JARVIS</h1><div class="sub">JUST A RATHER VERY INTELLIGENT SYSTEM</div></div>
 <div class="status"><span class="dot" id="statusDot"></span><span id="statusText">SYSTEM ONLINE</span></div>
 <div class="chat" id="chat"></div>
+<div class="toast" id="toast"></div>
 
 <div class="input-bar">
   <input id="userInput" type="text" placeholder="Ask Jarvis anything..." autocomplete="off"/>
@@ -64,20 +67,21 @@
   <label>OPENROUTER API KEY</label>
   <input type="password" id="apiKey" placeholder="sk-or-v1-..."/>
 
-  <h4>VOICE — Google Cloud TTS</h4>
-  <label>GOOGLE CLOUD TTS API KEY</label>
-  <input type="password" id="googleKey" placeholder="AIza..."/>
-  <label>VOICE</label>
-  <select id="googleVoiceSelect">
-    <option value="ur-IN-Wavenet-A">Urdu (India) - Female (Wavenet)</option>
-    <option value="ur-IN-Standard-A">Urdu (India) - Female (Standard)</option>
-    <option value="ur-IN-Standard-B">Urdu (India) - Male (Standard)</option>
-    <option value="hi-IN-Wavenet-A">Hindi - Female (Wavenet)</option>
-    <option value="hi-IN-Wavenet-B">Hindi - Male (Wavenet)</option>
+  <h4>VOICE — Edge-TTS (Free, No Key)</h4>
+  <label>URDU VOICE</label>
+  <select id="voiceSelect">
+    <option value="ur-PK-AsadNeural">Asad (Male, Urdu Pakistan)</option>
+    <option value="ur-PK-UzmaNeural">Uzma (Female, Urdu Pakistan)</option>
+    <option value="hi-IN-MadhurNeural">Madhur (Male, Hindi — Urdu ke qareeb)</option>
+    <option value="hi-IN-SwaraNeural">Swara (Female, Hindi — Urdu ke qareeb)</option>
   </select>
 
-  <button id="saveSettings">SAVE ALL</button>
+  <button id="saveSettings">SAVE</button>
   <button id="testVoice" style="background:rgba(0,200,150,0.25);">TEST VOICE</button>
+
+  <div style="font-size:10px; color:#4a7ea4; margin-top:8px; line-height:1.5;">
+    Edge-TTS bilkul free hai. Koi API key nahi chahiye. Bas Chrome/Edge browser use karo.
+  </div>
 </div>
 
 <script type="importmap">
@@ -165,7 +169,7 @@ function animate(){
 animate();
 addEventListener('resize', ()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 
-// ============ JARVIS ============
+// ============ JARVIS LOGIC ============
 const chatEl = document.getElementById('chat');
 const inputEl = document.getElementById('userInput');
 const micBtn = document.getElementById('micBtn');
@@ -175,33 +179,39 @@ const statusText = document.getElementById('statusText');
 const settingsToggle = document.getElementById('settingsToggle');
 const settingsPanel = document.getElementById('settingsPanel');
 const apiKeyInput = document.getElementById('apiKey');
-const googleKeyInput = document.getElementById('googleKey');
-const googleVoiceSelect = document.getElementById('googleVoiceSelect');
+const voiceSelect = document.getElementById('voiceSelect');
 const saveBtn = document.getElementById('saveSettings');
 const testVoiceBtn = document.getElementById('testVoice');
+const toastEl = document.getElementById('toast');
+
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  setTimeout(() => toastEl.classList.remove('show'), 2000);
+}
 
 const settings = {
   apiKey: localStorage.getItem('jarvis_apiKey') || '',
-  googleKey: localStorage.getItem('jarvis_googleKey') || '',
-  googleVoice: localStorage.getItem('jarvis_googleVoice') || 'ur-IN-Wavenet-A'
+  voice: localStorage.getItem('jarvis_voice') || 'ur-PK-AsadNeural'
 };
 
 apiKeyInput.value = settings.apiKey;
-googleKeyInput.value = settings.googleKey;
-googleVoiceSelect.value = settings.googleVoice;
+voiceSelect.value = settings.voice;
 
 saveBtn.addEventListener('click', ()=>{
   settings.apiKey = apiKeyInput.value.trim();
-  settings.googleKey = googleKeyInput.value.trim();
-  settings.googleVoice = googleVoiceSelect.value;
+  settings.voice = voiceSelect.value;
   localStorage.setItem('jarvis_apiKey', settings.apiKey);
-  localStorage.setItem('jarvis_googleKey', settings.googleKey);
-  localStorage.setItem('jarvis_googleVoice', settings.googleVoice);
+  localStorage.setItem('jarvis_voice', settings.voice);
   settingsPanel.classList.remove('open');
+  showToast('Saved!');
   addMessage('jarvis', 'Saved. Ab test karo.');
 });
 
-testVoiceBtn.addEventListener('click', ()=> speak('Assalam o alaikum. Main Jarvis hoon. Aap kaise hain?'));
+testVoiceBtn.addEventListener('click', ()=>{
+  speak('Assalam o alaikum. Main Jarvis hoon. Aap kaise hain?');
+});
+
 settingsToggle.addEventListener('click', ()=> settingsPanel.classList.toggle('open'));
 
 const history = [{ role: 'system', content:
@@ -225,48 +235,35 @@ function setState(s) {
   else statusText.textContent = 'SYSTEM ONLINE';
 }
 
-// ============ GOOGLE CLOUD TTS ============
+// ============ EDGE-TTS (Free Microsoft Neural Voices) ============
 let currentAudio = null;
 
-async function speakGoogle(text) {
-  if (!settings.googleKey) throw new Error('Google Cloud TTS key missing');
+async function speakEdgeTTS(text, voice) {
+  // Microsoft Edge TTS public endpoint (free, no API key)
+  const url = 'https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=6A5AA1D4EAFF4E9FB37E23D68491D6F4';
 
-  const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${settings.googleKey}`;
+  const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='ur-PK'>
+    <voice name='${voice}'>
+      <prosody rate='0%' pitch='0Hz'>${text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</prosody>
+    </voice>
+  </speak>`;
 
   const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      input: { text: text },
-      voice: {
-        languageCode: settings.googleVoice.substring(0, 5), // e.g., 'ur-IN'
-        name: settings.googleVoice
-      },
-      audioConfig: {
-        audioEncoding: 'MP3',
-        speakingRate: 1.0,
-        pitch: 0.0
-      }
-    })
+    headers: {
+      'Content-Type': 'application/ssml+xml',
+      'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3',
+      'Origin': 'https://edge.microsoft.com',
+      'Referer': 'https://edge.microsoft.com/'
+    },
+    body: ssml
   });
 
   if (!res.ok) {
-    const errText = await res.text();
-    console.error('Google Cloud TTS error:', res.status, errText);
-    if (res.status === 403) throw new Error('Google Cloud TTS: API key invalid ya API enabled nahi hai');
-    if (res.status === 429) throw new Error('Google Cloud TTS: Rate limit. Thoda wait karo.');
-    throw new Error(`Google Cloud TTS: ${res.status}`);
+    throw new Error(`Edge-TTS ${res.status}`);
   }
 
-  const data = await res.json();
-  const audioContent = data.audioContent; // base64 encoded MP3
-  if (!audioContent) throw new Error('Google Cloud TTS: No audio returned');
-
-  // Convert base64 to MP3 blob and play
-  const binaryString = atob(audioContent);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
-  const blob = new Blob([bytes], { type: 'audio/mpeg' });
+  const blob = await res.blob();
   const audioUrl = URL.createObjectURL(blob);
 
   if (currentAudio) { currentAudio.pause(); URL.revokeObjectURL(currentAudio.src); }
@@ -279,11 +276,11 @@ async function speakGoogle(text) {
 async function speak(text) {
   setState('speaking');
   try {
-    await speakGoogle(text);
+    await speakEdgeTTS(text, settings.voice);
   } catch (e) {
-    console.error(e);
+    console.error('Edge-TTS error:', e);
     setState('idle');
-    addMessage('jarvis', `Voice error: ${e.message}`);
+    addMessage('jarvis', `Voice error: ${e.message}. Chrome use karo ya Edge browser.`);
   }
 }
 
@@ -306,7 +303,7 @@ async function askJarvis(userText) {
     if (!res.ok) {
       const t = await res.text();
       console.error('OpenRouter:', res.status, t);
-      throw new Error(res.status === 401 ? 'OpenRouter key invalid' : res.status === 429 ? 'Rate limit, thoda wait karo' : 'Error ' + res.status);
+      throw new Error(res.status === 401 ? 'OpenRouter key invalid' : res.status === 429 ? 'Rate limit' : 'Error ' + res.status);
     }
     const data = await res.json();
     const reply = data.choices?.[0]?.message?.content?.trim() || '(no reply)';
