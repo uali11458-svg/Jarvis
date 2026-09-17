@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>J.A.R.V.I.S</title>
+<title>J.A.R.V.I.S — ElevenLabs</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   html, body { width:100%; height:100%; overflow:hidden; background:#000; font-family: 'Segoe UI', system-ui, sans-serif; color:#7dd3fc; user-select:none; }
@@ -31,12 +31,14 @@
   @keyframes recPulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
   .icon-btn svg { width:20px; height:20px; }
   .settings-toggle { position:fixed; top:24px; right:24px; z-index:20; }
-  .settings-panel { position:fixed; top:80px; right:24px; width:340px; max-height:80vh; overflow-y:auto; background:rgba(0,20,45,0.95); border:1px solid rgba(0,180,255,0.4); border-radius:14px; padding:20px; z-index:20; display:none; }
+  .settings-panel { position:fixed; top:80px; right:24px; width:360px; max-height:80vh; overflow-y:auto; background:rgba(0,20,45,0.95); border:1px solid rgba(0,180,255,0.4); border-radius:14px; padding:20px; z-index:20; display:none; }
   .settings-panel.open { display:block; }
   .settings-panel h3 { font-size:12px; letter-spacing:3px; color:#7dd3fc; margin-bottom:14px; font-weight:400; }
+  .settings-panel h4 { font-size:11px; letter-spacing:2px; color:#4a90c4; margin-top:18px; margin-bottom:8px; font-weight:400; border-bottom:1px solid rgba(0,150,255,0.2); padding-bottom:6px; }
   .settings-panel label { display:block; font-size:11px; color:#5a9ac9; margin-bottom:6px; margin-top:12px; }
   .settings-panel input, .settings-panel select { width:100%; background:rgba(0,30,60,0.8); border:1px solid rgba(0,150,255,0.3); border-radius:8px; padding:9px 12px; color:#dbeeff; font-size:13px; outline:none; }
   .settings-panel button { width:100%; margin-top:16px; padding:10px; border-radius:8px; border:1px solid rgba(0,180,255,0.5); background:rgba(0,120,255,0.25); color:#bfe9ff; font-size:12px; letter-spacing:2px; cursor:pointer; }
+  .settings-panel .hint { font-size:10px; color:#4a7ea4; margin-top:8px; line-height:1.5; }
 </style>
 </head>
 <body>
@@ -62,6 +64,7 @@
 
 <div class="settings-panel" id="settingsPanel">
   <h3>CONFIGURATION</h3>
+  <h4>BRAIN (OpenRouter)</h4>
   <label>OPENROUTER API KEY</label>
   <input type="password" id="apiKey" placeholder="sk-or-v1-..."/>
   <label>MODEL</label>
@@ -70,14 +73,25 @@
     <option value="nvidia/nemotron-3-ultra-550b-a55b:free">NVIDIA Nemotron (Free)</option>
     <option value="poolside/laguna-m.1:free">Poolside Laguna (Free)</option>
   </select>
-  <label>VOICE LANGUAGE</label>
-  <select id="voiceLangSelect">
-    <option value="ur">Urdu (اردو)</option>
-    <option value="hi">Hindi (हिन्दी)</option>
-    <option value="en">English</option>
+
+  <h4>VOICE (ElevenLabs)</h4>
+  <label>ELEVENLABS API KEY</label>
+  <input type="password" id="elevenKey" placeholder="sk_..."/>
+  <label>VOICE ID (اردو کے لیے)</label>
+  <input type="text" id="elevenVoiceId" value="ur-PK-Female-01"/>
+  <label>MODEL</label>
+  <select id="elevenModel">
+    <option value="eleven_multilingual_v2">Multilingual v2 (High Quality)</option>
+    <option value="eleven_v3">Eleven v3 (Best Quality)</option>
+    <option value="eleven_flash_v2_5">Flash v2.5 (Fast)</option>
   </select>
-  <button id="saveSettings">SAVE</button>
+
+  <button id="saveSettings">SAVE ALL</button>
   <button id="testVoice" style="background:rgba(0,200,150,0.25);">TEST VOICE</button>
+  <div class="hint">
+    API Key: <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" style="color:#7dd3fc;">elevenlabs.io → API Keys</a><br>
+    Voice ID: <a href="https://elevenlabs.io/voice-library" target="_blank" style="color:#7dd3fc;">elevenlabs.io/voice-library</a>
+  </div>
 </div>
 
 <script type="importmap">
@@ -177,173 +191,13 @@ const settingsToggle = document.getElementById('settingsToggle');
 const settingsPanel = document.getElementById('settingsPanel');
 const apiKeyInput = document.getElementById('apiKey');
 const modelSelect = document.getElementById('modelSelect');
-const voiceLangSelect = document.getElementById('voiceLangSelect');
+const elevenKeyInput = document.getElementById('elevenKey');
+const elevenVoiceIdInput = document.getElementById('elevenVoiceId');
+const elevenModelSelect = document.getElementById('elevenModel');
 const saveBtn = document.getElementById('saveSettings');
 const testVoiceBtn = document.getElementById('testVoice');
 
 const settings = {
   apiKey: localStorage.getItem('jarvis_apiKey') || '',
   model: localStorage.getItem('jarvis_model') || 'openrouter/free',
-  voiceLang: localStorage.getItem('jarvis_voiceLang') || 'ur'
-};
-apiKeyInput.value = settings.apiKey;
-if (settings.model) modelSelect.value = settings.model;
-voiceLangSelect.value = settings.voiceLang;
-
-saveBtn.addEventListener('click', ()=>{
-  settings.apiKey = apiKeyInput.value.trim();
-  settings.model = modelSelect.value;
-  settings.voiceLang = voiceLangSelect.value;
-  localStorage.setItem('jarvis_apiKey', settings.apiKey);
-  localStorage.setItem('jarvis_model', settings.model);
-  localStorage.setItem('jarvis_voiceLang', settings.voiceLang);
-  settingsPanel.classList.remove('open');
-  addMessage('jarvis', 'Saved. Ready.');
-});
-
-testVoiceBtn.addEventListener('click', ()=> speak('Assalam o alaikum. Main Jarvis hoon. Aap kaise hain?'));
-
-settingsToggle.addEventListener('click', ()=> settingsPanel.classList.toggle('open'));
-
-const history = [{ role: 'system', content:
-  'You are JARVIS, an advanced AI assistant. Calm, intelligent, slightly witty. Keep responses short and natural. ' +
-  'IMPORTANT: If user speaks Roman Urdu, reply in Roman Urdu. If Urdu script, reply in Urdu script.'
-}];
-
-function addMessage(role, text){
-  const el = document.createElement('div');
-  el.className = `msg ${role}`;
-  el.textContent = text;
-  chatEl.appendChild(el);
-  chatEl.scrollTop = chatEl.scrollHeight;
-}
-
-function setState(s){
-  jarvisState = s;
-  statusDot.classList.remove('thinking','speaking');
-  if (s==='thinking'){ statusDot.classList.add('thinking'); statusText.textContent='PROCESSING'; }
-  else if (s==='speaking'){ statusDot.classList.add('speaking'); statusText.textContent='SPEAKING'; }
-  else statusText.textContent='SYSTEM ONLINE';
-}
-
-// ===== VOICE — Google Translate TTS via corsproxy.io =====
-let currentAudio = null;
-
-async function googleTTS(text, lang) {
-  // Chunk for 200 char limit
-  const chunks = [];
-  let rem = text.trim();
-  while (rem.length > 0) {
-    let c = rem.substring(0, 180);
-    if (rem.length > 180) {
-      const ls = c.lastIndexOf(' ');
-      if (ls > 100) c = c.substring(0, ls);
-    }
-    chunks.push(c.trim());
-    rem = rem.substring(c.length).trim();
-  }
-
-  for (const chunk of chunks) {
-    if (!chunk) continue;
-    const enc = encodeURIComponent(chunk);
-    const gUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${enc}&tl=${lang}&client=tw-ob`;
-    const pUrl = `https://corsproxy.io/?url=${encodeURIComponent(gUrl)}`;
-
-    const res = await fetch(pUrl);
-    if (!res.ok) throw new Error(`TTS ${res.status}`);
-    const blob = await res.blob();
-    if (blob.size < 100) throw new Error('Empty audio');
-
-    const url = URL.createObjectURL(blob);
-    await new Promise((resolve, reject) => {
-      if (currentAudio) currentAudio.pause();
-      currentAudio = new Audio(url);
-      currentAudio.onended = () => { URL.revokeObjectURL(url); resolve(); };
-      currentAudio.onerror = () => { URL.revokeObjectURL(url); reject(new Error('play fail')); };
-      currentAudio.play().catch(reject);
-    });
-  }
-}
-
-async function speak(text) {
-  setState('speaking');
-  try {
-    await googleTTS(text, settings.voiceLang);
-    setState('idle');
-    return;
-  } catch (e) {
-    console.warn('Google TTS failed:', e.message);
-  }
-  // Fallback: browser TTS
-  try {
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.rate = 1.0;
-    u.onend = () => setState('idle');
-    u.onerror = () => setState('idle');
-    speechSynthesis.speak(u);
-  } catch(e) {
-    setState('idle');
-  }
-}
-
-// ===== OPENROUTER =====
-async function askJarvis(userText){
-  if (!settings.apiKey){ addMessage('jarvis','Add OpenRouter key in settings.'); return; }
-  history.push({ role:'user', content:userText });
-  setState('thinking');
-  try {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method:'POST',
-      headers:{ 'Authorization': `Bearer ${settings.apiKey}`, 'Content-Type':'application/json', 'HTTP-Referer': location.origin, 'X-Title':'JARVIS' },
-      body: JSON.stringify({ model: settings.model, messages: history, temperature:0.7, max_tokens:500 })
-    });
-    if (!res.ok){
-      const t = await res.text();
-      console.error('OpenRouter:', res.status, t);
-      throw new Error(res.status===404?'Model not free. Pick another.':res.status===401?'Key invalid.':res.status===429?'Rate limit.':'Error '+res.status);
-    }
-    const data = await res.json();
-    const reply = data.choices?.[0]?.message?.content?.trim() || '(no reply)';
-    history.push({ role:'assistant', content:reply });
-    addMessage('jarvis', reply);
-    await speak(reply);
-  } catch (e){
-    console.error(e);
-    setState('idle');
-    addMessage('jarvis', e.message);
-  }
-}
-
-function send(){
-  const t = inputEl.value.trim(); if (!t) return;
-  addMessage('user', t); inputEl.value = '';
-  askJarvis(t);
-}
-sendBtn.addEventListener('click', send);
-inputEl.addEventListener('keydown', e=>{ if (e.key==='Enter') send(); });
-
-// ===== MIC =====
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let rec = null, recording = false;
-if (SR) {
-  rec = new SR();
-  rec.continuous = false;
-  rec.interimResults = false;
-  rec.lang = 'ur-PK';
-  rec.onstart = ()=>{ recording=true; micBtn.classList.add('recording'); statusText.textContent='LISTENING'; };
-  rec.onresult = (e)=>{ inputEl.value = e.results[0][0].transcript; send(); };
-  rec.onend = ()=>{ recording=false; micBtn.classList.remove('recording'); setState('idle'); };
-  rec.onerror = ()=>{ recording=false; micBtn.classList.remove('recording'); setState('idle'); };
-  micBtn.addEventListener('click', ()=>{
-    if (recording) rec.stop();
-    else { if (currentAudio) currentAudio.pause(); speechSynthesis.cancel(); try{rec.start();}catch(e){} }
-  });
-} else {
-  micBtn.addEventListener('click', ()=> addMessage('jarvis','Mic not supported. Use Chrome/Edge.'));
-}
-
-setTimeout(()=> addMessage('jarvis','Systems online. What can I do for you?'), 600);
-</script>
-</body>
-</html>
+  elevenKey: localStorage.getItem('jarvis_elevenKey') || '',
