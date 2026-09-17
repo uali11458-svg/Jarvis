@@ -218,10 +218,7 @@ settingsToggle.addEventListener('click', ()=> settingsPanel.classList.toggle('op
 
 const history = [{ role: 'system', content:
   'You are JARVIS, an AI assistant. Keep responses short (voice-first). ' +
-  'ALWAYS reply in native Urdu script (اردو), never in Roman Urdu / English letters, ' +
-  'even if the user types in Roman Urdu or English. This is critical because your text ' +
-  'is read aloud by an Urdu text-to-speech voice, which mispronounces Roman Urdu as English. ' +
-  'Keep sentences short and natural, like spoken Urdu.'
+  'If user speaks Roman Urdu, reply in Roman Urdu. If Urdu script, reply in Urdu script.'
 }];
 
 function addMessage(role, text) {
@@ -242,6 +239,17 @@ function setState(s) {
 
 // ============ BROWSER TTS (reliable, no network call) ============
 let voicesReadyPromise = null;
+let speechUnlocked = false;
+function unlockSpeech() {
+  if (speechUnlocked || !window.speechSynthesis) return;
+  speechUnlocked = true;
+  const u = new SpeechSynthesisUtterance('');
+  u.volume = 0;
+  speechSynthesis.speak(u);
+}
+document.addEventListener('click', unlockSpeech, { once: true });
+document.addEventListener('touchstart', unlockSpeech, { once: true });
+
 function getVoicesAsync() {
   if (voicesReadyPromise) return voicesReadyPromise;
   voicesReadyPromise = new Promise(resolve => {
@@ -266,13 +274,22 @@ async function speak(text) {
   setState('speaking');
   const vs = await getVoicesAsync();
   const ur = pickUrduVoice(vs);
+  if (vs.length === 0) { addMessage('jarvis', 'Is browser/device mein koi bhi awaz install nahi hai. Chrome ya Edge browser try karo.'); setState('idle'); return; }
   if (!ur) addMessage('jarvis', 'Is device mein Urdu/Hindi awaz install nahi hai, default awaz bol rahi hai.');
   const u = new SpeechSynthesisUtterance(text);
   if (ur) { u.voice = ur; u.lang = ur.lang; } else { u.lang = 'ur-PK'; }
   u.rate = 0.95;
+  let started = false;
+  u.onstart = () => { started = true; };
   u.onend = () => setState('idle');
   u.onerror = () => setState('idle');
   speechSynthesis.speak(u);
+  setTimeout(() => {
+    if (!started && jarvisState === 'speaking') {
+      addMessage('jarvis', 'Awaz start nahi ho pa rahi. Page ko ek dafa touch/click karke phir try karo.');
+      setState('idle');
+    }
+  }, 1500);
 }
 
 // ============ OPENROUTER BRAIN ============
