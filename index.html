@@ -87,15 +87,13 @@
 <script type="importmap">
 {
   "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "@twn39/edgetts-js": "https://cdn.jsdelivr.net/npm/@twn39/edgetts-js@1.1.0/+esm"
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
   }
 }
 </script>
 
 <script type="module">
 import * as THREE from 'three';
-import { Communicate } from '@twn39/edgetts-js';
 
 // ============ 3D GLOBE ============
 const canvas = document.getElementById('globe');
@@ -242,45 +240,39 @@ function setState(s) {
   else statusText.textContent = 'SYSTEM ONLINE';
 }
 
-// ============ EDGE-TTS (Browser JS Library) ============
-let currentAudio = null;
-
-async function speakEdgeTTS(text, voice) {
-  const communicate = new Communicate(text, {
-    voice: voice,
-    rate: '+0%',
-    volume: '+0%',
-    pitch: '+0Hz'
+// ============ BROWSER TTS (reliable, no network call) ============
+let voicesReadyPromise = null;
+function getVoicesAsync() {
+  if (voicesReadyPromise) return voicesReadyPromise;
+  voicesReadyPromise = new Promise(resolve => {
+    let vs = speechSynthesis.getVoices();
+    if (vs.length) { resolve(vs); return; }
+    const done = () => resolve(speechSynthesis.getVoices());
+    speechSynthesis.onvoiceschanged = done;
+    setTimeout(done, 1000);
   });
-
-  const audioChunks = [];
-  for await (const chunk of communicate.stream()) {
-    if (chunk.type === 'audio') {
-      audioChunks.push(chunk.data);
-    }
-  }
-
-  if (audioChunks.length === 0) throw new Error('No audio received');
-
-  const audioBlob = new Blob(audioChunks, { type: 'audio/mpeg' });
-  const audioUrl = URL.createObjectURL(audioBlob);
-
-  if (currentAudio) { currentAudio.pause(); URL.revokeObjectURL(currentAudio.src); }
-  currentAudio = new Audio(audioUrl);
-  currentAudio.onended = () => { URL.revokeObjectURL(audioUrl); setState('idle'); };
-  currentAudio.onerror = () => { URL.revokeObjectURL(audioUrl); setState('idle'); };
-  await currentAudio.play();
+  return voicesReadyPromise;
+}
+function pickUrduVoice(vs) {
+  return vs.find(v => v.lang.toLowerCase().startsWith('ur'))
+      || vs.find(v => v.lang.toLowerCase().startsWith('hi'))
+      || vs.find(v => v.lang.toLowerCase().startsWith('en-in'))
+      || null;
 }
 
 async function speak(text) {
+  speechSynthesis.cancel();
+  if (!window.speechSynthesis) { addMessage('jarvis', 'Is browser mein awaz support nahi hai.'); setState('idle'); return; }
   setState('speaking');
-  try {
-    await speakEdgeTTS(text, settings.voice);
-  } catch (e) {
-    console.error('Edge-TTS error:', e);
-    setState('idle');
-    addMessage('jarvis', `Voice error: ${e.message}`);
-  }
+  const vs = await getVoicesAsync();
+  const ur = pickUrduVoice(vs);
+  if (!ur) addMessage('jarvis', 'Is device mein Urdu/Hindi awaz install nahi hai, default awaz bol rahi hai.');
+  const u = new SpeechSynthesisUtterance(text);
+  if (ur) { u.voice = ur; u.lang = ur.lang; } else { u.lang = 'ur-PK'; }
+  u.rate = 0.95;
+  u.onend = () => setState('idle');
+  u.onerror = () => setState('idle');
+  speechSynthesis.speak(u);
 }
 
 // ============ OPENROUTER BRAIN ============
@@ -338,7 +330,7 @@ if (SR) {
   rec.onerror = () => { recording = false; micBtn.classList.remove('recording'); setState('idle'); };
   micBtn.addEventListener('click', () => {
     if (recording) rec.stop();
-    else { if (currentAudio) currentAudio.pause(); try { rec.start(); } catch(e) {} }
+    else { speechSynthesis.cancel(); try { rec.start(); } catch(e) {} }
   });
 } else {
   micBtn.addEventListener('click', () => addMessage('jarvis', 'Mic support nahi. Chrome ya Edge use karo.'));
