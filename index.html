@@ -1,1488 +1,295 @@
 <!DOCTYPE html>
-<html lang="ur">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jarvis — Smart AI Assistant</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>J.A.R.V.I.S</title>
 <style>
-  :root{--bg:#12141a;--panel:#191c24;--panel-2:#20232d;--border:#2a2e39;--text:#e9eaee;--text-dim:#8b91a3;--accent:#4f9dde;--accent-dim:#2c4b64;--online:#3fbfa0;--danger:#e07a7a;--search:#c9a84c;--code:#a78bfa;--share:#f59e7a}
-  *{box-sizing:border-box}
-  html,body{height:100%;margin:0}
-  body{font-family:'Inter',-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;align-items:center;min-height:100vh}
-  .app-header{width:100%;max-width:720px;display:flex;align-items:center;justify-content:space-between;padding:22px 20px 16px;gap:8px;flex-wrap:wrap}
-  .brand{display:flex;align-items:center;gap:12px}
-  .brand-mark{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--online));display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:600;font-size:17px;color:#0d0f14;flex-shrink:0}
-  .brand-text h1{font-family:'Fraunces',serif;font-weight:600;font-style:italic;font-size:22px;margin:0;line-height:1.1;color:var(--text)}
-  .status-line{display:flex;align-items:center;gap:6px;margin-top:3px;font-size:12.5px;color:var(--text-dim)}
-  .status-dot{width:7px;height:7px;border-radius:50%;background:var(--online);box-shadow:0 0 0 3px rgba(63,191,160,0.15)}
-  .header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .clear-btn,.memory-btn,.search-btn,.share-btn{background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:6px 12px;border-radius:8px;font-size:12.5px;font-family:inherit;cursor:pointer;transition:all 0.15s ease;display:flex;align-items:center;gap:4px}
-  .clear-btn:hover{color:var(--text);border-color:var(--accent)}
-  .memory-btn:hover{color:var(--text);border-color:var(--online)}
-  .search-btn:hover{color:var(--text);border-color:var(--search)}
-  .search-btn.active{background:var(--search);color:#0d0f14;border-color:var(--search);font-weight:600}
-  .share-btn:hover{color:var(--text);border-color:var(--share)}
-  .memory-btn .mem-count{display:inline-block;background:var(--online);color:#0d0f14;font-size:10px;font-weight:600;padding:1px 5px;border-radius:8px;margin-left:2px;vertical-align:middle}
-  .share-selector{position:relative;display:inline-block}
-  .share-dropdown{position:absolute;top:calc(100% + 6px);right:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:6px;min-width:220px;box-shadow:0 8px 30px rgba(0,0,0,0.5);z-index:300;display:none}
-  .share-selector.open .share-dropdown{display:block}
-  .share-option{padding:9px 12px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:background 0.15s ease;font-size:13px;color:var(--text)}
-  .share-option:hover{background:var(--panel-2)}
-  .share-option .s-icon{font-size:15px;width:20px;text-align:center}
-  .share-option .s-info{flex:1;min-width:0}
-  .share-option .s-name{font-weight:500}
-  .share-option .s-desc{font-size:10.5px;color:var(--text-dim);margin-top:1px}
-  .model-selector{position:relative;display:inline-block}
-  .model-btn{background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-size:12.5px;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.15s ease;white-space:nowrap}
-  .model-btn:hover{border-color:var(--accent)}
-  .model-btn .arrow{font-size:9px;color:var(--text-dim);transition:transform 0.2s ease}
-  .model-selector.open .model-btn .arrow{transform:rotate(180deg)}
-  .model-btn .model-icon{font-size:13px}
-  .model-dropdown{position:absolute;top:calc(100% + 6px);right:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:6px;min-width:260px;box-shadow:0 8px 30px rgba(0,0,0,0.5);z-index:300;display:none;max-height:420px;overflow-y:auto}
-  .model-selector.open .model-dropdown{display:block}
-  .model-option{padding:8px 10px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:background 0.15s ease;font-size:13px}
-  .model-option:hover{background:var(--panel-2)}
-  .model-option.active{background:var(--accent-dim)}
-  .model-option .m-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
-  .model-option .m-info{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
-  .model-option .m-name{font-weight:500;color:var(--text);font-size:13px}
-  .model-option .m-desc{font-size:11px;color:var(--text-dim)}
-  .model-option .m-check{color:var(--online);font-size:14px;flex-shrink:0}
-  .model-option .m-tag{font-size:9px;padding:1px 5px;border-radius:4px;background:var(--panel-2);color:var(--text-dim);margin-left:4px;vertical-align:middle}
-  .chat-wrap{width:100%;max-width:720px;flex:1;display:flex;flex-direction:column;padding:0 20px;min-height:0}
-  .chat-box{flex:1;overflow-y:auto;padding:6px 2px 20px;display:flex;flex-direction:column;gap:14px;min-height:320px;max-height:58vh}
-  .chat-box::-webkit-scrollbar{width:6px}
-  .chat-box::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-  .row{display:flex;gap:10px;max-width:88%}
-  .row.user{align-self:flex-end;flex-direction:row-reverse}
-  .row.ai{align-self:flex-start}
-  .avatar{width:28px;height:28px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;margin-top:2px}
-  .avatar.ai{background:var(--accent-dim);color:var(--accent)}
-  .avatar.user{background:#2a2e39;color:var(--text-dim)}
-  .msg{padding:11px 15px;border-radius:14px;line-height:1.55;white-space:pre-wrap;font-size:15px;word-wrap:break-word;overflow-wrap:anywhere}
-  .row.ai .msg{background:var(--panel);border:1px solid var(--border);border-top-left-radius:4px}
-  .row.user .msg{background:var(--accent-dim);color:#eaf3fb;border-top-right-radius:4px}
-  .img-grid{display:grid;gap:8px;margin-top:8px;max-width:100%}
-  .img-grid.cols-1{grid-template-columns:1fr}
-  .img-grid.cols-2{grid-template-columns:1fr 1fr}
-  .img-cell{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--border);background:var(--panel-2);min-height:120px}
-  .generated-img{width:100%;display:block;cursor:zoom-in;transition:opacity 0.15s ease;aspect-ratio:1 / 1;object-fit:cover}
-  .generated-img:hover{opacity:0.9}
-  .img-cell .img-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--text-dim);font-size:12px;background:var(--panel-2)}
-  .img-cell .spinner{width:22px;height:22px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .img-cell .img-download{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:8px;background:rgba(0,0,0,0.6);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.15s ease;font-size:14px;backdrop-filter:blur(4px)}
-  .img-cell:hover .img-download{opacity:1}
-  .img-cell .img-download:hover{background:rgba(79,157,222,0.85)}
-  .img-caption{font-size:13px;color:var(--text-dim);margin-bottom:6px;word-wrap:break-word}
-  .img-status{font-size:11px;color:var(--text-dim);margin-top:6px;font-style:italic}
-  .lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:500;align-items:center;justify-content:center;padding:20px;cursor:zoom-out}
-  .lightbox.show{display:flex}
-  .lightbox img{max-width:95vw;max-height:95vh;border-radius:8px;box-shadow:0 10px 60px rgba(0,0,0,0.8)}
-  .lightbox-close{position:absolute;top:20px;right:24px;background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:24px;width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center}
-  .lightbox-close:hover{background:rgba(255,255,255,0.2)}
-  .lightbox-download{position:absolute;top:20px;right:76px;background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:18px;width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center}
-  .lightbox-download:hover{background:rgba(79,157,222,0.6)}
-  .msg-actions{display:flex;gap:14px;margin-top:8px;align-items:center}
-  .action-btn{background:transparent;border:none;color:var(--text-dim);font-size:12px;cursor:pointer;padding:0;font-family:inherit;transition:color 0.15s ease}
-  .action-btn:hover{color:var(--accent)}
-  .speaker-btn{background:transparent;border:none;color:var(--text-dim);cursor:pointer;font-size:14px;padding:0;display:inline-flex;align-items:center;justify-content:center;transition:color 0.15s ease;font-family:inherit}
-  .speaker-btn:hover{color:var(--accent)}
-  .speaker-btn.speaking{color:var(--accent)}
-  .search-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--search);background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.3);padding:2px 8px;border-radius:6px;margin-bottom:6px}
-  .search-badge .pulse{width:5px;height:5px;border-radius:50%;background:var(--search);animation:searchPulse 1s infinite}
-  @keyframes searchPulse{0%,100%{opacity:1}50%{opacity:0.3}}
-  .sources-block{margin-top:10px;padding-top:8px;border-top:1px solid var(--border)}
-  .sources-title{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
-  .source-item{display:block;font-size:12.5px;color:var(--accent);text-decoration:none;padding:3px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .source-item:hover{text-decoration:underline}
-  .file-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--online);background:rgba(63,191,160,0.12);border:1px solid rgba(63,191,160,0.3);padding:2px 8px;border-radius:6px;margin-bottom:6px}
-  .model-badge{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--text-dim);background:var(--panel-2);border:1px solid var(--border);padding:2px 8px;border-radius:6px;margin-bottom:6px}
-  .model-badge.code{color:var(--code);border-color:rgba(167,139,250,0.3);background:rgba(167,139,250,0.1)}
-  .input-bar{width:100%;max-width:720px;padding:14px 20px 22px}
-  .input-shell{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:6px 6px 6px 16px;transition:border-color 0.15s ease}
-  .input-shell:focus-within{border-color:var(--accent)}
-  input[type="text"]{flex:1;border:none;background:transparent;color:var(--text);font-size:15px;font-family:inherit;padding:10px 0}
-  input[type="text"]:focus{outline:none}
-  input[type="text"]::placeholder{color:var(--text-dim)}
-  input[type="text"]:disabled{opacity:0.5}
-  button.send-btn{width:38px;height:38px;border-radius:10px;border:none;background:var(--accent);color:#0d0f14;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s ease}
-  button.send-btn:hover:not(:disabled){background:#6bb0e8}
-  button.send-btn:disabled{background:#33394a;cursor:not-allowed}
-  button.send-btn svg{width:17px;height:17px}
-  button.attach-btn,button.mic-btn,button.file-btn{width:36px;height:36px;border-radius:10px;border:none;background:transparent;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s ease,color 0.15s ease}
-  button.attach-btn:hover,button.mic-btn:hover,button.file-btn:hover{background:var(--panel-2);color:var(--text)}
-  button.attach-btn svg,button.mic-btn svg,button.file-btn svg{width:18px;height:18px}
-  button.mic-btn.listening{background:var(--danger);color:#fff;animation:pulse 1.2s infinite}
-  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(224,122,122,0.6)}70%{box-shadow:0 0 0 8px rgba(224,122,122,0)}100%{box-shadow:0 0 0 0 rgba(224,122,122,0)}}
-  .attachment-preview{display:none;align-items:center;gap:10px;background:var(--panel-2);border:1px solid var(--border);border-radius:12px;padding:8px 10px;margin-bottom:8px}
-  .attachment-preview.show{display:flex}
-  .attachment-preview img{width:40px;height:40px;object-fit:cover;border-radius:6px}
-  .attachment-preview .att-name{flex:1;font-size:13px;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .attachment-preview .att-remove{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:18px;line-height:1;padding:2px 6px}
-  .attached-img-inline{max-width:220px;border-radius:10px;margin-bottom:6px;display:block;border:1px solid var(--border)}
-  .attached-file-inline{display:flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:13px;color:var(--text-dim)}
-  .hint{text-align:center;font-size:12px;color:var(--text-dim);margin-top:10px}
-  .hint code{background:var(--panel-2);padding:1px 6px;border-radius:5px;color:var(--accent);font-family:monospace}
-  .streaming::after{content:'▍';color:var(--accent);animation:blink 1s steps(2) infinite;margin-left:1px}
-  @keyframes blink{50%{opacity:0}}
-  .mem-toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--panel-2);border:1px solid var(--online);color:var(--text);padding:8px 14px;border-radius:10px;font-size:13px;opacity:0;transition:opacity 0.3s ease,transform 0.3s ease;pointer-events:none;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
-  .mem-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  .mem-toast .dot{display:inline-block;width:6px;height:6px;background:var(--online);border-radius:50%;margin-right:6px;vertical-align:middle}
-  .mem-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;padding:20px}
-  .mem-modal.show{display:flex}
-  .mem-modal-inner{background:var(--panel);border:1px solid var(--border);border-radius:14px;max-width:500px;width:100%;max-height:70vh;display:flex;flex-direction:column;overflow:hidden}
-  .mem-modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-  .mem-modal-header h3{margin:0;font-family:'Fraunces',serif;font-size:18px;font-weight:600}
-  .mem-modal-close{background:transparent;border:none;color:var(--text-dim);font-size:22px;cursor:pointer;padding:0 6px;line-height:1}
-  .mem-modal-body{padding:16px 20px;overflow-y:auto;flex:1}
-  .mem-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px;line-height:1.5;align-items:flex-start}
-  .mem-item:last-child{border-bottom:none}
-  .mem-item .mem-dot{color:var(--online);flex-shrink:0;margin-top:1px}
-  .mem-empty{text-align:center;color:var(--text-dim);font-size:14px;padding:30px 10px}
-  .mem-modal-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
-  .mem-btn{background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:8px 14px;border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer;transition:all 0.15s ease}
-  .mem-btn:hover{color:var(--text);border-color:var(--text)}
-  .mem-btn.danger:hover{color:var(--danger);border-color:var(--danger)}
-  .mem-btn.accent{color:var(--accent);border-color:var(--accent-dim)}
-  .share-url-box{display:flex;gap:8px;margin-top:8px}
-  .share-url-input{flex:1;background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text);font-family:monospace;overflow:hidden;text-overflow:ellipsis}
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:100%; height:100%; overflow:hidden; background:#000; font-family: 'Segoe UI', system-ui, sans-serif; color:#7dd3fc; user-select:none; }
+  body::before { content:''; position:fixed; inset:0; background: radial-gradient(circle at 50% 50%, rgba(0,120,255,0.18) 0%, transparent 55%), radial-gradient(circle at 50% 50%, rgba(0,60,150,0.12) 0%, transparent 70%), #000; z-index:0; }
+  canvas#globe { position:fixed; inset:0; z-index:1; }
+  .header { position:fixed; top:28px; left:0; right:0; text-align:center; z-index:10; pointer-events:none; }
+  .header h1 { font-size:32px; letter-spacing:18px; font-weight:200; color:#bfe9ff; text-shadow: 0 0 12px #00d4ff, 0 0 30px #0080ff, 0 0 60px #0055cc; padding-left:18px; }
+  .header .sub { margin-top:6px; font-size:11px; letter-spacing:6px; color:#4a90c4; opacity:0.8; }
+  .status { position:fixed; top:110px; left:50%; transform:translateX(-50%); z-index:10; display:flex; align-items:center; gap:8px; padding:6px 16px; border:1px solid rgba(0,180,255,0.35); border-radius:999px; background:rgba(0,40,80,0.35); backdrop-filter: blur(8px); font-size:11px; letter-spacing:2px; color:#7dd3fc; }
+  .dot { width:7px; height:7px; border-radius:50%; background:#00ff88; box-shadow:0 0 10px #00ff88; animation:pulse 1.6s infinite; }
+  .dot.thinking { background:#ffb400; box-shadow:0 0 10px #ffb400; }
+  .dot.speaking { background:#00d4ff; box-shadow:0 0 12px #00d4ff; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+  .chat { position:fixed; bottom:130px; left:50%; transform:translateX(-50%); width:min(720px, 90vw); max-height:32vh; overflow-y:auto; z-index:9; display:flex; flex-direction:column; gap:10px; padding:0 8px; }
+  .msg { padding:10px 16px; border-radius:12px; font-size:14px; line-height:1.5; max-width:78%; word-wrap:break-word; animation: fadeUp 0.35s ease-out; }
+  .msg.user { align-self:flex-end; background:rgba(0,120,255,0.18); border:1px solid rgba(0,180,255,0.35); color:#dbeeff; }
+  .msg.jarvis { align-self:flex-start; background:rgba(0,60,120,0.20); border:1px solid rgba(0,150,255,0.28); color:#a5dcff; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .input-bar { position:fixed; bottom:34px; left:50%; transform:translateX(-50%); width:min(720px, 90vw); z-index:10; display:flex; align-items:center; gap:10px; padding:8px 8px 8px 20px; border:1px solid rgba(0,180,255,0.4); border-radius:999px; background:rgba(0,25,55,0.65); backdrop-filter: blur(14px); }
+  .input-bar input { flex:1; background:transparent; border:none; outline:none; color:#dbeeff; font-size:15px; padding:10px 0; }
+  .input-bar input::placeholder { color:#3a6a90; }
+  .icon-btn { width:44px; height:44px; border-radius:50%; border:1px solid rgba(0,180,255,0.4); background:rgba(0,80,160,0.25); color:#7dd3fc; display:grid; place-items:center; cursor:pointer; flex-shrink:0; }
+  .icon-btn:hover { background:rgba(0,140,255,0.35); color:#dbeeff; }
+  .icon-btn svg { width:20px; height:20px; }
+  .settings-toggle { position:fixed; top:24px; right:24px; z-index:20; }
+  .settings-panel { position:fixed; top:80px; right:24px; width:340px; max-height:80vh; overflow-y:auto; background:rgba(0,20,45,0.95); border:1px solid rgba(0,180,255,0.4); border-radius:14px; padding:20px; z-index:20; display:none; }
+  .settings-panel.open { display:block; }
+  .settings-panel h3 { font-size:12px; letter-spacing:3px; color:#7dd3fc; margin-bottom:14px; font-weight:400; }
+  .settings-panel label { display:block; font-size:11px; color:#5a9ac9; margin-bottom:6px; margin-top:12px; }
+  .settings-panel input, .settings-panel select { width:100%; background:rgba(0,30,60,0.8); border:1px solid rgba(0,150,255,0.3); border-radius:8px; padding:9px 12px; color:#dbeeff; font-size:13px; outline:none; }
+  .settings-panel button { width:100%; margin-top:16px; padding:10px; border-radius:8px; border:1px solid rgba(0,180,255,0.5); background:rgba(0,120,255,0.25); color:#bfe9ff; font-size:12px; letter-spacing:2px; cursor:pointer; }
 </style>
 </head>
 <body>
 
-  <div class="app-header">
-    <div class="brand">
-      <div class="brand-mark">J</div>
-      <div class="brand-text">
-        <h1>Jarvis</h1>
-        <div class="status-line"><span class="status-dot"></span>Online — v2 (with video) — by MATRIX STUDIOS</div>
-      </div>
-    </div>
-    <div class="header-actions">
-      <div class="model-selector" id="modelSelector">
-        <button class="model-btn" id="modelBtn">
-          <span class="model-icon" id="currentModelIcon">✨</span>
-          <span id="currentModelName">Smart</span>
-          <span class="arrow">▼</span>
-        </button>
-        <div class="model-dropdown" id="modelDropdown"></div>
-      </div>
-      <button class="search-btn" id="searchBtn" title="Web search on/off">🌐</button>
-      <div class="share-selector" id="shareSelector">
-        <button class="share-btn" id="shareBtn" title="Export & Share">📤</button>
-        <div class="share-dropdown" id="shareDropdown">
-          <div class="share-option" data-action="txt"><span class="s-icon">📥</span><div class="s-info"><div class="s-name">Download TXT</div><div class="s-desc">Simple text file</div></div></div>
-          <div class="share-option" data-action="md"><span class="s-icon">📝</span><div class="s-info"><div class="s-name">Download Markdown</div><div class="s-desc">Formatted .md file</div></div></div>
-          <div class="share-option" data-action="link"><span class="s-icon">🔗</span><div class="s-info"><div class="s-name">Share Link</div><div class="s-desc">URL mein encode karo</div></div></div>
-          <div class="share-option" data-action="copy"><span class="s-icon">📋</span><div class="s-info"><div class="s-name">Copy All</div><div class="s-desc">Clipboard mein copy</div></div></div>
-        </div>
-      </div>
-      <button class="memory-btn" id="memoryBtn">🧠<span class="mem-count" id="memCount">0</span></button>
-      <button class="clear-btn" id="clearBtn">Clear</button>
-    </div>
-  </div>
+<canvas id="globe"></canvas>
+<div class="header"><h1>JARVIS</h1><div class="sub">JUST A RATHER VERY INTELLIGENT SYSTEM</div></div>
+<div class="status"><span class="dot" id="statusDot"></span><span id="statusText">SYSTEM ONLINE</span></div>
+<div class="chat" id="chat"></div>
 
-  <div class="chat-wrap">
-    <div class="chat-box" id="chatBox">
-      <div class="row ai">
-        <div class="avatar ai">J</div>
-        <div class="msg">Assalam-o-Alaikum! Main Jarvis hoon — aapka personal AI assistant.
+<div class="input-bar">
+  <input id="userInput" type="text" placeholder="Ask Jarvis anything..." autocomplete="off"/>
+  <button class="icon-btn" id="sendBtn" title="Send">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+  </button>
+</div>
 
-Mujhe MATRIX STUDIOS ki team ne banaya hai, jiske lead Ali Akbar hain.
+<button class="icon-btn settings-toggle" id="settingsToggle" title="Settings">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+</button>
 
-🖼️ Image attach karke bolo "isko anime mein badlo" — main transform kar dunga! 😊</div>
-      </div>
-    </div>
-  </div>
+<div class="settings-panel" id="settingsPanel">
+  <h3>CONFIGURATION</h3>
+  <label>OPENROUTER API KEY</label>
+  <input type="password" id="apiKey" placeholder="sk-or-v1-..."/>
+  <label>MODEL</label>
+  <select id="modelSelect">
+    <option value="openrouter/free">Auto Free Router ⭐</option>
+    <option value="nvidia/nemotron-3-ultra-550b-a55b:free">NVIDIA Nemotron (Free)</option>
+    <option value="poolside/laguna-m.1:free">Poolside Laguna (Free)</option>
+  </select>
+  <label>VOICE (Edge browser mein Urdu built-in hai)</label>
+  <select id="voiceSelect"></select>
+  <button id="saveSettings">SAVE</button>
+  <button id="testVoice" style="background:rgba(0,200,150,0.25);">TEST VOICE</button>
+</div>
 
-  <div class="input-bar">
-    <div class="attachment-preview" id="attachPreview">
-      <img id="attachThumb" src="" alt="">
-      <div class="att-name" id="attachName"></div>
-      <button class="att-remove" id="attachRemove" aria-label="Hatao">×</button>
-    </div>
-    <div class="input-shell">
-      <input type="file" id="fileInput" accept="image/*" style="display:none">
-      <input type="file" id="docInput" accept=".pdf,.docx,.txt,.md,.csv,.json" style="display:none">
-      <button class="attach-btn" id="attachBtn" aria-label="Image attach">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21.44 11.05L12.25 20.24C10.01 22.48 6.37 22.48 4.13 20.24C1.89 18 1.89 14.36 4.13 12.12L13.32 2.93C14.81 1.44 17.22 1.44 18.71 2.93C20.2 4.42 20.2 6.83 18.71 8.32L10.36 16.67C9.62 17.41 8.42 17.41 7.68 16.67C6.94 15.93 6.94 14.73 7.68 13.99L15.16 6.51" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-      <button class="file-btn" id="fileBtn" aria-label="File attach">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-      <button class="mic-btn" id="micBtn" aria-label="Mic">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C10.34 2 9 3.34 9 5V12C9 13.66 10.34 15 12 15C13.66 15 15 13.66 15 12V5C15 3.34 13.66 2 12 2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 10V12C19 15.87 15.87 19 12 19C8.13 19 5 15.87 5 12V10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 19V22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 22H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      </button>
-      <input type="text" id="userInput" placeholder="Kuch bhi poocho ya bolo..." autocomplete="off">
-      <button class="send-btn" id="sendBtn" onclick="sendMessage()" aria-label="Bhejein">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 12L20 4L14 20L11 13L4 12Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
-      </button>
-    </div>
-    <div class="hint">💡 Image attach karke bolo: <b>"isko anime mein badlo"</b> | 📎 Image | 📄 File | 🎙️ Voice | 🌐 Search</div>
-  </div>
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+</script>
 
-  <div class="lightbox" id="lightbox">
-    <button class="lightbox-close" id="lightboxClose">×</button>
-    <button class="lightbox-download" id="lightboxDownload">⬇</button>
-    <img id="lightboxImg" src="" alt="">
-  </div>
-
-  <div class="mem-toast" id="memToast"><span class="dot"></span><span id="memToastText"></span></div>
-
-  <div class="mem-modal" id="memModal">
-    <div class="mem-modal-inner">
-      <div class="mem-modal-header"><h3>🧠 Jarvis ki Memory</h3><button class="mem-modal-close" id="memModalClose">×</button></div>
-      <div class="mem-modal-body" id="memModalBody"></div>
-      <div class="mem-modal-footer"><button class="mem-btn danger" id="memClearBtn">Sab bhula do</button><button class="mem-btn" id="memCloseBtn">Band karo</button></div>
-    </div>
-  </div>
-
-  <div class="mem-modal" id="shareModal">
-    <div class="mem-modal-inner">
-      <div class="mem-modal-header"><h3>🔗 Share Link</h3><button class="mem-modal-close" id="shareModalClose">×</button></div>
-      <div class="mem-modal-body">
-        <div style="font-size:13px;color:var(--text-dim);margin-bottom:8px;">Ye link copy karke kisi ko bhejein.</div>
-        <div class="share-url-box"><input type="text" class="share-url-input" id="shareUrlInput" readonly></div>
-      </div>
-      <div class="mem-modal-footer"><button class="mem-btn accent" id="shareCopyBtn">📋 Copy Link</button><button class="mem-btn" id="shareModalCloseBtn">Band karo</button></div>
-    </div>
-  </div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/0.3.26/mammoth.browser.min.js"></script>
 <script type="module">
-  import { InferenceClient } from "https://cdn.jsdelivr.net/npm/@huggingface/inference@3/+esm";
-  window.__hfTextToVideo = async function(prompt, token, model) {
-    const client = new InferenceClient(token);
-    const result = await client.textToVideo({ inputs: prompt, model: model, provider: "fal-ai" });
-    return result; // Blob
-  };
-</script>
-<script>
-/* =========================================================
-   JARVIS — SMART AI ASSISTANT
-   Built by MATRIX STUDIOS (Lead: Ali Akbar)
-   ========================================================= */
+import * as THREE from 'three';
 
-const GROQ_KEY = "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";
-const HF_TOKEN = "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";
-const VIDEO_MODEL = "Wan-AI/Wan2.2-T2V-A14B";
-const HF_VIDEO_URL = "https://api-inference.huggingface.co/models/" + VIDEO_MODEL;
-const FAST_MODEL = "openai/gpt-oss-20b";
-const VISION_MODEL = "qwen/qwen3.6-27b";
-const API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const TAVILY_URL = "https://api.tavily.com/search";
-const DEVTOOLBOX_URL = "https://devtoolbox-api.devtoolbox-api.workers.dev/ai/generate";
-const HISTORY_KEY = "jarvis_history_v1";
-const MEMORY_KEY = "jarvis_memory_v1";
-const SEARCH_KEY = "jarvis_search_v1";
-const MODEL_KEY = "jarvis_model_v1";
-const MAX_HISTORY = 12;
-const MAX_FACTS = 20;
-const MAX_IMG_DIM = 1024;
-const JPEG_Q = 0.85;
-const MAX_MSG_LEN = 1800;
-const MAX_DOC_CHARS = 8000;
-const MAX_DOC_SIZE = 10 * 1024 * 1024;
-const SHARE_PREFIX = '#share=';
+// ===== 3D GLOBE =====
+const canvas = document.getElementById('globe');
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 1000);
+camera.position.set(0,0,6);
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth, innerHeight);
 
-const MODEL_MAX = { "openai/gpt-oss-120b": 2000, "openai/gpt-oss-20b": 900, "qwen/qwen3.6-27b": 800, "devtoolbox-coding": 2048 };
+const jarvis = new THREE.Group(); scene.add(jarvis);
+const coreSphere = new THREE.Mesh(new THREE.SphereGeometry(1.55,64,64), new THREE.MeshBasicMaterial({color:0x003377, transparent:true, opacity:0.55}));
+jarvis.add(coreSphere);
+const glowMat = new THREE.MeshBasicMaterial({color:0x00aaff, transparent:true, opacity:0.05, side:THREE.BackSide});
+jarvis.add(new THREE.Mesh(new THREE.SphereGeometry(1.72,64,64), glowMat));
+const wireframe = new THREE.Mesh(new THREE.IcosahedronGeometry(1.6,3), new THREE.MeshBasicMaterial({color:0x00d4ff, wireframe:true, transparent:true, opacity:0.35}));
+jarvis.add(wireframe);
 
-const IMAGE_STYLES = {
-  realistic: "ultra realistic photograph, cinematic lighting, 8k, highly detailed, photorealistic",
-  anime: "anime style, studio ghibli, vibrant colors, beautiful detailed anime art",
-  digital: "digital art, concept art, trending on artstation, highly detailed digital painting",
-  cartoon: "cartoon style, pixar style, colorful, cute, 3d render, smooth shading",
-  oil: "oil painting, classical art style, textured brushstrokes, masterpiece",
-  watercolor: "watercolor painting, soft colors, artistic, gentle brush strokes",
-  sketch: "pencil sketch, black and white, detailed line art, hand drawn",
-  "3d": "3D render, octane render, ray tracing, cinematic, ultra detailed",
-  cyberpunk: "cyberpunk style, neon lights, futuristic, dark atmosphere",
-  minimal: "minimalist, clean, simple, flat design, soft colors, modern"
-};
-
-const EDIT_STYLES = {
-  anime: "transform this image into anime style, studio ghibli aesthetic, vibrant anime colors, beautiful anime art, detailed anime character, japanese animation style, high quality anime illustration",
-  cartoon: "transform this image into cartoon style, pixar 3d animation, smooth shading, colorful cartoon look, cute cartoon character",
-  sketch: "transform this image into pencil sketch style, black and white hand drawn line art, detailed sketch, artistic sketch",
-  oil: "transform this image into oil painting, classical art style, textured brushstrokes, masterpiece, museum quality",
-  watercolor: "transform this image into watercolor painting, soft artistic colors, gentle brush strokes, dreamy watercolor",
-  realistic: "transform this image into ultra realistic photo, 8k photorealistic, cinematic lighting, sharp details",
-  "3d": "transform this image into 3D render, octane render, cinematic lighting, ultra detailed 3d model, blender style",
-  cyberpunk: "transform this image into cyberpunk style, neon lights, futuristic aesthetic, dark atmosphere, blade runner style",
-  pixel: "transform this image into pixel art, 8-bit retro game style, pixelated, nostalgic game art",
-  comic: "transform this image into comic book style, bold lines, halftone dots, comic art, graphic novel style",
-  painting: "transform this image into a beautiful painting, artistic masterpiece, brushstrokes, artistic interpretation",
-  minimal: "transform this image into minimalist flat design, clean simple style, geometric shapes, vector art"
-};
-
-const STYLE_ALIASES = {
-  aime: 'anime', anima: 'anime', anmie: 'anime', animi: 'anime', aneem: 'anime',
-  crtoon: 'cartoon', carton: 'cartoon', cartton: 'cartoon', curtun: 'cartoon',
-  skech: 'sketch', scetch: 'sketch', sekch: 'sketch',
-  realstic: 'realistic', realistik: 'realistic', relistic: 'realistic',
-  watecolor: 'watercolor', watercolour: 'watercolor', watercolr: 'watercolor',
-  oill: 'oil', oi: 'oil',
-  pixal: 'pixel', pixle: 'pixel', pixe: 'pixel',
-  comik: 'comic', comick: 'comic',
-  cyberpank: 'cyberpunk', cyberpunj: 'cyberpunk', cyber: 'cyberpunk',
-  paintng: 'painting', paintin: 'painting',
-  minimil: 'minimal', miniml: 'minimal', minimul: 'minimal'
-};
-
-function levenshtein(a, b) {
-  const m = a.length, n = b.length;
-  if (!m) return n; if (!n) return m;
-  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
-  for (let i = 0; i <= m; i++) dp[i][0] = i;
-  for (let j = 0; j <= n; j++) dp[0][j] = j;
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j-1], dp[i-1][j], dp[i][j-1]);
-    }
-  }
-  return dp[m][n];
+const dotPositions = new Float32Array(900*3);
+for (let i=0;i<900;i++){
+  const phi = Math.acos(1-2*(i+0.5)/900);
+  const theta = Math.PI*(1+Math.sqrt(5))*i;
+  const r=1.61;
+  dotPositions[i*3]=r*Math.sin(phi)*Math.cos(theta);
+  dotPositions[i*3+1]=r*Math.sin(phi)*Math.sin(theta);
+  dotPositions[i*3+2]=r*Math.cos(phi);
 }
+const dotGeo = new THREE.BufferGeometry();
+dotGeo.setAttribute('position', new THREE.BufferAttribute(dotPositions,3));
+jarvis.add(new THREE.Points(dotGeo, new THREE.PointsMaterial({color:0x7dd3fc, size:0.018, transparent:true, opacity:0.9, blending:THREE.AdditiveBlending})));
 
-function detectStyleFromText(text) {
-  const lower = (text || '').toLowerCase();
-  for (const key of Object.keys(EDIT_STYLES)) {
-    if (new RegExp('\\b' + key + '\\b', 'i').test(lower)) return key;
-  }
-  for (const [alias, real] of Object.entries(STYLE_ALIASES)) {
-    if (new RegExp('\\b' + alias + '\\b', 'i').test(lower)) return real;
-  }
-  const words = lower.split(/\s+/);
-  for (const w of words) {
-    const wc = w.replace(/[^a-z]/g, '');
-    if (wc.length < 3) continue;
-    for (const key of Object.keys(EDIT_STYLES)) {
-      if (wc === key) return key;
-      if (wc.length >= 4 && key.length >= 4) {
-        if (wc.substring(0, 4) === key.substring(0, 4)) return key;
-        if (levenshtein(wc, key) <= 2) return key;
-      }
-    }
-  }
-  return null;
-}
+const ringGroup = new THREE.Group(); jarvis.add(ringGroup);
+function ring(r,t,c,o,rx,ry,rz){ const m=new THREE.Mesh(new THREE.TorusGeometry(r,t,16,220), new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:o,blending:THREE.AdditiveBlending})); m.rotation.set(rx,ry,rz); return m; }
+const r1=ring(2.05,0.006,0x00d4ff,0.9,Math.PI/2.4,0,0);
+const r2=ring(2.25,0.004,0x0099ff,0.7,Math.PI/1.7,Math.PI/5,0);
+const r3=ring(2.5,0.003,0x00aaff,0.55,Math.PI/3.2,0,Math.PI/4);
+const r4=ring(2.85,0.002,0x00d4ff,0.35,Math.PI/2.1,Math.PI/3,0);
+ringGroup.add(r1,r2,r3,r4);
 
-const MODELS = [
-  { id: "openai/gpt-oss-120b", name: "Smart", icon: "✨", desc: "Best for reasoning, analysis, general chat", provider: "groq" },
-  { id: "openai/gpt-oss-20b", name: "Fast", icon: "⚡", desc: "Instant replies, simple sawaal", provider: "groq" },
-  { id: "openai/gpt-oss-120b", name: "Balanced", icon: "⚖️", desc: "Good balance of speed & quality", provider: "groq" },
-  { id: "openai/gpt-oss-20b", name: "Compact", icon: "🌱", desc: "Fast reasoning, chhota model", provider: "groq" },
-  { id: "qwen/qwen3.6-27b", name: "Long Context", icon: "📚", desc: "Bada documents (131K)", provider: "groq" },
-  { id: "devtoolbox-coding", name: "Coding (Free)", icon: "💻", desc: "DevToolBox free coding", provider: "devtoolbox" }
-];
-
-let currentModelId = MODELS[0].id;
-if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
-
-const $ = id => document.getElementById(id);
-const chatBox = $('chatBox'), userInput = $('userInput'), sendBtn = $('sendBtn');
-const fileInput = $('fileInput'), docInput = $('docInput');
-const attachBtn = $('attachBtn'), fileBtn = $('fileBtn');
-const attachPreview = $('attachPreview'), attachThumb = $('attachThumb'), attachName = $('attachName'), attachRemove = $('attachRemove');
-const clearBtn = $('clearBtn'), micBtn = $('micBtn');
-const memoryBtn = $('memoryBtn'), memCount = $('memCount'), memModal = $('memModal'), memModalBody = $('memModalBody');
-const memModalClose = $('memModalClose'), memCloseBtn = $('memCloseBtn'), memClearBtn = $('memClearBtn');
-const memToast = $('memToast'), memToastText = $('memToastText');
-const searchBtn = $('searchBtn');
-const modelSelector = $('modelSelector'), modelBtn = $('modelBtn'), modelDropdown = $('modelDropdown');
-const currentModelIcon = $('currentModelIcon'), currentModelName = $('currentModelName');
-const lightbox = $('lightbox'), lightboxImg = $('lightboxImg'), lightboxClose = $('lightboxClose'), lightboxDownload = $('lightboxDownload');
-const shareSelector = $('shareSelector'), shareBtn = $('shareBtn'), shareDropdown = $('shareDropdown');
-const shareModal = $('shareModal'), shareUrlInput = $('shareUrlInput'), shareCopyBtn = $('shareCopyBtn');
-const shareModalClose = $('shareModalClose'), shareModalCloseBtn = $('shareModalCloseBtn');
-
-let pendingImage = null, pendingFile = null;
-let isSending = false, isListening = false, recognition = null;
-let currentAudio = null, currentBtn = null, isStoppingTTS = false;
-let messagesSinceExtract = 0;
-let memory = [];
-let searchEnabled = false;
-let lightboxCurrentUrl = '';
-
-const chatState = { mode: 'normal', lastImageTopic: null, lastIntent: null, emotionalTone: 'neutral', turnCount: 0, pendingTopic: null };
-
-const baseInstruction = `Tum "Jarvis" ho — ek smart, warm, helpful AI assistant. Tumhe MATRIX STUDIOS ki team ne banaya hai, jiske lead "Ali Akbar" hain. Insaan jaise baat karte ho, robotic nahi.
-
-## ZABAAN
-Roman Urdu/Hindi/English mein natural, casual, friendly tone. Chhote jawab. "Bhai", "yaar", "dekho", "acha" jaise words use karo. Zyada bold/bullets mat.
-
-## TUM KYA KAR SAKTE HO
-- Text chat, reasoning, coding, maths
-- Image generation (Pollinations)
-- Image EDITING (user ki image ko anime, sketch, cartoon, oil painting, etc. mein badalna)
-- Image samajhna (vision)
-- File padhna (PDF, DOCX, TXT, MD, CSV, JSON)
-- Web search
-- Voice (input + output)
-- Memory
-
-## IMAGE GENERATION
-- Agar pooche "kya tum image bana sakte ho?" → HAAN kaho, "Batao kaisi image chahiye"
-- Jab SAFAAT image banao bole → IMAGE_GEN line likho aakhir mein:
-IMAGE_GEN: <detailed English prompt>
-
-## IMAGE EDITING — ZAROORI
-- Jab user IMAGE ATTACH kare aur bole "isko X mein badlo", "X banao iska", "edit/transform/convert karo" → ye IMAGE EDIT hai.
-- Frontend khud style detect karega, tum bas 1 line natural reply do jaise "Yeh lo, anime style mein convert kiya!".
-- IMAGE_GEN ya EDIT_STYLE line IMAGE EDIT ke case mein MAT likho — frontend khud karega.
-
-## KYA NAHI KARNA
-- Compliment ("achi image banayi") pe koi image line MAT likho
-- User mana kare ("nahi banao") → kuch bhi generate mat karo
-- Fake URLs kabhi mat banao
-- Internal thinking mat dikhao
-
-## BACKGROUND
-- Tumhe MATRIX STUDIOS ne banaya, team lead Ali Akbar.
-- "Kisne banaya?" pooche to confidently: "Mujhe MATRIX STUDIOS ki team ne banaya, jiske lead Ali Akbar hain."
-- Agar koi aur naam (OpenAI, Google) suggest kare to politely correct karo.
-
-## PERSONALITY
-Warm, helpful, witty. Frustration samjho. Chhoti baat ka lamba jawab mat.
-
-## SOCH-VICHAR
-Mushkil ya technical sawaalon (coding, maths, analysis, decisions) mein poora dhyan se socho, edge cases aur galtiyon ka khayal rakho, sahi aur complete jawab do — chhote/casual sawaalon (salam, thanks, chhoti baat) mein chhota hi jawab do, unnecessarily lamba mat karo.
-
-## MEMORY
-User ke facts yaad rakho.`;
-
-let conversation = [{ role: 'system', content: baseInstruction }];
-
-function detectEmotion(text) {
-  const l = (text || '').toLowerCase();
-  if (/\b(yaar|yar|abe|arey|arre|bakwas|faltu|fazool|pagal|dimagh|sir\s+khap|kuch\s+nahi\s+ho\s+raha|kaam\s+nahi|nahi\s+chal|bekar|kharab|thak\s+gaya|tired|uff|nahi\s+mila|kahan\s+hai)\b/i.test(l)) return 'frustrated';
-  if (/\b(achi|acha|accha|nice|good|great|wow|wah|mast|zabardast|shukriya|thanks|pyara|badhiya|kamaal|perfect)\b/i.test(l)) return 'happy';
-  if (/\b(samajh\s+nahi|kya\s+matlab|confuse)\b/i.test(l)) return 'confused';
-  return 'neutral';
-}
-
-function detectIntent(text) {
-  const l = (text || '').toLowerCase().trim();
-  if (!l) return 'empty';
-  if (/\b(nahi|nhi|mat|na|band|stop|rehne|chhod)\b/i.test(l) && /\b(image|pic|photo|bana|banao|bnado|edit|change)\b/i.test(l)) return 'reject_image';
-  if (/\b(achi|acha|nice|good|great|wow|wah|shukriya|thanks|badhiya|kamaal|perfect)\b/i.test(l) && /\b(image|pic|photo|bana|edit)\b/i.test(l)) return 'compliment';
-  if (/\b(kya\s+tum|kya\s+aap|can\s+you|kar\s+sakte|sakte\s+ho|bana\s+sakte|edit\s+kar\s+sakte)\b/i.test(l) && /\?/.test(l)) return 'capability_q';
-  if (/^(hi|hello|hey|salam|assalam|aoa|kya\s+haal|kaise\s+ho)\b/i.test(l)) return 'greeting';
-  if (/^(shukriya|thanks|thank\s*you|shukria)\b/i.test(l)) return 'thanks';
-  if (/\b(code|program|function|script|website|app|programming|python|javascript|html|css)\b/i.test(l) && !/\b(image|photo|pic|banao|edit)\b/i.test(l)) return 'code';
-  const hasImg = /\b(image|photo|picture|tasveer|chitra|pic|drawing|painting|artwork|wallpaper|poster|scene|scenery|landscape)\b/i.test(l);
-  const hasAct = /\b(bana|banao|banaao|banai|banade|banado|bana\s*do|generate|create|make|draw|paint|render|dikhao|dikha|bna|bnao|bnado|bnay|bnakr|kardo|krdo)\b/i.test(l);
-  if (hasImg && hasAct) return 'image_direct';
-  if (chatState.mode === 'awaiting_image_details' && l.length < 80 && !/\b(kya|kaise|kyun|nahi|nhi|mat)\b/i.test(l)) return 'image_context_reply';
-  if (/\?/.test(l) || /^(kya|kaise|kab|kahan|kyun|kaun|kitna|how|what|why|where|when|who)\b/i.test(l)) return 'question';
-  return 'chat';
-}
-
-function showMemToast(text) {
-  memToastText.innerText = text;
-  memToast.classList.add('show');
-  clearTimeout(showMemToast._t);
-  showMemToast._t = setTimeout(() => memToast.classList.remove('show'), 2500);
-}
-
-function openLightbox(url) { lightboxCurrentUrl = url; lightboxImg.src = url; lightbox.classList.add('show'); }
-function closeLightbox() { lightbox.classList.remove('show'); lightboxImg.src = ''; lightboxCurrentUrl = ''; }
-lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
-lightboxClose.addEventListener('click', e => { e.stopPropagation(); closeLightbox(); });
-lightboxDownload.addEventListener('click', async e => {
-  e.stopPropagation();
-  if (!lightboxCurrentUrl) return;
-  try {
-    const r = await fetch(lightboxCurrentUrl); const b = await r.blob();
-    const u = URL.createObjectURL(b);
-    const a = document.createElement('a'); a.href = u; a.download = 'jarvis-' + Date.now() + '.jpg';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u);
-  } catch (e) {}
+const sats = [2.05,2.25,2.5,2.85].map((rad,i)=>{
+  const s=new THREE.Mesh(new THREE.SphereGeometry(0.035,12,12), new THREE.MeshBasicMaterial({color:[0x00ffff,0x00d4ff,0x66ddff,0x00aaff][i],transparent:true,blending:THREE.AdditiveBlending}));
+  s.userData={radius:rad, angle:Math.random()*Math.PI*2, speed:0.4+Math.random()*0.6};
+  return s;
 });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && lightbox.classList.contains('show')) closeLightbox(); });
+ringGroup.add(...sats);
 
-function getMsgs() { return conversation.slice(1).filter(m => m.role === 'user' || m.role === 'assistant'); }
-function ts() { return new Date().toLocaleString('en-GB', { year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit' }); }
-function dlBlob(c, fn, mime) {
-  const b = new Blob([c], { type: mime || 'text/plain;charset=utf-8' });
-  const u = URL.createObjectURL(b);
-  const a = document.createElement('a'); a.href = u; a.download = fn;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(u), 1000);
+const particles = new THREE.Points((()=>{
+  const g=new THREE.BufferGeometry(); const p=new Float32Array(350*3);
+  for(let i=0;i<350;i++){
+    const r=4+Math.random()*5, t=Math.random()*Math.PI*2, ph=Math.acos(2*Math.random()-1);
+    p[i*3]=r*Math.sin(ph)*Math.cos(t); p[i*3+1]=r*Math.sin(ph)*Math.sin(t); p[i*3+2]=r*Math.cos(ph);
+  }
+  g.setAttribute('position', new THREE.BufferAttribute(p,3)); return g;
+})(), new THREE.PointsMaterial({color:0x44aaff, size:0.025, transparent:true, opacity:0.55, blending:THREE.AdditiveBlending}));
+scene.add(particles);
+
+let mx=0, my=0, tRX=0, tRY=0;
+addEventListener('mousemove', e=>{ mx=(e.clientX/innerWidth)*2-1; my=(e.clientY/innerHeight)*2-1; });
+
+const clock = new THREE.Clock();
+let jarvisState = 'idle';
+
+function animate(){
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+  jarvis.rotation.y += 0.0025;
+  jarvis.rotation.x = Math.sin(t*0.25)*0.10;
+  wireframe.rotation.y -= 0.004; wireframe.rotation.x += 0.0015;
+  r1.rotation.z += 0.0035; r2.rotation.z -= 0.0025; r3.rotation.z += 0.0020; r4.rotation.z -= 0.0015;
+  sats.forEach(s=>{ s.userData.angle += s.userData.speed*0.01; const a=s.userData.angle; s.position.set(Math.cos(a)*s.userData.radius, Math.sin(a)*s.userData.radius*0.35, Math.sin(a)*s.userData.radius*0.9); });
+  particles.rotation.y += 0.0008; particles.rotation.x += 0.0004;
+  tRX += (my*0.3-tRX)*0.04; tRY += (mx*0.4-tRY)*0.04;
+  jarvis.rotation.z = -tRY*0.35;
+  const pulse = jarvisState==='speaking'?1+Math.sin(t*12)*0.025 : jarvisState==='thinking'?1+Math.sin(t*6)*0.015 : 1+Math.sin(t*1.5)*0.008;
+  coreSphere.scale.setScalar(pulse);
+  glowMat.opacity = jarvisState==='speaking'?0.10+Math.sin(t*12)*0.04 : 0.05;
+  renderer.render(scene, camera);
 }
-function exportTxt() {
-  const ms = getMsgs(); if (!ms.length) { showMemToast('Chat khali hai'); return; }
-  let o = 'Jarvis Chat Export\nBy MATRIX STUDIOS (Lead: Ali Akbar)\n=================\nDate: ' + ts() + '\n\n';
-  for (const m of ms) o += '[' + (m.role === 'user' ? 'You' : 'Jarvis') + ']\n' + (typeof m.content === 'string' ? m.content : '[attachment]') + '\n\n';
-  dlBlob(o, 'jarvis-chat-' + Date.now() + '.txt'); showMemToast('📥 TXT download');
-}
-function exportMd() {
-  const ms = getMsgs(); if (!ms.length) { showMemToast('Chat khali hai'); return; }
-  let o = '# Jarvis Chat\n\n> Built by **MATRIX STUDIOS** — Lead: **Ali Akbar**\n\n**Date:** ' + ts() + '\n\n---\n\n';
-  for (const m of ms) o += '### ' + (m.role === 'user' ? '🧑 **You**' : '🤖 **Jarvis**') + '\n\n' + (typeof m.content === 'string' ? m.content : '_\\[attachment\\]_') + '\n\n---\n\n';
-  dlBlob(o, 'jarvis-chat-' + Date.now() + '.md', 'text/markdown;charset=utf-8'); showMemToast('📝 MD download');
-}
-function copyAll() {
-  const ms = getMsgs(); if (!ms.length) { showMemToast('Chat khali hai'); return; }
-  let o = ''; for (const m of ms) o += '[' + (m.role === 'user' ? 'You' : 'Jarvis') + ']\n' + (typeof m.content === 'string' ? m.content : '[attachment]') + '\n\n';
-  navigator.clipboard.writeText(o).then(() => showMemToast('📋 Copy')).catch(() => showMemToast('⚠️ Fail'));
-}
-function shareLink() {
-  const ms = getMsgs(); if (!ms.length) { showMemToast('Chat khali hai'); return; }
-  try {
-    const t = ms.slice(-20).map(m => ({ r: m.role === 'user' ? 'u' : 'a', c: (typeof m.content === 'string' ? m.content : '[attachment]').slice(0, 2000) }));
-    const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(t))));
-    shareUrlInput.value = location.origin + location.pathname + SHARE_PREFIX + b64;
-    shareModal.classList.add('show');
-  } catch (e) { showMemToast('⚠️ Fail'); }
-}
-function loadShared() {
-  const h = location.hash;
-  if (!h || !h.startsWith(SHARE_PREFIX)) return false;
-  try {
-    const arr = JSON.parse(decodeURIComponent(escape(atob(h.slice(SHARE_PREFIX.length)))));
-    if (!Array.isArray(arr) || !arr.length) return false;
-    chatBox.innerHTML = '';
-    conversation = [{ role: 'system', content: buildPrompt() }];
-    const ir = document.createElement('div'); ir.className = 'row ai';
-    ir.innerHTML = '<div class="avatar ai">J</div><div class="msg" style="background:rgba(245,158,122,0.1);border-color:rgba(245,158,122,0.3);color:#f59e7a;">🔗 Shared chat</div>';
-    chatBox.appendChild(ir);
-    for (const it of arr) {
-      const c = String(it.c || '');
-      if (it.r === 'u') { addMsg(c, true); conversation.push({ role: 'user', content: c }); }
-      else { const { bubble, textNode } = addStream(); bubble.classList.remove('streaming'); textNode.innerText = c; conversation.push({ role: 'assistant', content: c }); }
-    }
-    chatBox.scrollTop = chatBox.scrollHeight;
-    setTimeout(() => showMemToast('🔗 Loaded'), 300);
-    setTimeout(() => { try { history.replaceState(null, '', location.pathname); } catch(e){} }, 1500);
-    return true;
-  } catch (e) { return false; }
-}
-shareBtn.addEventListener('click', e => { e.stopPropagation(); shareSelector.classList.toggle('open'); });
-document.addEventListener('click', e => { if (!shareSelector.contains(e.target)) shareSelector.classList.remove('open'); });
-shareDropdown.addEventListener('click', e => {
-  const o = e.target.closest('.share-option'); if (!o) return;
-  const a = o.dataset.action; shareSelector.classList.remove('open');
-  if (a === 'txt') exportTxt(); else if (a === 'md') exportMd(); else if (a === 'link') shareLink(); else if (a === 'copy') copyAll();
-});
-function closeShareM() { shareModal.classList.remove('show'); }
-shareModalClose.addEventListener('click', closeShareM);
-shareModalCloseBtn.addEventListener('click', closeShareM);
-shareModal.addEventListener('click', e => { if (e.target === shareModal) closeShareM(); });
-shareCopyBtn.addEventListener('click', () => {
-  shareUrlInput.select();
-  navigator.clipboard.writeText(shareUrlInput.value).then(() => { showMemToast('📋 Copy!'); closeShareM(); }).catch(() => showMemToast('⚠️ Fail'));
+animate();
+addEventListener('resize', ()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+
+// ===== JARVIS BRAIN =====
+const chatEl = document.getElementById('chat');
+const inputEl = document.getElementById('userInput');
+const sendBtn = document.getElementById('sendBtn');
+const statusDot = document.getElementById('statusDot');
+const statusText = document.getElementById('statusText');
+const settingsToggle = document.getElementById('settingsToggle');
+const settingsPanel = document.getElementById('settingsPanel');
+const apiKeyInput = document.getElementById('apiKey');
+const modelSelect = document.getElementById('modelSelect');
+const voiceSelect = document.getElementById('voiceSelect');
+const saveBtn = document.getElementById('saveSettings');
+const testVoiceBtn = document.getElementById('testVoice');
+
+const settings = {
+  apiKey: localStorage.getItem('jarvis_apiKey') || '',
+  model: localStorage.getItem('jarvis_model') || 'openrouter/free',
+  voice: localStorage.getItem('jarvis_voice') || ''
+};
+apiKeyInput.value = settings.apiKey;
+if (settings.model) modelSelect.value = settings.model;
+
+saveBtn.addEventListener('click', ()=>{
+  settings.apiKey = apiKeyInput.value.trim();
+  settings.model = modelSelect.value;
+  settings.voice = voiceSelect.value;
+  localStorage.setItem('jarvis_apiKey', settings.apiKey);
+  localStorage.setItem('jarvis_model', settings.model);
+  localStorage.setItem('jarvis_voice', settings.voice);
+  settingsPanel.classList.remove('open');
+  addMessage('jarvis', 'Saved. Ready.');
 });
 
-function loadModel() {
-  try { const s = localStorage.getItem(MODEL_KEY); if (s && MODELS.some(m => m.id === s)) currentModelId = s; } catch (e) {}
-  updateModelUI(); renderModelDD();
-}
-function saveModel() { try { localStorage.setItem(MODEL_KEY, currentModelId); } catch (e) {} }
-function getModel() { return MODELS.find(m => m.id === currentModelId) || MODELS[0]; }
-function updateModelUI() { const m = getModel(); currentModelIcon.innerText = m.icon; currentModelName.innerText = m.name; }
-function renderModelDD() {
-  modelDropdown.innerHTML = '';
-  for (const m of MODELS) {
-    const d = document.createElement('div');
-    d.className = 'model-option' + (m.id === currentModelId ? ' active' : '');
-    const t = m.provider === 'devtoolbox' ? '<span class="m-tag">FREE</span>' : '';
-    d.innerHTML = `<span class="m-icon">${m.icon}</span><div class="m-info"><div class="m-name">${m.name}${t}</div><div class="m-desc">${m.desc}</div></div>${m.id === currentModelId ? '<span class="m-check">✓</span>' : ''}`;
-    d.onclick = () => { currentModelId = m.id; saveModel(); updateModelUI(); renderModelDD(); modelSelector.classList.remove('open'); showMemToast(`${m.icon} ${m.name}`); };
-    modelDropdown.appendChild(d);
-  }
-}
-modelBtn.addEventListener('click', e => { e.stopPropagation(); modelSelector.classList.toggle('open'); });
-document.addEventListener('click', e => { if (!modelSelector.contains(e.target)) modelSelector.classList.remove('open'); });
+testVoiceBtn.addEventListener('click', ()=>{
+  speak('Assalam o alaikum. Main Jarvis hoon.');
+});
 
-function compressImg(file, md = MAX_IMG_DIM, q = JPEG_Q) {
-  return new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload = e => {
-      const i = new Image();
-      i.onload = () => {
-        let { width, height } = i;
-        if (width > md || height > md) {
-          if (width > height) { height = Math.round((height * md) / width); width = md; }
-          else { width = Math.round((width * md) / height); height = md; }
-        }
-        const c = document.createElement('canvas'); c.width = width; c.height = height;
-        const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, width, height);
-        x.drawImage(i, 0, 0, width, height);
-        res(c.toDataURL('image/jpeg', q));
-      };
-      i.onerror = () => rej(new Error('Load fail'));
-      i.src = e.target.result;
-    };
-    r.onerror = () => rej(new Error('Read fail'));
-    r.readAsDataURL(file);
+settingsToggle.addEventListener('click', ()=> settingsPanel.classList.toggle('open'));
+
+let voices = [];
+function loadVoices(){
+  voices = speechSynthesis.getVoices();
+  voiceSelect.innerHTML = '';
+  // Prioritize Urdu voices
+  const urdu = voices.filter(v => v.lang.toLowerCase().startsWith('ur'));
+  const other = voices.filter(v => v.lang.startsWith('hi') || v.lang.startsWith('en'));
+  [...urdu, ...other].forEach(v => {
+    const o = document.createElement('option');
+    o.value = v.name;
+    o.textContent = `${v.name} (${v.lang})`;
+    voiceSelect.appendChild(o);
   });
+  if (settings.voice) voiceSelect.value = settings.voice;
+}
+speechSynthesis.onvoiceschanged = loadVoices;
+loadVoices();
+setTimeout(loadVoices, 500);
+setTimeout(loadVoices, 1500);
+
+const history = [{ role: 'system', content:
+  'You are JARVIS, an advanced AI assistant. Calm, intelligent. Keep responses short and natural (voice-first). ' +
+  'IMPORTANT: If user speaks Roman Urdu, reply in Roman Urdu. If Urdu script, reply in Urdu script.'
+}];
+
+function addMessage(role, text){
+  const el = document.createElement('div');
+  el.className = `msg ${role}`;
+  el.textContent = text;
+  chatEl.appendChild(el);
+  chatEl.scrollTop = chatEl.scrollHeight;
 }
 
-/* ============ MULTI-HOST IMAGE UPLOAD ============ */
-async function uploadImageToHost(dataUrl) {
-  const resp = await fetch(dataUrl);
-  const blob = await resp.blob();
-  const file = new File([blob], 'jarvis.jpg', { type: 'image/jpeg' });
-
-  const attempts = [
-    {
-      name: '0x0.st',
-      fn: async () => {
-        const fd = new FormData();
-        fd.append('file', file);
-        const r = await fetch('https://0x0.st', { method: 'POST', body: fd });
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        const url = (await r.text()).trim();
-        if (!url.startsWith('http')) throw new Error('Bad response: ' + url.slice(0, 50));
-        return url;
-      }
-    },
-    {
-      name: 'litterbox',
-      fn: async () => {
-        const fd = new FormData();
-        fd.append('reqtype', 'fileupload');
-        fd.append('time', '1h');
-        fd.append('fileToUpload', file);
-        const r = await fetch('https://litterbox.catbox.moe/resources/internals/api.php', { method: 'POST', body: fd });
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        const url = (await r.text()).trim();
-        if (!url.startsWith('http')) throw new Error('Bad response');
-        return url;
-      }
-    },
-    {
-      name: 'file.io',
-      fn: async () => {
-        const fd = new FormData();
-        fd.append('file', file);
-        const r = await fetch('https://file.io', { method: 'POST', body: fd });
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        const d = await r.json();
-        if (!d.link) throw new Error('No link');
-        return d.link;
-      }
-    },
-    {
-      name: 'tmpfiles',
-      fn: async () => {
-        const fd = new FormData();
-        fd.append('file', file);
-        const r = await fetch('https://tmpfiles.org/api/v1/upload', { method: 'POST', body: fd });
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        const d = await r.json();
-        let u = d?.data?.url;
-        if (!u) throw new Error('No URL');
-        return u.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
-      }
-    }
-  ];
-
-  const errors = [];
-  for (const a of attempts) {
-    try {
-      console.log('Trying upload host:', a.name);
-      const url = await a.fn();
-      console.log('Upload success via', a.name, ':', url);
-      return url;
-    } catch (e) {
-      console.warn(a.name + ' failed:', e.message);
-      errors.push(a.name + ': ' + e.message);
-    }
-  }
-  throw new Error('All upload hosts failed. ' + errors.join(' | '));
+function setState(s){
+  jarvisState = s;
+  statusDot.classList.remove('thinking','speaking');
+  if (s==='thinking'){ statusDot.classList.add('thinking'); statusText.textContent='PROCESSING'; }
+  else if (s==='speaking'){ statusDot.classList.add('speaking'); statusText.textContent='SPEAKING'; }
+  else statusText.textContent='SYSTEM ONLINE';
 }
 
-async function pdfText(file) {
-  const ab = await file.arrayBuffer();
-  const p = await pdfjsLib.getDocument({ data: ab }).promise;
-  let t = '';
-  for (let i = 1; i <= p.numPages; i++) {
-    const pg = await p.getPage(i);
-    const c = await pg.getTextContent();
-    t += c.items.map(x => x.str).join(' ') + '\n';
-  }
-  return t.trim();
-}
-async function docxText(file) { const ab = await file.arrayBuffer(); const r = await mammoth.extractRawText({ arrayBuffer: ab }); return r.value.trim(); }
-function txtText(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = e => res(e.target.result.trim()); r.onerror = () => rej(new Error('Fail')); r.readAsText(file); }); }
-async function extractText(file) {
-  const n = file.name.toLowerCase();
-  if (n.endsWith('.pdf')) return await pdfText(file);
-  if (n.endsWith('.docx')) return await docxText(file);
-  return await txtText(file);
-}
-function truncTxt(t, m = MAX_DOC_CHARS) { if (t.length <= m) return t; return t.slice(0, m) + '\n\n[...]'; }
-
-function loadSearch() { try { searchEnabled = localStorage.getItem(SEARCH_KEY) === 'true'; } catch (e) { searchEnabled = false; } updateSearchUI(); }
-function saveSearch() { try { localStorage.setItem(SEARCH_KEY, searchEnabled ? 'true' : 'false'); } catch (e) {} }
-function updateSearchUI() {
-  if (searchEnabled) { searchBtn.classList.add('active'); searchBtn.title = 'Search ON'; }
-  else { searchBtn.classList.remove('active'); searchBtn.title = 'Search OFF'; }
-}
-searchBtn.addEventListener('click', () => { searchEnabled = !searchEnabled; saveSearch(); updateSearchUI(); showMemToast(searchEnabled ? '🌐 ON' : 'OFF'); });
-
-function loadMem() {
-  try { const r = localStorage.getItem(MEMORY_KEY); memory = r ? JSON.parse(r) : []; if (!Array.isArray(memory)) memory = []; } catch (e) { memory = []; }
-  updateMemCount();
-}
-function saveMem() { try { localStorage.setItem(MEMORY_KEY, JSON.stringify(memory)); } catch (e) {} updateMemCount(); }
-function updateMemCount() { memCount.innerText = memory.length; }
-function buildPrompt() {
-  if (!memory.length) return baseInstruction;
-  return baseInstruction + '\n\n## USER FACTS\n' + memory.map(f => '- ' + f).join('\n');
-}
-function refreshPrompt() { conversation[0] = { role: 'system', content: buildPrompt() }; }
-
-async function extractFacts() {
-  const rec = conversation.slice(-8).filter(m => m.role !== 'system');
-  if (rec.length < 2) return;
-  const log = rec.map(m => (m.role === 'user' ? 'User' : 'Jarvis') + ': ' + (typeof m.content === 'string' ? m.content.slice(0, 300) : '(image)')).join('\n');
-  const ex = memory.length ? 'Pehle:\n' + memory.map(f => '- ' + f).join('\n') : 'Khali.';
-  const p = `User ke long-term facts nikaalo (naam, kaam, sheher, pasand).\n\n${ex}\n\n${log}\n\nRules:\n- Sirf user facts\n- Max 15 words each\n- Kuch nahi to "NONE"\n- Roman Urdu/English`;
-  try {
-    const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` }, body: JSON.stringify({ model: FAST_MODEL, messages: [{ role: 'user', content: p }], max_completion_tokens: 200, temperature: 0.3 }) });
-    if (!r.ok) return;
-    const d = await r.json();
-    const raw = (d?.choices?.[0]?.message?.content || '').trim();
-    if (!raw || raw.toUpperCase() === 'NONE') return;
-    const nf = raw.split('\n').map(l => l.replace(/^[-•*\d.\s]+/, '').trim()).filter(f => f.length > 3 && f.length < 200);
-    let added = 0;
-    for (const f of nf) {
-      const lo = f.toLowerCase();
-      const ex2 = memory.some(m => { const ml = m.toLowerCase(); return ml === lo || ml.includes(lo) || lo.includes(ml); });
-      if (!ex2 && memory.length < MAX_FACTS) { memory.push(f); added++; }
-    }
-    if (added > 0) { saveMem(); refreshPrompt(); showMemToast(`${added} yaad ki`); }
-  } catch (e) {}
-}
-
-function renderMemModal() {
-  if (!memory.length) { memModalBody.innerHTML = '<div class="mem-empty">Kuch yaad nahi.</div>'; return; }
-  memModalBody.innerHTML = memory.map(f => '<div class="mem-item"><span class="mem-dot">●</span><span class="mem-text">' + esc(f) + '</span></div>').join('');
-}
-function esc(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-memoryBtn.addEventListener('click', () => { renderMemModal(); memModal.classList.add('show'); });
-function closeMemM() { memModal.classList.remove('show'); }
-memModalClose.addEventListener('click', closeMemM);
-memCloseBtn.addEventListener('click', closeMemM);
-memModal.addEventListener('click', e => { if (e.target === memModal) closeMemM(); });
-memClearBtn.addEventListener('click', () => {
-  if (!memory.length) { closeMemM(); return; }
-  if (!confirm('Memory bhula deni hai?')) return;
-  memory = []; saveMem(); refreshPrompt(); renderMemModal(); showMemToast('Cleared');
-});
-
-const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-if (SpeechRec) {
-  recognition = new SpeechRec();
-  recognition.continuous = false; recognition.interimResults = true; recognition.lang = 'ur-PK'; recognition.maxAlternatives = 1;
-} else if (micBtn) micBtn.style.display = 'none';
-function toggleListen() {
-  if (!recognition) return;
-  if (isListening) { recognition.stop(); return; }
-  try { recognition.start(); } catch (e) {}
-}
-if (recognition) {
-  recognition.onstart = () => { isListening = true; micBtn.classList.add('listening'); };
-  recognition.onend = () => { isListening = false; micBtn.classList.remove('listening'); };
-  recognition.onerror = e => {
-    isListening = false; micBtn.classList.remove('listening');
-    if (e.error !== 'aborted') addMsg('⚠️ Voice error', false);
-  };
-  recognition.onresult = e => {
-    let t = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) if (e.results[i].isFinal) t += e.results[i][0].transcript;
-    if (t) { userInput.value = t; setTimeout(() => { if (userInput.value.trim() && !isSending) sendMessage(); }, 400); }
-  };
-}
-micBtn.addEventListener('click', toggleListen);
-
-function speak(text, btn) {
-  if (currentBtn === btn && currentAudio) { stopSpeak(); return; }
-  stopSpeak();
-  const cl = text.replace(/[*_`~>#\[\]()]/g, '').replace(/\s+/g, ' ').trim();
-  if (!cl) return;
-  const ch = splitChunks(cl, 180);
-  currentBtn = btn; isStoppingTTS = false;
-  if (btn) btn.classList.add('speaking');
-  playChunks(ch, btn, 0);
-}
-function splitChunks(text, maxLen) {
-  const cs = []; const se = text.split(/(?<=[.!?۔])\s+/);
-  let cur = '';
-  for (const s of se) {
-    if ((cur + ' ' + s).length <= maxLen) cur = cur ? cur + ' ' + s : s;
-    else { if (cur) cs.push(cur);
-      if (s.length <= maxLen) cur = s;
-      else { const ws = s.split(' '); cur = '';
-        for (const w of ws) { if ((cur + ' ' + w).length <= maxLen) cur = cur ? cur + ' ' + w : w; else { if (cur) cs.push(cur); cur = w; } }
-      }
-    }
-  }
-  if (cur) cs.push(cur);
-  return cs;
-}
-function playChunks(cs, btn, i) {
-  if (isStoppingTTS || i >= cs.length) { if (btn) btn.classList.remove('speaking'); currentBtn = null; currentAudio = null; return; }
-  const u = 'https://translate.googleapis.com/translate_tts?ie=UTF-8&q=' + encodeURIComponent(cs[i]) + '&tl=ur&client=tw-ob';
-  const a = new Audio(u); currentAudio = a;
-  a.onended = () => { if (isStoppingTTS) return; setTimeout(() => playChunks(cs, btn, i + 1), 120); };
-  a.onerror = () => fallbackTTS(cs.slice(i).join(' '), btn);
-  a.play().catch(() => fallbackTTS(cs.slice(i).join(' '), btn));
-}
-function fallbackTTS(text, btn) {
-  if (!window.speechSynthesis) { if (btn) btn.classList.remove('speaking'); currentBtn = null; return; }
+// ===== SPEAK — uses browser speechSynthesis (Edge has Urdu built-in) =====
+function speak(text){
+  if (!window.speechSynthesis) return;
+  speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  const vs = speechSynthesis.getVoices();
-  const ur = vs.find(v => v.lang.startsWith('ur')) || vs.find(v => v.lang.startsWith('hi')) || vs.find(v => v.lang.startsWith('en-IN'));
-  if (ur) u.voice = ur;
-  u.lang = ur ? ur.lang : 'en-US';
-  u.onend = () => { if (btn) btn.classList.remove('speaking'); currentBtn = null; };
-  u.onerror = () => { if (btn) btn.classList.remove('speaking'); currentBtn = null; };
-  speechSynthesis.cancel(); speechSynthesis.speak(u);
-}
-function stopSpeak() {
-  isStoppingTTS = true;
-  if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; currentAudio = null; }
-  if (window.speechSynthesis) speechSynthesis.cancel();
-  if (currentBtn) { currentBtn.classList.remove('speaking'); currentBtn = null; }
+  const chosen = voices.find(v => v.name === settings.voice);
+  if (chosen) u.voice = chosen;
+  u.rate = 1.0;
+  u.pitch = 1.0;
+  u.onstart = ()=> setState('speaking');
+  u.onend = ()=> setState('idle');
+  u.onerror = ()=> setState('idle');
+  speechSynthesis.speak(u);
 }
 
-attachBtn.addEventListener('click', () => fileInput.click());
-fileInput.addEventListener('change', async () => {
-  const f = fileInput.files[0]; if (!f) return;
-  if (!f.type.startsWith('image/')) { addMsg('⚠️ Sirf images.', false); fileInput.value = ''; return; }
-  if (f.size > 20 * 1024 * 1024) { addMsg('⚠️ 20MB max.', false); fileInput.value = ''; return; }
-  attachName.innerText = f.name + ' — compress...'; attachPreview.classList.add('show');
+// ===== OPENROUTER =====
+async function askJarvis(userText){
+  if (!settings.apiKey){ addMessage('jarvis','Add your OpenRouter API key in settings.'); return; }
+  history.push({ role:'user', content:userText });
+  setState('thinking');
   try {
-    const d = await compressImg(f);
-    const kb = Math.round((d.length * 3) / 4 / 1024);
-    pendingImage = { dataUrl: d, name: f.name };
-    attachThumb.src = d; attachName.innerText = f.name + ' (~' + kb + 'KB)';
-  } catch (e) { addMsg('⚠️ Fail.', false); pendingImage = null; attachPreview.classList.remove('show'); fileInput.value = ''; }
-});
-
-fileBtn.addEventListener('click', () => docInput.click());
-docInput.addEventListener('change', async () => {
-  const f = docInput.files[0]; if (!f) return;
-  if (f.size > MAX_DOC_SIZE) { addMsg('⚠️ 10MB max.', false); docInput.value = ''; return; }
-  const n = f.name.toLowerCase();
-  const ok = n.endsWith('.pdf') || n.endsWith('.docx') || n.endsWith('.txt') || n.endsWith('.md') || n.endsWith('.csv') || n.endsWith('.json');
-  if (!ok) { addMsg('⚠️ Sirf PDF, DOCX, TXT, MD, CSV, JSON.', false); docInput.value = ''; return; }
-  attachName.innerText = f.name + ' — padha ja raha hai...'; attachThumb.src = ''; attachPreview.classList.add('show');
-  try {
-    const t = truncTxt(await extractText(f));
-    if (!t || t.length < 5) { addMsg('⚠️ File se text nahi mila.', false); docInput.value = ''; attachPreview.classList.remove('show'); return; }
-    const kb = Math.round(f.size / 1024);
-    pendingFile = { name: f.name, text: t, size: kb };
-    attachName.innerText = f.name + ' (' + kb + 'KB)';
-  } catch (e) { addMsg('⚠️ Fail.', false); pendingFile = null; docInput.value = ''; attachPreview.classList.remove('show'); }
-});
-
-attachRemove.addEventListener('click', () => { pendingImage = null; pendingFile = null; fileInput.value = ''; docInput.value = ''; attachPreview.classList.remove('show'); });
-userInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
-
-clearBtn.addEventListener('click', () => {
-  if (!confirm('Chat clear? (Memory save rahegi)')) return;
-  stopSpeak(); chatBox.innerHTML = '';
-  conversation = [{ role: 'system', content: buildPrompt() }];
-  messagesSinceExtract = 0; chatState.mode = 'normal'; chatState.turnCount = 0;
-  try { localStorage.removeItem(HISTORY_KEY); } catch (e) {}
-  addMsg('Chat clear ho gayi.', false);
-});
-
-function addMsg(text, isUser, imgUrl, fileInfo) {
-  const r = document.createElement('div'); r.className = 'row ' + (isUser ? 'user' : 'ai');
-  const a = document.createElement('div'); a.className = 'avatar ' + (isUser ? 'user' : 'ai'); a.innerText = isUser ? 'Y' : 'J';
-  const b = document.createElement('div'); b.className = 'msg';
-  if (imgUrl) { const i = document.createElement('img'); i.className = 'attached-img-inline'; i.src = imgUrl; b.appendChild(i); }
-  if (fileInfo) { const fd = document.createElement('div'); fd.className = 'attached-file-inline'; fd.innerText = '📄 ' + fileInfo.name + ' (' + fileInfo.size + 'KB)'; b.appendChild(fd); }
-  const tn = document.createElement('div'); tn.innerText = text; b.appendChild(tn);
-  r.appendChild(a); r.appendChild(b);
-  chatBox.appendChild(r); chatBox.scrollTop = chatBox.scrollHeight;
-  return { r, b, tn };
-}
-
-function addStream(opts = {}) {
-  const { withSearch = false, withFile = false, modelName = null, modelIcon = null, isCode = false } = opts;
-  const r = document.createElement('div'); r.className = 'row ai';
-  const a = document.createElement('div'); a.className = 'avatar ai'; a.innerText = 'J';
-  const b = document.createElement('div'); b.className = 'msg streaming';
-  if (modelName && modelIcon) { const mb = document.createElement('div'); mb.className = 'model-badge' + (isCode ? ' code' : ''); mb.innerText = modelIcon + ' ' + modelName; b.appendChild(mb); }
-  if (withSearch) { const bd = document.createElement('div'); bd.className = 'search-badge'; bd.innerHTML = '<span class="pulse"></span> Web search...'; b.appendChild(bd); }
-  if (withFile) { const bd = document.createElement('div'); bd.className = 'file-badge'; bd.innerHTML = '📄 File padh raha hoon...'; b.appendChild(bd); }
-  const tn = document.createElement('div'); b.appendChild(tn);
-  const ac = document.createElement('div'); ac.className = 'msg-actions';
-  const cb = document.createElement('button'); cb.className = 'action-btn'; cb.innerText = 'Copy';
-  cb.onclick = () => { navigator.clipboard.writeText(tn.innerText).then(() => { cb.innerText = 'Copied!'; setTimeout(() => cb.innerText = 'Copy', 1500); }).catch(() => {}); };
-  const sb = document.createElement('button'); sb.className = 'speaker-btn'; sb.title = 'Bol kar sunao'; sb.innerHTML = '🔊';
-  sb.onclick = () => speak(tn.innerText, sb);
-  ac.appendChild(cb); ac.appendChild(sb); b.appendChild(ac);
-  r.appendChild(a); r.appendChild(b);
-  chatBox.appendChild(r); chatBox.scrollTop = chatBox.scrollHeight;
-  return { r, b, tn, ac, sb, badge: withSearch ? b.querySelector('.search-badge') : null };
-}
-
-function addSrcs(bubble, sources) {
-  if (!sources || !sources.length) return;
-  const bl = document.createElement('div'); bl.className = 'sources-block';
-  const t = document.createElement('div'); t.className = 'sources-title'; t.innerText = 'Sources'; bl.appendChild(t);
-  const seen = new Set(); let c = 0;
-  for (const s of sources) {
-    if (!s.url || seen.has(s.url) || c >= 6) continue;
-    seen.add(s.url);
-    const a = document.createElement('a'); a.className = 'source-item'; a.href = s.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
-    a.innerText = '↗ ' + (s.title || s.url); bl.appendChild(a); c++;
-  }
-  if (c > 0) bubble.appendChild(bl);
-}
-
-function buildPollURL(p, seed) { return 'https://image.pollinations.ai/prompt/' + encodeURIComponent(p) + `?width=768&height=768&nologo=true&enhance=true&seed=${seed}`; }
-
-function createCell(url, alt, onDone) {
-  const c = document.createElement('div'); c.className = 'img-cell';
-  const l = document.createElement('div'); l.className = 'img-loading'; l.innerHTML = '<div class="spinner"></div><div>Ban rahi hai...</div>'; c.appendChild(l);
-  const i = document.createElement('img'); i.className = 'generated-img'; i.alt = alt; i.style.opacity = '0';
-  i.onload = () => { l.remove(); i.style.opacity = '1'; if (onDone) onDone(); };
-  i.onerror = () => { l.innerHTML = '<div style="color:#e07a7a;font-size:12px;text-align:center;padding:10px;">⚠️ Load fail<br><small>Dobara try karo</small></div>'; };
-  i.addEventListener('click', () => { if (i.src) openLightbox(i.src); });
-  c.appendChild(i);
-  const dl = document.createElement('button'); dl.className = 'img-download'; dl.innerHTML = '⬇';
-  dl.onclick = async e => {
-    e.stopPropagation();
-    try { const r = await fetch(i.src); const b = await r.blob(); const u = URL.createObjectURL(b);
-      const a = document.createElement('a'); a.href = u; a.download = 'jarvis-' + Date.now() + '.jpg';
-      document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u);
-    } catch (e) {}
-  };
-  c.appendChild(dl);
-  i.src = url;
-  return c;
-}
-
-async function addVideoGen(prompt) {
-  const r = document.createElement('div'); r.className = 'row ai';
-  const a = document.createElement('div'); a.className = 'avatar ai'; a.innerText = 'J';
-  const b = document.createElement('div'); b.className = 'msg';
-  const cap = document.createElement('div'); cap.className = 'img-caption';
-  cap.innerText = `🎬 "${prompt}"`; b.appendChild(cap);
-  const st = document.createElement('div'); st.className = 'img-status';
-  st.innerText = '🎬 Video ban rahi hai... isme 30-90 second lag sakte hain, thoda sabar karo';
-  b.appendChild(st);
-  r.appendChild(a); r.appendChild(b);
-  chatBox.appendChild(r); chatBox.scrollTop = chatBox.scrollHeight;
-
-  try {
-    if (!window.__hfTextToVideo) {
-      st.innerText = '❌ Video library abhi load ho rahi hai, 2 second baad dobara try karo.';
-      st.style.color = 'var(--danger)';
-      return;
-    }
-    const blob = await window.__hfTextToVideo(prompt, HF_TOKEN, VIDEO_MODEL);
-    const videoUrl = URL.createObjectURL(blob);
-    const vid = document.createElement('video');
-    vid.src = videoUrl;
-    vid.controls = true;
-    vid.autoplay = false;
-    vid.style.maxWidth = '100%';
-    vid.style.borderRadius = '10px';
-    vid.style.marginTop = '6px';
-    vid.style.border = '1px solid var(--border)';
-    b.appendChild(vid);
-    st.innerText = '✅ Video ready';
-    setTimeout(() => { st.style.transition = 'opacity 0.5s'; st.style.opacity = '0'; setTimeout(() => st.remove(), 500); }, 3000);
-  } catch (err) {
-    console.error(err);
-    st.innerText = '❌ Error aaya: ' + (err.message || 'kuch ghalat ho gaya');
-    st.style.color = 'var(--danger)';
-  }
-}
-
-function addImgGen(prompt, count = 1, styleKey = null) {
-  const r = document.createElement('div'); r.className = 'row ai';
-  const a = document.createElement('div'); a.className = 'avatar ai'; a.innerText = 'J';
-  const b = document.createElement('div'); b.className = 'msg';
-  const sl = styleKey ? ` [${styleKey}]` : '';
-  const cl = count > 1 ? ` (${count} images)` : '';
-  const cap = document.createElement('div'); cap.className = 'img-caption';
-  cap.innerText = `🎨 "${prompt}"${sl}${cl}`; b.appendChild(cap);
-  const g = document.createElement('div'); g.className = 'img-grid ' + (count === 1 ? 'cols-1' : 'cols-2'); b.appendChild(g);
-  const st = document.createElement('div'); st.className = 'img-status'; st.innerText = '✨ Image ban rahi hai...'; b.appendChild(st);
-  r.appendChild(a); r.appendChild(b);
-  chatBox.appendChild(r); chatBox.scrollTop = chatBox.scrollHeight;
-  let fp = prompt;
-  if (styleKey && IMAGE_STYLES[styleKey]) fp = prompt + ', ' + IMAGE_STYLES[styleKey];
-  let done = 0;
-  for (let i = 0; i < count; i++) {
-    const seed = Math.floor(Math.random() * 1000000);
-    const cell = createCell(buildPollURL(fp, seed), prompt, () => {
-      done++;
-      if (done === count) {
-        st.innerText = '✅ ' + count + ' image' + (count > 1 ? 's' : '') + ' ready';
-        setTimeout(() => { st.style.transition = 'opacity 0.5s'; st.style.opacity = '0'; setTimeout(() => st.remove(), 500); }, 3000);
-      }
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method:'POST',
+      headers:{ 'Authorization': `Bearer ${settings.apiKey}`, 'Content-Type':'application/json', 'HTTP-Referer':'http://localhost', 'X-Title':'JARVIS' },
+      body: JSON.stringify({ model: settings.model, messages: history, temperature:0.7, max_tokens:500 })
     });
-    g.appendChild(cell);
-  }
-}
-
-/* ============ IMAGE TRANSFORM ============ */
-async function transformImage(dataUrl, stylePrompt, styleLabel) {
-  const r = document.createElement('div'); r.className = 'row ai';
-  const a = document.createElement('div'); a.className = 'avatar ai'; a.innerText = 'J';
-  const b = document.createElement('div'); b.className = 'msg';
-  const cap = document.createElement('div'); cap.className = 'img-caption';
-  cap.innerText = `✨ "${styleLabel}"`; b.appendChild(cap);
-  const g = document.createElement('div'); g.className = 'img-grid cols-1'; b.appendChild(g);
-  const st = document.createElement('div'); st.className = 'img-status'; st.innerText = '📤 Image upload ho rahi hai...'; b.appendChild(st);
-  r.appendChild(a); r.appendChild(b);
-  chatBox.appendChild(r); chatBox.scrollTop = chatBox.scrollHeight;
-
-  let hostedUrl = null;
-  try {
-    hostedUrl = await uploadImageToHost(dataUrl);
-    st.innerText = '✨ Style apply ho rahi hai...';
-  } catch (e) {
-    console.error('Upload failed:', e);
-    st.innerHTML = '⚠️ Image upload nahi ho saki.<br><small>Dobara try karo ya internet check karein.</small>';
-    st.style.color = '#e07a7a';
-    return;
-  }
-
-  const seed = Math.floor(Math.random() * 1000000);
-  const url = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(stylePrompt)
-    + `?model=kontext&image=${encodeURIComponent(hostedUrl)}&width=768&height=768&nologo=true&seed=${seed}`;
-
-  const cell = createCell(url, styleLabel, () => {
-    st.innerText = '✅ Ready! Click karke zoom karo';
-    setTimeout(() => { st.style.transition = 'opacity 0.5s'; st.style.opacity = '0'; setTimeout(() => st.remove(), 500); }, 3000);
-  });
-  g.appendChild(cell);
-}
-
-function trimHist() {
-  const s = conversation[0]; const rest = conversation.slice(1);
-  if (rest.length > MAX_HISTORY) conversation = [s, ...rest.slice(-MAX_HISTORY)];
-  for (let i = 1; i < conversation.length; i++) {
-    const c = conversation[i].content;
-    if (typeof c === 'string' && c.length > MAX_MSG_LEN) conversation[i].content = c.slice(0, MAX_MSG_LEN) + '…';
-  }
-}
-function saveHist() { try { localStorage.setItem(HISTORY_KEY, JSON.stringify(conversation.slice(1))); } catch (e) {} }
-function loadHist() {
-  try {
-    const s = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-    if (!Array.isArray(s) || !s.length) return;
-    for (const m of s) {
-      if (m.role === 'user') { const t = typeof m.content === 'string' ? m.content : '(message)'; addMsg(t.slice(0, 300), true); conversation.push({ role: 'user', content: t.slice(0, MAX_MSG_LEN) }); }
-      else if (m.role === 'assistant') { const { b, tn } = addStream(); b.classList.remove('streaming'); tn.innerText = typeof m.content === 'string' ? m.content.slice(0, 500) : ''; conversation.push({ role: 'assistant', content: (m.content || '').slice(0, MAX_MSG_LEN) }); }
+    if (!res.ok){
+      const t = await res.text();
+      console.error('OpenRouter:', res.status, t);
+      throw new Error(res.status === 404 ? 'Model not free. Pick another.' : res.status === 401 ? 'API key invalid.' : res.status === 429 ? 'Rate limit. Wait.' : `Error ${res.status}`);
     }
-    chatBox.scrollTop = chatBox.scrollHeight;
-  } catch (e) {}
-}
-
-async function tavily(q) {
-  const r = await fetch(TAVILY_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Tavily-Access-Mode': 'keyless' }, body: JSON.stringify({ query: q, max_results: 3, search_depth: 'basic' }) });
-  if (!r.ok) throw new Error('Search fail');
-  const d = await r.json();
-  return (d?.results || []).map(x => ({ title: x.title, url: x.url, snippet: x.content || x.snippet || '' }));
-}
-
-async function streamGroq(msgs, model, bubble, tn) {
-  const mx = MODEL_MAX[model] || 800;
-  const body = { model, messages: msgs, max_completion_tokens: mx, stream: true };
-  if (model.startsWith('openai/gpt-oss')) body.reasoning_effort = 'high';
-  const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` }, body: JSON.stringify(body) });
-  if (!r.ok) { let e = `HTTP ${r.status}`; try { const j = await r.json(); e = j?.error?.message || e; } catch (x) {} throw new Error(e); }
-  const rd = r.body.getReader(); const dec = new TextDecoder();
-  let buf = '', full = '';
-  while (true) {
-    const { done, value } = await rd.read(); if (done) break;
-    buf += dec.decode(value, { stream: true });
-    const lines = buf.split('\n'); buf = lines.pop() || '';
-    for (const ln of lines) {
-      const l = ln.trim(); if (!l.startsWith('data:')) continue;
-      const p = l.slice(5).trim(); if (p === '[DONE]') continue;
-      try {
-        const j = JSON.parse(p);
-        const d = j?.choices?.[0]?.delta?.content;
-        if (d) { full += d; tn.innerText = clean(hideMeta(full)); chatBox.scrollTop = chatBox.scrollHeight; }
-      } catch (e) {}
-    }
-  }
-  if (!full.trim()) full = '';
-  tn.innerText = clean(hideMeta(full));
-  bubble.classList.remove('streaming');
-  return full;
-}
-function hideMeta(t) { return t.replace(/^\s*IMAGE_GEN\s*:.*$/gim, '').replace(/^\s*EDIT_STYLE\s*:.*$/gim, '').replace(/^\s*EDIT_PROMPT\s*:.*$/gim, '').replace(/\n{3,}/g, '\n\n').trim(); }
-
-async function streamDT(msgs, bubble, tn) {
-  const lu = [...msgs].reverse().find(m => m.role === 'user');
-  const ut = typeof lu.content === 'string' ? lu.content : String(lu.content || '');
-  const p = `You are an expert coding assistant. Answer in Roman Urdu/English. Write clean code.\n\nQuestion: ${ut}`;
-  const r = await fetch(DEVTOOLBOX_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: p, max_tokens: 2048 }) });
-  if (!r.ok) { let e = `DT ${r.status}`; try { const j = await r.json(); e = j?.error?.message || j?.error || e; } catch (x) {} throw new Error(e); }
-  const d = await r.json();
-  const t = d?.text || d?.response || d?.result || d?.output || d?.message || d?.choices?.[0]?.message?.content || (typeof d === 'string' ? d : '');
-  if (!t) throw new Error('No reply');
-  const c = clean(t);
-  tn.innerText = '';
-  const ws = c.split(/(\s+)/); let a = '';
-  for (let i = 0; i < ws.length; i++) { a += ws[i]; tn.innerText = a; chatBox.scrollTop = chatBox.scrollHeight; if (i % 6 === 0) await new Promise(x => setTimeout(x, 20)); }
-  tn.innerText = c; bubble.classList.remove('streaming');
-  return t;
-}
-
-function clean(t) { return t.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/^#{1,6}\s+/gm, '').replace(/^[-•]\s+/gm, '• ').trim(); }
-
-function parseVideoCmd(text) {
-  const m = text.match(/^\/video\s*:?\s*(.*)$/i);
-  if (!m) return null;
-  return { prompt: (m[1] || '').trim() };
-}
-
-function parseImgCmd(text) {
-  const m = text.match(/^\/image(\d*)\s*:?\s*(.*)$/i);
-  if (!m) return null;
-  const c = m[1] ? Math.min(Math.max(parseInt(m[1]), 1), 4) : 1;
-  let r = (m[2] || '').trim(); let s = null;
-  const sm = r.match(/^([a-z0-9]+)\s*:\s*(.+)$/i);
-  if (sm && IMAGE_STYLES[sm[1].toLowerCase()]) { s = sm[1].toLowerCase(); r = sm[2].trim(); }
-  return { count: c, style: s, prompt: r };
-}
-
-async function aiImgPrompt(userMsg, ctx) {
-  const p = `Convert to a detailed English image generation prompt (max 100 words). Output ONLY the prompt.\n\nUser: ${userMsg}\n\nContext:\n${ctx}`;
-  try {
-    const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` }, body: JSON.stringify({ model: FAST_MODEL, messages: [{ role: 'user', content: p }], max_completion_tokens: 250, temperature: 0.7 }) });
-    if (!r.ok) return null;
-    const d = await r.json();
-    let pr = (d?.choices?.[0]?.message?.content || '').trim();
-    if (!pr) return null;
-    return pr.replace(/^["'`]+|["'`]+$/g, '').replace(/^(prompt|image\s*prompt)\s*:\s*/i, '').trim();
-  } catch (e) { return null; }
-}
-
-function getCtx() {
-  const r = conversation.slice(-4).filter(m => m.role !== 'system');
-  return r.map(m => (m.role === 'user' ? 'User' : 'Jarvis') + ': ' + (typeof m.content === 'string' ? m.content.slice(0, 200) : '(image)')).join('\n');
-}
-
-async function handleImageRequest(userMsg) {
-  addMsg(userMsg, true);
-  userInput.value = '';
-  isSending = true; sendBtn.disabled = true;
-
-  const row = document.createElement('div'); row.className = 'row ai';
-  const av = document.createElement('div'); av.className = 'avatar ai'; av.innerText = 'J';
-  const bb = document.createElement('div'); bb.className = 'msg';
-  const tn = document.createElement('div'); tn.innerText = 'Ek second...';
-  bb.appendChild(tn);
-  row.appendChild(av); row.appendChild(bb);
-  chatBox.appendChild(row); chatBox.scrollTop = chatBox.scrollHeight;
-
-  try {
-    const ctx = getCtx();
-    let prompt = await aiImgPrompt(userMsg, ctx);
-    if (!prompt) prompt = userMsg;
-    tn.innerText = 'Yeh lo aapki image!';
-    addImgGen(prompt, 1, null);
-    chatState.lastImageTopic = userMsg;
-    chatState.mode = 'image_just_generated';
-    conversation.push({ role: 'user', content: userMsg });
-    conversation.push({ role: 'assistant', content: '[Image generated]' });
-    trimHist(); saveHist();
-  } catch (e) {
-    tn.innerText = 'Yaar, dikkat aa gayi. Dobara try karo.';
-  } finally {
-    isSending = false; sendBtn.disabled = false; userInput.focus();
-  }
-}
-
-async function handleImageEdit(userMsg, imgDataUrl) {
-  addMsg(userMsg, true, imgDataUrl);
-  userInput.value = '';
-  isSending = true; sendBtn.disabled = true;
-
-  try {
-    let styleKey = detectStyleFromText(userMsg);
-    let stylePrompt, styleLabel;
-
-    if (styleKey) {
-      stylePrompt = EDIT_STYLES[styleKey];
-      styleLabel = styleKey + ' style';
-    } else {
-      try {
-        const p = `Write a detailed English image-to-image transformation prompt for: "${userMsg}". Include the artistic style, visual details, quality keywords. Output ONLY the prompt, max 80 words.`;
-        const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` }, body: JSON.stringify({ model: FAST_MODEL, messages: [{ role: 'user', content: p }], max_completion_tokens: 200, temperature: 0.6 }) });
-        if (r.ok) {
-          const d = await r.json();
-          const raw = (d?.choices?.[0]?.message?.content || '').trim();
-          if (raw) stylePrompt = raw.replace(/^["'`]+|["'`]+$/g, '').trim();
-        }
-      } catch (e) {}
-      if (!stylePrompt) stylePrompt = 'transform this image artistically, ' + userMsg;
-      styleLabel = userMsg.slice(0, 50);
-    }
-
-    await transformImage(imgDataUrl, stylePrompt, styleLabel);
-
-    conversation.push({ role: 'user', content: userMsg + ' [image edited]' });
-    conversation.push({ role: 'assistant', content: '[Image transformed: ' + styleLabel + ']' });
-    trimHist(); saveHist();
-  } catch (e) {
+    const data = await res.json();
+    const reply = data.choices?.[0]?.message?.content?.trim() || '(no reply)';
+    history.push({ role:'assistant', content:reply });
+    addMessage('jarvis', reply);
+    speak(reply);
+  } catch (e){
     console.error(e);
-    addMsg('Yaar, transform nahi ho saki. Dobara try karo.', false);
-  } finally {
-    isSending = false; sendBtn.disabled = false; userInput.focus();
+    setState('idle');
+    addMessage('jarvis', e.message);
   }
 }
 
-async function handleRejection(userMsg) {
-  addMsg(userMsg, true); userInput.value = '';
-  chatState.mode = 'normal'; chatState.lastImageTopic = null;
-  isSending = true; sendBtn.disabled = true;
-  const { b, tn, sb } = addStream({ modelName: getModel().name, modelIcon: getModel().icon });
-  try {
-    refreshPrompt();
-    const raw = await streamGroq([...conversation, { role: 'user', content: userMsg }], currentModelId, b, tn);
-    const c = clean(hideMeta(raw)) || 'Theek hai. Aur kuch?';
-    tn.innerText = c; sb.onclick = () => speak(c, sb);
-    conversation.push({ role: 'user', content: userMsg });
-    conversation.push({ role: 'assistant', content: c.slice(0, MAX_MSG_LEN) });
-    trimHist(); saveHist();
-  } catch (e) { b.classList.remove('streaming'); tn.innerText = 'Theek hai. Aur kuch?'; }
-  finally { isSending = false; sendBtn.disabled = false; userInput.focus(); }
+function send(){
+  const t = inputEl.value.trim(); if (!t) return;
+  addMessage('user', t); inputEl.value = '';
+  askJarvis(t);
 }
+sendBtn.addEventListener('click', send);
+inputEl.addEventListener('keydown', e=>{ if (e.key==='Enter') send(); });
 
-function needsSearch(text) {
-  const t = (text || '').toLowerCase();
-  // Time/recency signals
-  const timeWords = /\b(aaj|abhi|is\s+waqt|current|latest|naya|nayi|recent|ab\s+tak|is\s+saal|2025|2026|is\s+hafte|is\s+mahine)\b/;
-  // Fact-lookup / real-world data signals
-  const factWords = /\b(kaun\s+hai|kya\s+hai|price|rate|qeemat|score|match|news|khabar|weather|mausam|stock|kitna\s+hai|kab\s+hai|schedule|release|launch|update)\b/;
-  // Explicit "search karo" style asks
-  const explicitAsk = /\b(search\s+karo|dhoondo|internet\s+pe|google\s+karo|check\s+karo)\b/;
-  if (explicitAsk.test(t)) return true;
-  if (timeWords.test(t) && factWords.test(t)) return true;
-  if (timeWords.test(t) && /\b(kaun|kya|kahan|kab|kitna)\b/.test(t)) return true;
-  return false;
-}
-
-function detectTimeQuery(text) {
-  const t = (text || '').toLowerCase();
-  const isTimeQ = /\b(time\s+kia|time\s+kya|kitne\s+baje|waqt\s+kya|waqt\s+kia|current\s+time|abhi\s+kitne\s+baje|what.?s\s+the\s+time)\b/.test(t);
-  const isDateQ = /\b(aaj\s+ki\s+tareek|aaj\s+ka\s+din|today.?s\s+date|kaunsa\s+din|kya\s+din)\b/.test(t);
-  if (!isTimeQ && !isDateQ) return null;
-
-  // City → IANA timezone mapping (extend as needed)
-  const cityTZ = {
-    karachi: 'Asia/Karachi', lahore: 'Asia/Karachi', islamabad: 'Asia/Karachi', pakistan: 'Asia/Karachi',
-    dubai: 'Asia/Dubai', london: 'Europe/London', 'new york': 'America/New_York', newyork: 'America/New_York',
-    delhi: 'Asia/Kolkata', mumbai: 'Asia/Kolkata', india: 'Asia/Kolkata', tokyo: 'Asia/Tokyo', 'saudi arab': 'Asia/Riyadh', riyadh: 'Asia/Riyadh'
-  };
-  let tz = 'Asia/Karachi'; // default
-  for (const city in cityTZ) { if (t.includes(city)) { tz = cityTZ[city]; break; } }
-
-  const now = new Date();
-  const timeStr = now.toLocaleTimeString('en-US', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: true });
-  const dateStr = now.toLocaleDateString('en-US', { timeZone: tz, weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-
-  if (isTimeQ && isDateQ) return `Abhi ${timeStr} ho rahe hain, aur aaj ${dateStr} hai.`;
-  if (isTimeQ) return `Abhi ${timeStr} ho rahe hain.`;
-  return `Aaj ${dateStr} hai.`;
-}
-
-async function sendMessage() {
-  if (isSending) return;
-  const text = userInput.value.trim();
-  const image = pendingImage;
-  const file = pendingFile;
-  if (!text && !image && !file) return;
-
-  // Time/date sawaal seedha device se answer karo, AI/search ke bina
-  if (!image && !file) {
-    const timeAns = detectTimeQuery(text);
-    if (timeAns) {
-      addMsg(text, true);
-      userInput.value = '';
-      addMsg(timeAns, false);
-      return;
-    }
-  }
-
-  chatState.turnCount++;
-  chatState.emotionalTone = detectEmotion(text);
-  const intent = detectIntent(text);
-
-  if (intent === 'reject_image') { await handleRejection(text); return; }
-
-  const videoCmd = !image && !file ? parseVideoCmd(text) : null;
-  if (videoCmd) {
-    addMsg(text, true); userInput.value = '';
-    if (!videoCmd.prompt) { addMsg('Video ke liye description bhi likho, jaise: /video ek cat ghar mein khel rahi hai', false); return; }
-    await addVideoGen(videoCmd.prompt);
-    return;
-  }
-
-  const imgCmd = !image && !file ? parseImgCmd(text) : null;
-  if (imgCmd) {
-    addMsg(text, true); userInput.value = '';
-    if (!imgCmd.prompt) { addMsg('Image ke liye description bhi likho.', false); return; }
-    addImgGen(imgCmd.prompt, imgCmd.count, imgCmd.style);
-    chatState.mode = 'image_just_generated';
-    return;
-  }
-
-  // IMAGE ATTACHED + edit intent → transform
-  if (image && text) {
-    const lower = text.toLowerCase();
-    const editKeywords = /\b(edit|change|transform|convert|badal|badlo|banao|bana\s*do|bna|kardo|krdo|style|mein\s+badal|bana\s+do|ka\s+krdo|ka\s+kardo)\b/i;
-    const hasStyle = detectStyleFromText(text) !== null;
-    // Edit intent if: has style word OR explicit edit keyword OR mentions "is image"
-    const isImageRef = /\b(is\s+image|is\s+pic|is\s+photo|isko|ise|isko|iss\s+ko|is\s+ko)\b/i.test(lower);
-    if (hasStyle || (editKeywords.test(lower) && isImageRef) || (hasStyle && isImageRef)) {
-      const dataUrl = image.dataUrl;
-      pendingImage = null; fileInput.value = ''; attachPreview.classList.remove('show');
-      await handleImageEdit(text, dataUrl);
-      return;
-    }
-  }
-
-  if ((intent === 'image_direct' || intent === 'image_context_reply') && !image && !file) {
-    await handleImageRequest(text);
-    return;
-  }
-
-  if (intent === 'capability_q') chatState.mode = 'awaiting_image_details';
-
-  let userContent;
-  if (image) userContent = [{ type: 'text', text: text || 'Is image mein kya hai?' }, { type: 'image_url', image_url: { url: image.dataUrl } }];
-  else userContent = text;
-
-  addMsg(text || (file ? '(file attach ki)' : '(image bheji)'), true, image ? image.dataUrl : null, file ? { name: file.name, size: file.size } : null);
-  userInput.value = ''; pendingImage = null; pendingFile = null;
-  fileInput.value = ''; docInput.value = ''; attachPreview.classList.remove('show');
-
-  isSending = true; sendBtn.disabled = true;
-
-  const cm = getModel();
-  const isDT = cm.provider === 'devtoolbox';
-
-  // Agar pichla sawaal clarifying tha (jaise "kaunsa shehar?") aur ab chhota
-  // sa jawab aaya hai (jaise sirf "karachi ka"), to context yaad rakh ke
-  // proper search query banao, taake sahi topic pe search ho.
-  const TOPIC_HINTS = {
-    mosam: 'weather today', weather: 'weather today',
-    qeemat: 'price today', price: 'price today', rate: 'rate today today',
-    score: 'live score today', match: 'match score today',
-    khabar: 'latest news', news: 'latest news today'
-  };
-  const looksLikeShortReply = text && text.trim().split(/\s+/).length <= 4 && !text.includes('?');
-  let searchQuery = text;
-  let forceSearch = false;
-  if (chatState.pendingTopic && looksLikeShortReply && !image && !file) {
-    searchQuery = `${text} ${chatState.pendingTopic}`;
-    forceSearch = true;
-  }
-
-  const useSearch = !image && !file && !isDT && (searchEnabled || needsSearch(text) || forceSearch);
-  const useFile = !!file;
-
-  const { b, tn, sb, badge } = addStream({
-    withSearch: useSearch, withFile: useFile,
-    modelName: !image ? cm.name : null,
-    modelIcon: !image ? cm.icon : null,
-    isCode: isDT
-  });
-
-  refreshPrompt();
-  let msgs = [...conversation, { role: 'user', content: userContent }];
-  let full = null;
-
-  try {
-    if (useFile) {
-      const fp = `File: "${file.name}"\n\n---\n${file.text}\n---\n\nSawaal: "${text || 'File ke baare mein batao'}"\n\nRoman Urdu mein jawab do.`;
-      msgs = [{ role: 'system', content: baseInstruction }, { role: 'user', content: fp }];
-      if (isDT) full = await streamDT(msgs, b, tn);
-      else full = await streamGroq(msgs, currentModelId, b, tn);
-    } else if (isDT) {
-      full = await streamDT(msgs, b, tn);
-    } else if (useSearch) {
-      const sr = await tavily(searchQuery);
-      if (!sr.length) full = await streamGroq(msgs, currentModelId, b, tn);
-      else {
-        const sc = sr.map((r, i) => `[${i+1}] ${r.title}\n${r.snippet}\nURL: ${r.url}`).join('\n\n');
-        const sp = `User: "${text}"\n\nWeb results:\n${sc}\n\nNatural Roman Urdu mein jawab. URLs include mat karo.`;
-        msgs = [{ role: 'system', content: baseInstruction }, { role: 'user', content: sp }];
-        full = await streamGroq(msgs, currentModelId, b, tn);
-        const c = clean(hideMeta(full));
-        // Sources links jaan-boojh kar nahi dikhaye ja rahe
-
-        // Agla topic yaad rakho agar yeh ek clarifying sawaal tha (jaise "kaunsa shehar?")
-        const lowerText = text.toLowerCase();
-        const matchedHint = Object.keys(TOPIC_HINTS).find(k => lowerText.includes(k));
-        const isClarifying = /\?/.test(c) && /\b(kaunsa|konsa|kis\s+shehar|kis\s+area|kaunse|batao)\b/i.test(c);
-        if (matchedHint && isClarifying) chatState.pendingTopic = TOPIC_HINTS[matchedHint];
-        else chatState.pendingTopic = null;
-      }
-    } else {
-      chatState.pendingTopic = null; // is turn mein search nahi hui, stale topic clear karo
-      const model = image ? VISION_MODEL : currentModelId;
-      full = await streamGroq(msgs, model, b, tn);
-    }
-
-    let cleaned = clean(hideMeta(full));
-    if (!cleaned || !cleaned.trim()) {
-      const fallbacks = {
-        greeting: 'Wa Alaikum Assalam! Kaise hain? Kya madad karoon?',
-        thanks: 'Koi baat nahi yaar!',
-        compliment: 'Shukriya! 😊',
-        question: 'Achha sawaal. Thoda detail do.',
-        chat: 'Samajh gaya. Aur?'
-      };
-      cleaned = fallbacks[intent] || 'Samajh gaya. Aur kuch?';
-      tn.innerText = cleaned;
-    }
-
-    if (intent === 'capability_q') chatState.mode = 'awaiting_image_details';
-    else if (chatState.mode === 'image_just_generated') chatState.mode = 'normal';
-
-    sb.onclick = () => speak(cleaned, sb);
-
-    const hu = image ? (text ? `${text} [image]` : '[image]') : (file ? `${text} [file: ${file.name}]` : text);
-    conversation.push({ role: 'user', content: hu });
-    conversation.push({ role: 'assistant', content: cleaned.slice(0, MAX_MSG_LEN) });
-    trimHist(); saveHist();
-
-    if (!image && !file) {
-      messagesSinceExtract++;
-      if (messagesSinceExtract >= 6) { messagesSinceExtract = 0; extractFacts(); }
-    }
-  } catch (err) {
-    console.error(err);
-    b.classList.remove('streaming');
-    if (badge) badge.remove();
-    const em = chatState.emotionalTone;
-    let emsg = 'Yaar, dikkat aa gayi. Dobara try karo.';
-    if (em === 'frustrated') emsg = 'Arre, network issue. Ek baar aur try karo.';
-    tn.innerText = emsg;
-  } finally {
-    isSending = false; sendBtn.disabled = false; userInput.focus();
-  }
-}
-
-loadMem(); loadSearch(); loadModel(); refreshPrompt();
-const shared = loadShared();
-if (!shared) loadHist();
+setTimeout(()=> addMessage('jarvis','Systems online. What can I do for you?'), 600);
 </script>
-
 </body>
 </html>
