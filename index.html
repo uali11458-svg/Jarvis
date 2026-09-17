@@ -64,7 +64,7 @@
 <div class="settings-panel" id="settingsPanel">
   <h3>CONFIGURATION</h3>
 
-  <h4>BRAIN — GitHub Models</h4>
+  <h4>BRAIN — GitHub Models (via Cloudflare Worker)</h4>
   <label>GITHUB PERSONAL ACCESS TOKEN</label>
   <input type="password" id="githubToken" placeholder="ghp_..."/>
   <label>MODEL</label>
@@ -412,17 +412,11 @@ async function speak(text) {
   }, 1500);
 }
 
-// ============ GITHUB MODELS API (via CORS proxy) ============
-const CORS_PROXIES = [
-  (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-  (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
-];
-
+// ============ GITHUB MODELS API (via Cloudflare Worker) ============
 async function callGitHubModels(userText) {
   if (!settings.githubToken) throw new Error('GitHub token missing');
 
-  const apiUrl = 'https://models.github.ai/inference/chat/completions';
+  const workerUrl = 'https://jarvis-proxy.matrixstudios27.workers.dev/inference/chat/completions';
 
   const body = {
     model: settings.model,
@@ -431,47 +425,28 @@ async function callGitHubModels(userText) {
     max_tokens: 500
   };
 
-  let lastError = null;
+  console.log('Calling Cloudflare Worker...');
+  const res = await fetch(workerUrl, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${settings.githubToken}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2026-03-10'
+    },
+    body: JSON.stringify(body)
+  });
 
-  for (let i = 0; i < CORS_PROXIES.length; i++) {
-    try {
-      const proxyUrl = CORS_PROXIES[i](apiUrl);
-      console.log(`Trying proxy ${i+1}/${CORS_PROXIES.length}...`);
-
-      const res = await fetch(proxyUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${settings.githubToken}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/vnd.github+json',
-          'X-GitHub-Api-Version': '2026-03-10'
-        },
-        body: JSON.stringify(body)
-      });
-
-      if (res.status === 401) throw new Error('GitHub token invalid. models:read scope check karo.');
-      if (res.status === 429) throw new Error('rate limit');
-      if (!res.ok) {
-        const t = await res.text();
-        console.error(`Proxy ${i+1} error ${res.status}:`, t);
-        lastError = `HTTP ${res.status}`;
-        continue;
-      }
-
-      const data = await res.json();
-      const reply = data.choices?.[0]?.message?.content?.trim() || '(no reply)';
-      console.log(`Proxy ${i+1} SUCCESS!`);
-      return reply;
-
-    } catch (e) {
-      console.warn(`Proxy ${i+1} failed:`, e.message);
-      lastError = e.message;
-      if (e.message.includes('token invalid')) throw e;
-      continue;
-    }
+  if (res.status === 401) throw new Error('GitHub token invalid. models:read scope check karo.');
+  if (res.status === 429) throw new Error('rate limit');
+  if (!res.ok) {
+    const t = await res.text();
+    console.error('Worker error:', res.status, t);
+    throw new Error(`HTTP ${res.status}`);
   }
 
-  throw new Error(lastError || 'All proxies failed');
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content?.trim() || '(no reply)';
 }
 
 async function askJarvis(userText) {
