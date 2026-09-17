@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>J.A.R.V.I.S — ElevenLabs</title>
+<title>J.A.R.V.I.S</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   html, body { width:100%; height:100%; overflow:hidden; background:#000; font-family: 'Segoe UI', system-ui, sans-serif; color:#7dd3fc; user-select:none; }
@@ -13,32 +13,29 @@
   .header h1 { font-size:32px; letter-spacing:18px; font-weight:200; color:#bfe9ff; text-shadow: 0 0 12px #00d4ff, 0 0 30px #0080ff, 0 0 60px #0055cc; padding-left:18px; }
   .header .sub { margin-top:6px; font-size:11px; letter-spacing:6px; color:#4a90c4; opacity:0.8; }
   .status { position:fixed; top:110px; left:50%; transform:translateX(-50%); z-index:10; display:flex; align-items:center; gap:8px; padding:6px 16px; border:1px solid rgba(0,180,255,0.35); border-radius:999px; background:rgba(0,40,80,0.35); backdrop-filter: blur(8px); font-size:11px; letter-spacing:2px; color:#7dd3fc; }
-  .dot { width:7px; height:7px; border-radius:50%; background:#00ff88; box-shadow:0 0 10px #00ff88; animation:pulse 1.6s infinite; }
+  .dot { width:7px; height:7px; border-radius:50%; background:#00ff88; box-shadow:0 0 10px #00ff88; }
   .dot.thinking { background:#ffb400; box-shadow:0 0 10px #ffb400; }
   .dot.speaking { background:#00d4ff; box-shadow:0 0 12px #00d4ff; }
-  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
   .chat { position:fixed; bottom:130px; left:50%; transform:translateX(-50%); width:min(720px,90vw); max-height:32vh; overflow-y:auto; z-index:9; display:flex; flex-direction:column; gap:10px; padding:0 8px; }
-  .msg { padding:10px 16px; border-radius:12px; font-size:14px; line-height:1.5; max-width:78%; word-wrap:break-word; animation: fadeUp 0.35s ease-out; }
+  .msg { padding:10px 16px; border-radius:12px; font-size:14px; line-height:1.5; max-width:78%; word-wrap:break-word; }
   .msg.user { align-self:flex-end; background:rgba(0,120,255,0.18); border:1px solid rgba(0,180,255,0.35); color:#dbeeff; }
   .msg.jarvis { align-self:flex-start; background:rgba(0,60,120,0.20); border:1px solid rgba(0,150,255,0.28); color:#a5dcff; }
-  @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
   .input-bar { position:fixed; bottom:34px; left:50%; transform:translateX(-50%); width:min(720px,90vw); z-index:10; display:flex; align-items:center; gap:10px; padding:8px 8px 8px 20px; border:1px solid rgba(0,180,255,0.4); border-radius:999px; background:rgba(0,25,55,0.65); backdrop-filter: blur(14px); }
   .input-bar input { flex:1; background:transparent; border:none; outline:none; color:#dbeeff; font-size:15px; padding:10px 0; }
   .input-bar input::placeholder { color:#3a6a90; }
   .icon-btn { width:44px; height:44px; border-radius:50%; border:1px solid rgba(0,180,255,0.4); background:rgba(0,80,160,0.25); color:#7dd3fc; display:grid; place-items:center; cursor:pointer; flex-shrink:0; transition: all 0.25s; }
   .icon-btn:hover { background:rgba(0,140,255,0.35); color:#dbeeff; }
-  .icon-btn.recording { background:rgba(255,60,60,0.35); border-color:rgba(255,80,80,0.7); color:#ffdede; animation: recPulse 1.2s infinite; }
-  @keyframes recPulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+  .icon-btn.recording { background:rgba(255,60,60,0.35); border-color:rgba(255,80,80,0.7); color:#ffdede; }
   .icon-btn svg { width:20px; height:20px; }
   .settings-toggle { position:fixed; top:24px; right:24px; z-index:20; }
   .settings-panel { position:fixed; top:80px; right:24px; width:360px; max-height:80vh; overflow-y:auto; background:rgba(0,20,45,0.95); border:1px solid rgba(0,180,255,0.4); border-radius:14px; padding:20px; z-index:20; display:none; }
   .settings-panel.open { display:block; }
   .settings-panel h3 { font-size:12px; letter-spacing:3px; color:#7dd3fc; margin-bottom:14px; font-weight:400; }
-  .settings-panel h4 { font-size:11px; letter-spacing:2px; color:#4a90c4; margin-top:18px; margin-bottom:8px; font-weight:400; border-bottom:1px solid rgba(0,150,255,0.2); padding-bottom:6px; }
-  .settings-panel label { display:block; font-size:11px; color:#5a9ac9; margin-bottom:6px; margin-top:12px; }
+  .settings-panel h4 { font-size:11px; letter-spacing:2px; color:#4a90c4; margin-top:16px; margin-bottom:8px; font-weight:400; border-bottom:1px solid rgba(0,150,255,0.2); padding-bottom:6px; }
+  .settings-panel label { display:block; font-size:11px; color:#5a9ac9; margin-bottom:6px; margin-top:12px; letter-spacing:1px; }
   .settings-panel input, .settings-panel select { width:100%; background:rgba(0,30,60,0.8); border:1px solid rgba(0,150,255,0.3); border-radius:8px; padding:9px 12px; color:#dbeeff; font-size:13px; outline:none; }
   .settings-panel button { width:100%; margin-top:16px; padding:10px; border-radius:8px; border:1px solid rgba(0,180,255,0.5); background:rgba(0,120,255,0.25); color:#bfe9ff; font-size:12px; letter-spacing:2px; cursor:pointer; }
-  .settings-panel .hint { font-size:10px; color:#4a7ea4; margin-top:8px; line-height:1.5; }
+  .settings-panel button:hover { background:rgba(0,160,255,0.4); }
 </style>
 </head>
 <body>
@@ -58,40 +55,29 @@
   </button>
 </div>
 
-<button class="icon-btn settings-toggle" id="settingsToggle" title="Settings">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-</button>
+<button class="icon-btn settings-toggle" id="settingsToggle">⚙</button>
 
 <div class="settings-panel" id="settingsPanel">
   <h3>CONFIGURATION</h3>
-  <h4>BRAIN (OpenRouter)</h4>
+
+  <h4>BRAIN — OpenRouter</h4>
   <label>OPENROUTER API KEY</label>
   <input type="password" id="apiKey" placeholder="sk-or-v1-..."/>
-  <label>MODEL</label>
-  <select id="modelSelect">
-    <option value="openrouter/free">Auto Free Router ⭐</option>
-    <option value="nvidia/nemotron-3-ultra-550b-a55b:free">NVIDIA Nemotron (Free)</option>
-    <option value="poolside/laguna-m.1:free">Poolside Laguna (Free)</option>
-  </select>
 
-  <h4>VOICE (ElevenLabs)</h4>
+  <h4>VOICE — ElevenLabs</h4>
   <label>ELEVENLABS API KEY</label>
   <input type="password" id="elevenKey" placeholder="sk_..."/>
-  <label>VOICE ID (اردو کے لیے)</label>
-  <input type="text" id="elevenVoiceId" value="ur-PK-Female-01"/>
+  <label>VOICE ID</label>
+  <input type="text" id="elevenVoiceId" value="nq3gz2RQGRBB1SbrgTqF"/>
   <label>MODEL</label>
   <select id="elevenModel">
-    <option value="eleven_multilingual_v2">Multilingual v2 (High Quality)</option>
-    <option value="eleven_v3">Eleven v3 (Best Quality)</option>
+    <option value="eleven_multilingual_v2">Multilingual v2 (Best for Urdu)</option>
     <option value="eleven_flash_v2_5">Flash v2.5 (Fast)</option>
+    <option value="eleven_v3">Eleven v3 (Newest)</option>
   </select>
 
   <button id="saveSettings">SAVE ALL</button>
   <button id="testVoice" style="background:rgba(0,200,150,0.25);">TEST VOICE</button>
-  <div class="hint">
-    API Key: <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" style="color:#7dd3fc;">elevenlabs.io → API Keys</a><br>
-    Voice ID: <a href="https://elevenlabs.io/voice-library" target="_blank" style="color:#7dd3fc;">elevenlabs.io/voice-library</a>
-  </div>
 </div>
 
 <script type="importmap">
@@ -101,13 +87,12 @@
 <script type="module">
 import * as THREE from 'three';
 
-// ===== 3D GLOBE =====
+// ============ 3D GLOBE ============
 const canvas = document.getElementById('globe');
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 1000);
 camera.position.set(0,0,6);
 const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.setSize(innerWidth, innerHeight);
 
 const jarvis = new THREE.Group(); scene.add(jarvis);
@@ -132,11 +117,11 @@ dotGeo.setAttribute('position', new THREE.BufferAttribute(dotPositions,3));
 jarvis.add(new THREE.Points(dotGeo, new THREE.PointsMaterial({color:0x7dd3fc, size:0.018, transparent:true, opacity:0.9, blending:THREE.AdditiveBlending})));
 
 const ringGroup = new THREE.Group(); jarvis.add(ringGroup);
-function ring(r,t,c,o,rx,ry,rz){ const m=new THREE.Mesh(new THREE.TorusGeometry(r,t,16,220), new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:o,blending:THREE.AdditiveBlending})); m.rotation.set(rx,ry,rz); return m; }
-const r1=ring(2.05,0.006,0x00d4ff,0.9,Math.PI/2.4,0,0);
-const r2=ring(2.25,0.004,0x0099ff,0.7,Math.PI/1.7,Math.PI/5,0);
-const r3=ring(2.5,0.003,0x00aaff,0.55,Math.PI/3.2,0,Math.PI/4);
-const r4=ring(2.85,0.002,0x00d4ff,0.35,Math.PI/2.1,Math.PI/3,0);
+function mkRing(r,t,c,o,rx,ry,rz){ const m=new THREE.Mesh(new THREE.TorusGeometry(r,t,16,220), new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:o,blending:THREE.AdditiveBlending})); m.rotation.set(rx,ry,rz); return m; }
+const r1=mkRing(2.05,0.006,0x00d4ff,0.9,Math.PI/2.4,0,0);
+const r2=mkRing(2.25,0.004,0x0099ff,0.7,Math.PI/1.7,Math.PI/5,0);
+const r3=mkRing(2.5,0.003,0x00aaff,0.55,Math.PI/3.2,0,Math.PI/4);
+const r4=mkRing(2.85,0.002,0x00d4ff,0.35,Math.PI/2.1,Math.PI/3,0);
 ringGroup.add(r1,r2,r3,r4);
 
 const sats = [2.05,2.25,2.5,2.85].map((rad,i)=>{
@@ -156,7 +141,7 @@ const particles = new THREE.Points((()=>{
 })(), new THREE.PointsMaterial({color:0x44aaff, size:0.025, transparent:true, opacity:0.55, blending:THREE.AdditiveBlending}));
 scene.add(particles);
 
-let mx=0, my=0, tRX=0, tRY=0;
+let mx=0,my=0,tRX=0,tRY=0;
 addEventListener('mousemove', e=>{ mx=(e.clientX/innerWidth)*2-1; my=(e.clientY/innerHeight)*2-1; });
 
 const clock = new THREE.Clock();
@@ -180,7 +165,7 @@ function animate(){
 animate();
 addEventListener('resize', ()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 
-// ===== JARVIS =====
+// ============ JARVIS ============
 const chatEl = document.getElementById('chat');
 const inputEl = document.getElementById('userInput');
 const micBtn = document.getElementById('micBtn');
@@ -190,7 +175,6 @@ const statusText = document.getElementById('statusText');
 const settingsToggle = document.getElementById('settingsToggle');
 const settingsPanel = document.getElementById('settingsPanel');
 const apiKeyInput = document.getElementById('apiKey');
-const modelSelect = document.getElementById('modelSelect');
 const elevenKeyInput = document.getElementById('elevenKey');
 const elevenVoiceIdInput = document.getElementById('elevenVoiceId');
 const elevenModelSelect = document.getElementById('elevenModel');
@@ -199,5 +183,177 @@ const testVoiceBtn = document.getElementById('testVoice');
 
 const settings = {
   apiKey: localStorage.getItem('jarvis_apiKey') || '',
-  model: localStorage.getItem('jarvis_model') || 'openrouter/free',
   elevenKey: localStorage.getItem('jarvis_elevenKey') || '',
+  elevenVoiceId: localStorage.getItem('jarvis_elevenVoiceId') || 'nq3gz2RQGRBB1SbrgTqF',
+  elevenModel: localStorage.getItem('jarvis_elevenModel') || 'eleven_multilingual_v2'
+};
+
+apiKeyInput.value = settings.apiKey;
+elevenKeyInput.value = settings.elevenKey;
+elevenVoiceIdInput.value = settings.elevenVoiceId;
+elevenModelSelect.value = settings.elevenModel;
+
+saveBtn.addEventListener('click', ()=>{
+  settings.apiKey = apiKeyInput.value.trim();
+  settings.elevenKey = elevenKeyInput.value.trim();
+  settings.elevenVoiceId = elevenVoiceIdInput.value.trim();
+  settings.elevenModel = elevenModelSelect.value;
+  localStorage.setItem('jarvis_apiKey', settings.apiKey);
+  localStorage.setItem('jarvis_elevenKey', settings.elevenKey);
+  localStorage.setItem('jarvis_elevenVoiceId', settings.elevenVoiceId);
+  localStorage.setItem('jarvis_elevenModel', settings.elevenModel);
+  settingsPanel.classList.remove('open');
+  addMessage('jarvis', 'Saved. Ab test karo.');
+});
+
+testVoiceBtn.addEventListener('click', ()=> speak('Assalam o alaikum. Main Jarvis hoon. Aap kaise hain?'));
+settingsToggle.addEventListener('click', ()=> settingsPanel.classList.toggle('open'));
+
+const history = [{ role: 'system', content:
+  'You are JARVIS, an AI assistant. Keep responses short (voice-first). ' +
+  'If user speaks Roman Urdu, reply in Roman Urdu. If Urdu script, reply in Urdu script.'
+}];
+
+function addMessage(role, text) {
+  const el = document.createElement('div');
+  el.className = `msg ${role}`;
+  el.textContent = text;
+  chatEl.appendChild(el);
+  chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+function setState(s) {
+  jarvisState = s;
+  statusDot.classList.remove('thinking','speaking');
+  if (s === 'thinking') { statusDot.classList.add('thinking'); statusText.textContent = 'PROCESSING'; }
+  else if (s === 'speaking') { statusDot.classList.add('speaking'); statusText.textContent = 'SPEAKING'; }
+  else statusText.textContent = 'SYSTEM ONLINE';
+}
+
+// ============ ELEVENLABS TTS ============
+let currentAudio = null;
+
+async function speakEleven(text) {
+  if (!settings.elevenKey) throw new Error('ElevenLabs key missing');
+  if (!settings.elevenVoiceId) throw new Error('Voice ID missing');
+
+  const url = `https://api.elevenlabs.io/v1/text-to-speech/${settings.elevenVoiceId}`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Accept': 'audio/mpeg',
+      'Content-Type': 'application/json',
+      'xi-api-key': settings.elevenKey
+    },
+    body: JSON.stringify({
+      text: text,
+      model_id: settings.elevenModel,
+      voice_settings: {
+        stability: 0.5,
+        similarity_boost: 0.75,
+        style: 0.0,
+        use_speaker_boost: true
+      }
+    })
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error('ElevenLabs error:', res.status, errText);
+    if (res.status === 401) throw new Error('ElevenLabs: Key invalid ya account flagged');
+    if (res.status === 402) throw new Error('ElevenLabs: Credits khatam');
+    if (res.status === 422) throw new Error('ElevenLabs: Voice ID ghalat');
+    throw new Error(`ElevenLabs: ${res.status}`);
+  }
+
+  const blob = await res.blob();
+  const audioUrl = URL.createObjectURL(blob);
+
+  if (currentAudio) {
+    currentAudio.pause();
+    URL.revokeObjectURL(currentAudio.src);
+  }
+
+  currentAudio = new Audio(audioUrl);
+  currentAudio.onended = () => { URL.revokeObjectURL(audioUrl); setState('idle'); };
+  currentAudio.onerror = () => { URL.revokeObjectURL(audioUrl); setState('idle'); };
+  await currentAudio.play();
+}
+
+async function speak(text) {
+  setState('speaking');
+  try {
+    await speakEleven(text);
+  } catch (e) {
+    console.error(e);
+    setState('idle');
+    addMessage('jarvis', `Voice error: ${e.message}`);
+  }
+}
+
+// ============ OPENROUTER BRAIN ============
+async function askJarvis(userText) {
+  if (!settings.apiKey) { addMessage('jarvis', 'OpenRouter key daalo settings mein.'); return; }
+  history.push({ role: 'user', content: userText });
+  setState('thinking');
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${settings.apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': location.origin,
+        'X-Title': 'JARVIS'
+      },
+      body: JSON.stringify({ model: 'openrouter/free', messages: history, temperature: 0.7, max_tokens: 500 })
+    });
+    if (!res.ok) {
+      const t = await res.text();
+      console.error('OpenRouter:', res.status, t);
+      throw new Error(res.status === 401 ? 'OpenRouter key invalid' : res.status === 429 ? 'Rate limit, thoda wait karo' : 'Error ' + res.status);
+    }
+    const data = await res.json();
+    const reply = data.choices?.[0]?.message?.content?.trim() || '(no reply)';
+    history.push({ role: 'assistant', content: reply });
+    addMessage('jarvis', reply);
+    await speak(reply);
+  } catch (e) {
+    console.error(e);
+    setState('idle');
+    addMessage('jarvis', e.message);
+  }
+}
+
+function send() {
+  const t = inputEl.value.trim(); if (!t) return;
+  addMessage('user', t); inputEl.value = '';
+  askJarvis(t);
+}
+sendBtn.addEventListener('click', send);
+inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+
+// ============ MIC ============
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, recording = false;
+if (SR) {
+  rec = new SR();
+  rec.continuous = false;
+  rec.interimResults = false;
+  rec.lang = 'ur-PK';
+  rec.onstart = () => { recording = true; micBtn.classList.add('recording'); statusText.textContent = 'LISTENING'; };
+  rec.onresult = (e) => { inputEl.value = e.results[0][0].transcript; send(); };
+  rec.onend = () => { recording = false; micBtn.classList.remove('recording'); setState('idle'); };
+  rec.onerror = () => { recording = false; micBtn.classList.remove('recording'); setState('idle'); };
+  micBtn.addEventListener('click', () => {
+    if (recording) rec.stop();
+    else { if (currentAudio) currentAudio.pause(); try { rec.start(); } catch(e) {} }
+  });
+} else {
+  micBtn.addEventListener('click', () => addMessage('jarvis', 'Mic support nahi. Chrome ya Edge use karo.'));
+}
+
+setTimeout(() => addMessage('jarvis', 'Systems online. Kaise hain aap?'), 800);
+</script>
+</body>
+</html>
