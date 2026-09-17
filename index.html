@@ -214,13 +214,16 @@ saveBtn.addEventListener('click', ()=>{
   addMessage('jarvis', 'Saved. Ab test karo.');
 });
 
-testVoiceBtn.addEventListener('click', ()=> speak('Assalam o alaikum. Main Jarvis hoon.'));
+testVoiceBtn.addEventListener('click', ()=> speak('السلام علیکم۔ میں جارویس ہوں۔'));
 
 settingsToggle.addEventListener('click', ()=> settingsPanel.classList.toggle('open'));
 
 const history = [{ role: 'system', content:
   'You are JARVIS, an AI assistant. Keep responses short (voice-first). ' +
-  'If user speaks Roman Urdu, reply in Roman Urdu. If Urdu script, reply in Urdu script.'
+  'ALWAYS reply in native Urdu script (اردو), never in Roman Urdu / English letters, ' +
+  'even if the user types in Roman Urdu or English. This is critical because your text ' +
+  'is read aloud by an Urdu text-to-speech voice, which mispronounces Roman Urdu as English. ' +
+  'Keep sentences short and natural, like spoken Urdu.'
 }];
 
 function addMessage(role, text) {
