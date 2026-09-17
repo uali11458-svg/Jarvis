@@ -64,16 +64,16 @@
   <label>OPENROUTER API KEY</label>
   <input type="password" id="apiKey" placeholder="sk-or-v1-..."/>
 
-  <h4>VOICE — ElevenLabs</h4>
-  <label>ELEVENLABS API KEY</label>
-  <input type="password" id="elevenKey" placeholder="sk_..."/>
-  <label>VOICE ID</label>
-  <input type="text" id="elevenVoiceId" value="nq3gz2RQGRBB1SbrgTqF"/>
-  <label>MODEL</label>
-  <select id="elevenModel">
-    <option value="eleven_multilingual_v2">Multilingual v2 (Best for Urdu)</option>
-    <option value="eleven_flash_v2_5">Flash v2.5 (Fast)</option>
-    <option value="eleven_v3">Eleven v3 (Newest)</option>
+  <h4>VOICE — Google Cloud TTS</h4>
+  <label>GOOGLE CLOUD TTS API KEY</label>
+  <input type="password" id="googleKey" placeholder="AIza..."/>
+  <label>VOICE</label>
+  <select id="googleVoiceSelect">
+    <option value="ur-IN-Wavenet-A">Urdu (India) - Female (Wavenet)</option>
+    <option value="ur-IN-Standard-A">Urdu (India) - Female (Standard)</option>
+    <option value="ur-IN-Standard-B">Urdu (India) - Male (Standard)</option>
+    <option value="hi-IN-Wavenet-A">Hindi - Female (Wavenet)</option>
+    <option value="hi-IN-Wavenet-B">Hindi - Male (Wavenet)</option>
   </select>
 
   <button id="saveSettings">SAVE ALL</button>
@@ -175,33 +175,28 @@ const statusText = document.getElementById('statusText');
 const settingsToggle = document.getElementById('settingsToggle');
 const settingsPanel = document.getElementById('settingsPanel');
 const apiKeyInput = document.getElementById('apiKey');
-const elevenKeyInput = document.getElementById('elevenKey');
-const elevenVoiceIdInput = document.getElementById('elevenVoiceId');
-const elevenModelSelect = document.getElementById('elevenModel');
+const googleKeyInput = document.getElementById('googleKey');
+const googleVoiceSelect = document.getElementById('googleVoiceSelect');
 const saveBtn = document.getElementById('saveSettings');
 const testVoiceBtn = document.getElementById('testVoice');
 
 const settings = {
   apiKey: localStorage.getItem('jarvis_apiKey') || '',
-  elevenKey: localStorage.getItem('jarvis_elevenKey') || '',
-  elevenVoiceId: localStorage.getItem('jarvis_elevenVoiceId') || 'nq3gz2RQGRBB1SbrgTqF',
-  elevenModel: localStorage.getItem('jarvis_elevenModel') || 'eleven_multilingual_v2'
+  googleKey: localStorage.getItem('jarvis_googleKey') || '',
+  googleVoice: localStorage.getItem('jarvis_googleVoice') || 'ur-IN-Wavenet-A'
 };
 
 apiKeyInput.value = settings.apiKey;
-elevenKeyInput.value = settings.elevenKey;
-elevenVoiceIdInput.value = settings.elevenVoiceId;
-elevenModelSelect.value = settings.elevenModel;
+googleKeyInput.value = settings.googleKey;
+googleVoiceSelect.value = settings.googleVoice;
 
 saveBtn.addEventListener('click', ()=>{
   settings.apiKey = apiKeyInput.value.trim();
-  settings.elevenKey = elevenKeyInput.value.trim();
-  settings.elevenVoiceId = elevenVoiceIdInput.value.trim();
-  settings.elevenModel = elevenModelSelect.value;
+  settings.googleKey = googleKeyInput.value.trim();
+  settings.googleVoice = googleVoiceSelect.value;
   localStorage.setItem('jarvis_apiKey', settings.apiKey);
-  localStorage.setItem('jarvis_elevenKey', settings.elevenKey);
-  localStorage.setItem('jarvis_elevenVoiceId', settings.elevenVoiceId);
-  localStorage.setItem('jarvis_elevenModel', settings.elevenModel);
+  localStorage.setItem('jarvis_googleKey', settings.googleKey);
+  localStorage.setItem('jarvis_googleVoice', settings.googleVoice);
   settingsPanel.classList.remove('open');
   addMessage('jarvis', 'Saved. Ab test karo.');
 });
@@ -230,51 +225,51 @@ function setState(s) {
   else statusText.textContent = 'SYSTEM ONLINE';
 }
 
-// ============ ELEVENLABS TTS ============
+// ============ GOOGLE CLOUD TTS ============
 let currentAudio = null;
 
-async function speakEleven(text) {
-  if (!settings.elevenKey) throw new Error('ElevenLabs key missing');
-  if (!settings.elevenVoiceId) throw new Error('Voice ID missing');
+async function speakGoogle(text) {
+  if (!settings.googleKey) throw new Error('Google Cloud TTS key missing');
 
-  const url = `https://api.elevenlabs.io/v1/text-to-speech/${settings.elevenVoiceId}`;
+  const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${settings.googleKey}`;
 
   const res = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Accept': 'audio/mpeg',
-      'Content-Type': 'application/json',
-      'xi-api-key': settings.elevenKey
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      text: text,
-      model_id: settings.elevenModel,
-      voice_settings: {
-        stability: 0.5,
-        similarity_boost: 0.75,
-        style: 0.0,
-        use_speaker_boost: true
+      input: { text: text },
+      voice: {
+        languageCode: settings.googleVoice.substring(0, 5), // e.g., 'ur-IN'
+        name: settings.googleVoice
+      },
+      audioConfig: {
+        audioEncoding: 'MP3',
+        speakingRate: 1.0,
+        pitch: 0.0
       }
     })
   });
 
   if (!res.ok) {
     const errText = await res.text();
-    console.error('ElevenLabs error:', res.status, errText);
-    if (res.status === 401) throw new Error('ElevenLabs: Key invalid ya account flagged');
-    if (res.status === 402) throw new Error('ElevenLabs: Credits khatam');
-    if (res.status === 422) throw new Error('ElevenLabs: Voice ID ghalat');
-    throw new Error(`ElevenLabs: ${res.status}`);
+    console.error('Google Cloud TTS error:', res.status, errText);
+    if (res.status === 403) throw new Error('Google Cloud TTS: API key invalid ya API enabled nahi hai');
+    if (res.status === 429) throw new Error('Google Cloud TTS: Rate limit. Thoda wait karo.');
+    throw new Error(`Google Cloud TTS: ${res.status}`);
   }
 
-  const blob = await res.blob();
+  const data = await res.json();
+  const audioContent = data.audioContent; // base64 encoded MP3
+  if (!audioContent) throw new Error('Google Cloud TTS: No audio returned');
+
+  // Convert base64 to MP3 blob and play
+  const binaryString = atob(audioContent);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+  const blob = new Blob([bytes], { type: 'audio/mpeg' });
   const audioUrl = URL.createObjectURL(blob);
 
-  if (currentAudio) {
-    currentAudio.pause();
-    URL.revokeObjectURL(currentAudio.src);
-  }
-
+  if (currentAudio) { currentAudio.pause(); URL.revokeObjectURL(currentAudio.src); }
   currentAudio = new Audio(audioUrl);
   currentAudio.onended = () => { URL.revokeObjectURL(audioUrl); setState('idle'); };
   currentAudio.onerror = () => { URL.revokeObjectURL(audioUrl); setState('idle'); };
@@ -284,7 +279,7 @@ async function speakEleven(text) {
 async function speak(text) {
   setState('speaking');
   try {
-    await speakEleven(text);
+    await speakGoogle(text);
   } catch (e) {
     console.error(e);
     setState('idle');
