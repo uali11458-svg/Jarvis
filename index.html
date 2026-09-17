@@ -20,7 +20,6 @@
   .msg { padding:10px 16px; border-radius:12px; font-size:14px; line-height:1.5; max-width:78%; word-wrap:break-word; }
   .msg.user { align-self:flex-end; background:rgba(0,120,255,0.18); border:1px solid rgba(0,180,255,0.35); color:#dbeeff; }
   .msg.jarvis { align-self:flex-start; background:rgba(0,60,120,0.20); border:1px solid rgba(0,150,255,0.28); color:#a5dcff; }
-  .msg.system { align-self:center; background:rgba(0,200,150,0.12); border:1px solid rgba(0,220,180,0.3); color:#7fffd4; font-size:12px; letter-spacing:1px; }
   .input-bar { position:fixed; bottom:34px; left:50%; transform:translateX(-50%); width:min(720px,90vw); z-index:10; display:flex; align-items:center; gap:10px; padding:8px 8px 8px 20px; border:1px solid rgba(0,180,255,0.4); border-radius:999px; background:rgba(0,25,55,0.65); backdrop-filter: blur(14px); }
   .input-bar input { flex:1; background:transparent; border:none; outline:none; color:#dbeeff; font-size:15px; padding:10px 0; }
   .input-bar input::placeholder { color:#3a6a90; }
@@ -69,6 +68,17 @@
   <label>OPENROUTER API KEY</label>
   <input type="password" id="apiKey" placeholder="sk-or-v1-..."/>
 
+  <label>MODEL (agar ek busy ho to dusra try hoga)</label>
+  <select id="modelSelect">
+    <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 Flash (Recommended)</option>
+    <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B</option>
+    <option value="deepseek/deepseek-r1-0528:free">DeepSeek R1</option>
+    <option value="deepseek/deepseek-chat-v3-0324:free">DeepSeek V3</option>
+    <option value="qwen/qwen-2.5-72b-instruct:free">Qwen 2.5 72B</option>
+    <option value="mistralai/mistral-small-3.2-24b-instruct:free">Mistral Small 3.2</option>
+    <option value="openrouter/free">Auto Free Router</option>
+  </select>
+
   <h4>VOICE — Browser Voice</h4>
   <label>AWAZ CHUNO</label>
   <select id="voiceSelect">
@@ -79,7 +89,7 @@
   <button id="testVoice" style="background:rgba(0,200,150,0.25);">TEST VOICE</button>
 
   <div class="hint">
-    Commands try karo: "YouTube kholo", "Google pe cricket search karo", "Time kya hua", "Fullscreen karo", "Chat clear karo".
+    Commands: "YouTube kholo", "Google pe cricket search karo", "Time kya hua", "Fullscreen karo", "Chat clear karo".
   </div>
 </div>
 
@@ -182,6 +192,7 @@ const statusText = document.getElementById('statusText');
 const settingsToggle = document.getElementById('settingsToggle');
 const settingsPanel = document.getElementById('settingsPanel');
 const apiKeyInput = document.getElementById('apiKey');
+const modelSelect = document.getElementById('modelSelect');
 const voiceSelect = document.getElementById('voiceSelect');
 const saveBtn = document.getElementById('saveSettings');
 const testVoiceBtn = document.getElementById('testVoice');
@@ -195,17 +206,21 @@ function showToast(msg) {
 
 const settings = {
   apiKey: localStorage.getItem('jarvis_apiKey') || '',
-  voice: localStorage.getItem('jarvis_voice') || ''
+  voice: localStorage.getItem('jarvis_voice') || '',
+  model: localStorage.getItem('jarvis_model') || 'google/gemini-2.0-flash-exp:free'
 };
 
 apiKeyInput.value = settings.apiKey;
+modelSelect.value = settings.model;
 voiceSelect.value = settings.voice;
 
 saveBtn.addEventListener('click', ()=>{
   settings.apiKey = apiKeyInput.value.trim();
   settings.voice = voiceSelect.value;
+  settings.model = modelSelect.value;
   localStorage.setItem('jarvis_apiKey', settings.apiKey);
   localStorage.setItem('jarvis_voice', settings.voice);
+  localStorage.setItem('jarvis_model', settings.model);
   settingsPanel.classList.remove('open');
   showToast('Saved!');
   addMessage('jarvis', 'Saved. Ab test karo.');
@@ -240,7 +255,6 @@ function setState(s) {
 function handleSystemCommand(text) {
   const t = text.toLowerCase().trim();
 
-  // Website open commands
   const sites = {
     'youtube': 'https://youtube.com',
     'google': 'https://google.com',
@@ -259,7 +273,6 @@ function handleSystemCommand(text) {
     'tiktok': 'https://tiktok.com'
   };
 
-  // Open website
   for (const [name, url] of Object.entries(sites)) {
     if (t.includes(name) && (t.includes('khol') || t.includes('open') || t.includes('chalu'))) {
       window.open(url, '_blank');
@@ -267,14 +280,12 @@ function handleSystemCommand(text) {
     }
   }
 
-  // Search on specific site
   for (const [name, url] of Object.entries(sites)) {
     if (t.includes(name) && (t.includes('search') || t.includes('dhundo') || t.includes('dhoondo'))) {
       const q = text.replace(new RegExp(name, 'gi'), '')
                     .replace(/pe|par|search|karo|kro|dhundo|dhoondo|kar|do/gi, '').trim();
       if (q) {
         const searchUrl = name === 'youtube' ? `${url}/results?search_query=${encodeURIComponent(q)}`
-                        : name === 'google' ? `${url}/search?q=${encodeURIComponent(q)}`
                         : `${url}/search?q=${encodeURIComponent(q)}`;
         window.open(searchUrl, '_blank');
         return `${name.charAt(0).toUpperCase() + name.slice(1)} pe "${q}" search kar raha hoon...`;
@@ -282,7 +293,6 @@ function handleSystemCommand(text) {
     }
   }
 
-  // Generic Google search
   if ((t.includes('search') || t.includes('dhundo') || t.includes('dhoondo')) &&
       (t.includes('google') || t.includes('internet') || t.includes('web'))) {
     const q = text.replace(/google|internet|web|pe|par|search|karo|kro|dhundo|dhoondo/gi, '').trim();
@@ -292,14 +302,12 @@ function handleSystemCommand(text) {
     }
   }
 
-  // Time
-  if ((t.includes('time') || t.includes('waqt')) && (t.includes('kya') || t.includes('batao') || t.includes('kya hua'))) {
+  if ((t.includes('time') || t.includes('waqt')) && (t.includes('kya') || t.includes('batao'))) {
     const now = new Date();
     const time = now.toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', hour12: true });
     return `Abhi ${time} hua hai.`;
   }
 
-  // Date
   if ((t.includes('date') || t.includes('tareekh') || t.includes('din')) &&
       (t.includes('kya') || t.includes('batao') || t.includes('aaj'))) {
     const now = new Date();
@@ -307,30 +315,26 @@ function handleSystemCommand(text) {
     return `Aaj ${date} hai.`;
   }
 
-  // Fullscreen
   if (t.includes('fullscreen') || t.includes('full screen') || t.includes('poori screen')) {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(()=>{});
-      return 'Fullscreen mode on kar diya.';
+      return 'Fullscreen mode on.';
     } else {
       document.exitFullscreen();
-      return 'Fullscreen mode off kar diya.';
+      return 'Fullscreen mode off.';
     }
   }
 
-  // Reload
   if (t.includes('reload') || t.includes('refresh') || t.includes('dobara load')) {
     setTimeout(() => location.reload(), 1500);
     return 'Page reload kar raha hoon...';
   }
 
-  // Clear chat
   if ((t.includes('clear') && t.includes('chat')) || (t.includes('chat') && t.includes('saaf'))) {
     chatEl.innerHTML = '';
     return 'Chat clear kar di.';
   }
 
-  // Help
   if (t.includes('help') || t.includes('madad') || t.includes('kya kar sakte')) {
     return 'Main ye kar sakta hoon: "YouTube kholo", "Google pe X search karo", "Time kya hua", "Aaj ki date", "Fullscreen karo", "Chat clear karo", "Page reload karo".';
   }
@@ -408,7 +412,17 @@ async function speak(text) {
   }, 1500);
 }
 
-// ============ OPENROUTER BRAIN ============
+// ============ OPENROUTER BRAIN (with auto-fallback) ============
+const FALLBACK_MODELS = [
+  'google/gemini-2.0-flash-exp:free',
+  'meta-llama/llama-3.3-70b-instruct:free',
+  'qwen/qwen-2.5-72b-instruct:free',
+  'deepseek/deepseek-r1-0528:free',
+  'deepseek/deepseek-chat-v3-0324:free',
+  'mistralai/mistral-small-3.2-24b-instruct:free',
+  'openrouter/free'
+];
+
 async function askJarvis(userText) {
   // Check system commands first
   const sysReply = handleSystemCommand(userText);
@@ -421,31 +435,71 @@ async function askJarvis(userText) {
   if (!settings.apiKey) { addMessage('jarvis', 'OpenRouter key daalo settings mein.'); return; }
   history.push({ role: 'user', content: userText });
   setState('thinking');
-  try {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${settings.apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': location.origin,
-        'X-Title': 'JARVIS'
-      },
-      body: JSON.stringify({ model: 'openrouter/free', messages: history, temperature: 0.7, max_tokens: 500 })
-    });
-    if (!res.ok) {
-      const t = await res.text();
-      console.error('OpenRouter:', res.status, t);
-      throw new Error(res.status === 401 ? 'OpenRouter key invalid' : res.status === 429 ? 'Rate limit' : 'Error ' + res.status);
+
+  // Build model list: user's choice first, then fallbacks
+  const modelsToTry = [settings.model, ...FALLBACK_MODELS];
+  const uniqueModels = [...new Set(modelsToTry)];
+
+  let lastError = null;
+  let allRateLimited = true;
+
+  for (const model of uniqueModels) {
+    try {
+      console.log('Trying model:', model);
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${settings.apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': location.origin,
+          'X-Title': 'JARVIS'
+        },
+        body: JSON.stringify({ model: model, messages: history, temperature: 0.7, max_tokens: 400 })
+      });
+
+      if (res.status === 429) {
+        console.warn(`${model} rate limited, next try...`);
+        continue;
+      }
+      if (res.status === 404) {
+        console.warn(`${model} not available, next try...`);
+        allRateLimited = false;
+        continue;
+      }
+      if (res.status === 401) {
+        setState('idle');
+        addMessage('jarvis', 'OpenRouter key invalid hai. Settings check karo.');
+        return;
+      }
+      if (!res.ok) {
+        const t = await res.text();
+        console.error(`${model} error ${res.status}:`, t);
+        lastError = `error ${res.status}`;
+        allRateLimited = false;
+        continue;
+      }
+
+      const data = await res.json();
+      const reply = data.choices?.[0]?.message?.content?.trim() || '(no reply)';
+      history.push({ role: 'assistant', content: reply });
+      addMessage('jarvis', reply);
+      await speak(reply);
+      return; // Success!
+
+    } catch (e) {
+      console.error(`${model} failed:`, e);
+      lastError = e.message;
+      allRateLimited = false;
+      continue;
     }
-    const data = await res.json();
-    const reply = data.choices?.[0]?.message?.content?.trim() || '(no reply)';
-    history.push({ role: 'assistant', content: reply });
-    addMessage('jarvis', reply);
-    await speak(reply);
-  } catch (e) {
-    console.error(e);
-    setState('idle');
-    addMessage('jarvis', e.message);
+  }
+
+  // All models failed
+  setState('idle');
+  if (allRateLimited) {
+    addMessage('jarvis', 'Saare free models abhi busy hain (rate limit). Thodi der baad try karo, ya OpenRouter pe $10 daal ke limit barha do.');
+  } else {
+    addMessage('jarvis', `Connection issue (${lastError || 'unknown'}). Thodi der baad try karo.`);
   }
 }
 
