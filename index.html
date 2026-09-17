@@ -20,6 +20,7 @@
   .msg { padding:10px 16px; border-radius:12px; font-size:14px; line-height:1.5; max-width:78%; word-wrap:break-word; }
   .msg.user { align-self:flex-end; background:rgba(0,120,255,0.18); border:1px solid rgba(0,180,255,0.35); color:#dbeeff; }
   .msg.jarvis { align-self:flex-start; background:rgba(0,60,120,0.20); border:1px solid rgba(0,150,255,0.28); color:#a5dcff; }
+  .msg.system { align-self:center; background:rgba(0,200,150,0.12); border:1px solid rgba(0,220,180,0.3); color:#7fffd4; font-size:12px; letter-spacing:1px; }
   .input-bar { position:fixed; bottom:34px; left:50%; transform:translateX(-50%); width:min(720px,90vw); z-index:10; display:flex; align-items:center; gap:10px; padding:8px 8px 8px 20px; border:1px solid rgba(0,180,255,0.4); border-radius:999px; background:rgba(0,25,55,0.65); backdrop-filter: blur(14px); }
   .input-bar input { flex:1; background:transparent; border:none; outline:none; color:#dbeeff; font-size:15px; padding:10px 0; }
   .input-bar input::placeholder { color:#3a6a90; }
@@ -36,6 +37,7 @@
   .settings-panel input, .settings-panel select { width:100%; background:rgba(0,30,60,0.8); border:1px solid rgba(0,150,255,0.3); border-radius:8px; padding:9px 12px; color:#dbeeff; font-size:13px; outline:none; }
   .settings-panel button { width:100%; margin-top:16px; padding:10px; border-radius:8px; border:1px solid rgba(0,180,255,0.5); background:rgba(0,120,255,0.25); color:#bfe9ff; font-size:12px; letter-spacing:2px; cursor:pointer; }
   .settings-panel button:hover { background:rgba(0,160,255,0.4); }
+  .settings-panel .hint { font-size:10px; color:#4a7ea4; margin-top:8px; line-height:1.5; }
   .toast { position:fixed; bottom:110px; left:50%; transform:translateX(-50%); background:rgba(0,200,150,0.9); color:#000; padding:8px 20px; border-radius:20px; font-size:13px; font-weight:600; z-index:50; opacity:0; transition:opacity 0.3s; pointer-events:none; }
   .toast.show { opacity:1; }
 </style>
@@ -68,7 +70,7 @@
   <input type="password" id="apiKey" placeholder="sk-or-v1-..."/>
 
   <h4>VOICE — Browser Voice</h4>
-  <label>AWAZ CHUNO (Male/Female jo bhi available ho)</label>
+  <label>AWAZ CHUNO</label>
   <select id="voiceSelect">
     <option value="">Auto (best match)</option>
   </select>
@@ -76,8 +78,8 @@
   <button id="saveSettings">SAVE</button>
   <button id="testVoice" style="background:rgba(0,200,150,0.25);">TEST VOICE</button>
 
-  <div style="font-size:10px; color:#4a7ea4; margin-top:8px; line-height:1.5;">
-    Ye tumhare browser/device mein jitni bhi awazein installed hain unki list hai. Agar Urdu/Hindi mein koi male awaz nahi dikh rahi, to apne phone/PC ki Language Settings mein Urdu ya Hindi TTS voice pack install karo — phir yahan dikhne lagegi.
+  <div class="hint">
+    Commands try karo: "YouTube kholo", "Google pe cricket search karo", "Time kya hua", "Fullscreen karo", "Chat clear karo".
   </div>
 </div>
 
@@ -234,7 +236,109 @@ function setState(s) {
   else statusText.textContent = 'SYSTEM ONLINE';
 }
 
-// ============ BROWSER TTS (reliable, no network call) ============
+// ============ SYSTEM COMMANDS ============
+function handleSystemCommand(text) {
+  const t = text.toLowerCase().trim();
+
+  // Website open commands
+  const sites = {
+    'youtube': 'https://youtube.com',
+    'google': 'https://google.com',
+    'gmail': 'https://mail.google.com',
+    'whatsapp': 'https://web.whatsapp.com',
+    'facebook': 'https://facebook.com',
+    'instagram': 'https://instagram.com',
+    'twitter': 'https://twitter.com',
+    'chatgpt': 'https://chat.openai.com',
+    'openrouter': 'https://openrouter.ai',
+    'maps': 'https://maps.google.com',
+    'wikipedia': 'https://wikipedia.org',
+    'github': 'https://github.com',
+    'vercel': 'https://vercel.com',
+    'netflix': 'https://netflix.com',
+    'tiktok': 'https://tiktok.com'
+  };
+
+  // Open website
+  for (const [name, url] of Object.entries(sites)) {
+    if (t.includes(name) && (t.includes('khol') || t.includes('open') || t.includes('chalu'))) {
+      window.open(url, '_blank');
+      return `Opening ${name.charAt(0).toUpperCase() + name.slice(1)}...`;
+    }
+  }
+
+  // Search on specific site
+  for (const [name, url] of Object.entries(sites)) {
+    if (t.includes(name) && (t.includes('search') || t.includes('dhundo') || t.includes('dhoondo'))) {
+      const q = text.replace(new RegExp(name, 'gi'), '')
+                    .replace(/pe|par|search|karo|kro|dhundo|dhoondo|kar|do/gi, '').trim();
+      if (q) {
+        const searchUrl = name === 'youtube' ? `${url}/results?search_query=${encodeURIComponent(q)}`
+                        : name === 'google' ? `${url}/search?q=${encodeURIComponent(q)}`
+                        : `${url}/search?q=${encodeURIComponent(q)}`;
+        window.open(searchUrl, '_blank');
+        return `${name.charAt(0).toUpperCase() + name.slice(1)} pe "${q}" search kar raha hoon...`;
+      }
+    }
+  }
+
+  // Generic Google search
+  if ((t.includes('search') || t.includes('dhundo') || t.includes('dhoondo')) &&
+      (t.includes('google') || t.includes('internet') || t.includes('web'))) {
+    const q = text.replace(/google|internet|web|pe|par|search|karo|kro|dhundo|dhoondo/gi, '').trim();
+    if (q) {
+      window.open(`https://google.com/search?q=${encodeURIComponent(q)}`, '_blank');
+      return `Google pe "${q}" search kar raha hoon...`;
+    }
+  }
+
+  // Time
+  if ((t.includes('time') || t.includes('waqt')) && (t.includes('kya') || t.includes('batao') || t.includes('kya hua'))) {
+    const now = new Date();
+    const time = now.toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', hour12: true });
+    return `Abhi ${time} hua hai.`;
+  }
+
+  // Date
+  if ((t.includes('date') || t.includes('tareekh') || t.includes('din')) &&
+      (t.includes('kya') || t.includes('batao') || t.includes('aaj'))) {
+    const now = new Date();
+    const date = now.toLocaleDateString('en-PK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    return `Aaj ${date} hai.`;
+  }
+
+  // Fullscreen
+  if (t.includes('fullscreen') || t.includes('full screen') || t.includes('poori screen')) {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(()=>{});
+      return 'Fullscreen mode on kar diya.';
+    } else {
+      document.exitFullscreen();
+      return 'Fullscreen mode off kar diya.';
+    }
+  }
+
+  // Reload
+  if (t.includes('reload') || t.includes('refresh') || t.includes('dobara load')) {
+    setTimeout(() => location.reload(), 1500);
+    return 'Page reload kar raha hoon...';
+  }
+
+  // Clear chat
+  if ((t.includes('clear') && t.includes('chat')) || (t.includes('chat') && t.includes('saaf'))) {
+    chatEl.innerHTML = '';
+    return 'Chat clear kar di.';
+  }
+
+  // Help
+  if (t.includes('help') || t.includes('madad') || t.includes('kya kar sakte')) {
+    return 'Main ye kar sakta hoon: "YouTube kholo", "Google pe X search karo", "Time kya hua", "Aaj ki date", "Fullscreen karo", "Chat clear karo", "Page reload karo".';
+  }
+
+  return null;
+}
+
+// ============ BROWSER TTS ============
 let voicesReadyPromise = null;
 let speechUnlocked = false;
 function unlockSpeech() {
@@ -284,7 +388,7 @@ async function speak(text) {
   if (!window.speechSynthesis) { addMessage('jarvis', 'Is browser mein awaz support nahi hai.'); setState('idle'); return; }
   setState('speaking');
   const vs = await getVoicesAsync();
-  if (vs.length === 0) { addMessage('jarvis', 'Is browser/device mein koi bhi awaz install nahi hai. Chrome ya Edge browser try karo.'); setState('idle'); return; }
+  if (vs.length === 0) { addMessage('jarvis', 'Is browser/device mein koi bhi awaz install nahi hai.'); setState('idle'); return; }
   const chosen = settings.voice ? vs.find(v => v.voiceURI === settings.voice) : null;
   const ur = chosen || pickUrduVoice(vs);
   if (!ur) addMessage('jarvis', 'Is device mein Urdu/Hindi awaz install nahi hai, default awaz bol rahi hai.');
@@ -306,6 +410,14 @@ async function speak(text) {
 
 // ============ OPENROUTER BRAIN ============
 async function askJarvis(userText) {
+  // Check system commands first
+  const sysReply = handleSystemCommand(userText);
+  if (sysReply) {
+    addMessage('jarvis', sysReply);
+    speak(sysReply);
+    return;
+  }
+
   if (!settings.apiKey) { addMessage('jarvis', 'OpenRouter key daalo settings mein.'); return; }
   history.push({ role: 'user', content: userText });
   setState('thinking');
