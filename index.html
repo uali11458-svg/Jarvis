@@ -80,16 +80,22 @@
   <button id="testVoice" style="background:rgba(0,200,150,0.25);">TEST VOICE</button>
 
   <div style="font-size:10px; color:#4a7ea4; margin-top:8px; line-height:1.5;">
-    Edge-TTS bilkul free hai. Koi API key nahi chahiye. Bas Chrome/Edge browser use karo.
+    Edge-TTS bilkul free hai. Koi API key nahi chahiye.
   </div>
 </div>
 
 <script type="importmap">
-{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "@twn39/edgetts-js": "https://cdn.jsdelivr.net/npm/@twn39/edgetts-js@1.1.0/+esm"
+  }
+}
 </script>
 
 <script type="module">
 import * as THREE from 'three';
+import { Communicate } from '@twn39/edgetts-js';
 
 // ============ 3D GLOBE ============
 const canvas = document.getElementById('globe');
@@ -208,9 +214,7 @@ saveBtn.addEventListener('click', ()=>{
   addMessage('jarvis', 'Saved. Ab test karo.');
 });
 
-testVoiceBtn.addEventListener('click', ()=>{
-  speak('Assalam o alaikum. Main Jarvis hoon. Aap kaise hain?');
-});
+testVoiceBtn.addEventListener('click', ()=> speak('Assalam o alaikum. Main Jarvis hoon.'));
 
 settingsToggle.addEventListener('click', ()=> settingsPanel.classList.toggle('open'));
 
@@ -235,36 +239,28 @@ function setState(s) {
   else statusText.textContent = 'SYSTEM ONLINE';
 }
 
-// ============ EDGE-TTS (Free Microsoft Neural Voices) ============
+// ============ EDGE-TTS (Browser JS Library) ============
 let currentAudio = null;
 
 async function speakEdgeTTS(text, voice) {
-  // Microsoft Edge TTS public endpoint (free, no API key)
-  const url = 'https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=6A5AA1D4EAFF4E9FB37E23D68491D6F4';
-
-  const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='ur-PK'>
-    <voice name='${voice}'>
-      <prosody rate='0%' pitch='0Hz'>${text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</prosody>
-    </voice>
-  </speak>`;
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/ssml+xml',
-      'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3',
-      'Origin': 'https://edge.microsoft.com',
-      'Referer': 'https://edge.microsoft.com/'
-    },
-    body: ssml
+  const communicate = new Communicate(text, {
+    voice: voice,
+    rate: '+0%',
+    volume: '+0%',
+    pitch: '+0Hz'
   });
 
-  if (!res.ok) {
-    throw new Error(`Edge-TTS ${res.status}`);
+  const audioChunks = [];
+  for await (const chunk of communicate.stream()) {
+    if (chunk.type === 'audio') {
+      audioChunks.push(chunk.data);
+    }
   }
 
-  const blob = await res.blob();
-  const audioUrl = URL.createObjectURL(blob);
+  if (audioChunks.length === 0) throw new Error('No audio received');
+
+  const audioBlob = new Blob(audioChunks, { type: 'audio/mpeg' });
+  const audioUrl = URL.createObjectURL(audioBlob);
 
   if (currentAudio) { currentAudio.pause(); URL.revokeObjectURL(currentAudio.src); }
   currentAudio = new Audio(audioUrl);
@@ -280,7 +276,7 @@ async function speak(text) {
   } catch (e) {
     console.error('Edge-TTS error:', e);
     setState('idle');
-    addMessage('jarvis', `Voice error: ${e.message}. Chrome use karo ya Edge browser.`);
+    addMessage('jarvis', `Voice error: ${e.message}`);
   }
 }
 
