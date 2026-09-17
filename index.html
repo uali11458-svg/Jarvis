@@ -17,16 +17,18 @@
   .dot.thinking { background:#ffb400; box-shadow:0 0 10px #ffb400; }
   .dot.speaking { background:#00d4ff; box-shadow:0 0 12px #00d4ff; }
   @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-  .chat { position:fixed; bottom:130px; left:50%; transform:translateX(-50%); width:min(720px, 90vw); max-height:32vh; overflow-y:auto; z-index:9; display:flex; flex-direction:column; gap:10px; padding:0 8px; }
+  .chat { position:fixed; bottom:130px; left:50%; transform:translateX(-50%); width:min(720px,90vw); max-height:32vh; overflow-y:auto; z-index:9; display:flex; flex-direction:column; gap:10px; padding:0 8px; }
   .msg { padding:10px 16px; border-radius:12px; font-size:14px; line-height:1.5; max-width:78%; word-wrap:break-word; animation: fadeUp 0.35s ease-out; }
   .msg.user { align-self:flex-end; background:rgba(0,120,255,0.18); border:1px solid rgba(0,180,255,0.35); color:#dbeeff; }
   .msg.jarvis { align-self:flex-start; background:rgba(0,60,120,0.20); border:1px solid rgba(0,150,255,0.28); color:#a5dcff; }
   @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-  .input-bar { position:fixed; bottom:34px; left:50%; transform:translateX(-50%); width:min(720px, 90vw); z-index:10; display:flex; align-items:center; gap:10px; padding:8px 8px 8px 20px; border:1px solid rgba(0,180,255,0.4); border-radius:999px; background:rgba(0,25,55,0.65); backdrop-filter: blur(14px); }
+  .input-bar { position:fixed; bottom:34px; left:50%; transform:translateX(-50%); width:min(720px,90vw); z-index:10; display:flex; align-items:center; gap:10px; padding:8px 8px 8px 20px; border:1px solid rgba(0,180,255,0.4); border-radius:999px; background:rgba(0,25,55,0.65); backdrop-filter: blur(14px); }
   .input-bar input { flex:1; background:transparent; border:none; outline:none; color:#dbeeff; font-size:15px; padding:10px 0; }
   .input-bar input::placeholder { color:#3a6a90; }
-  .icon-btn { width:44px; height:44px; border-radius:50%; border:1px solid rgba(0,180,255,0.4); background:rgba(0,80,160,0.25); color:#7dd3fc; display:grid; place-items:center; cursor:pointer; flex-shrink:0; }
+  .icon-btn { width:44px; height:44px; border-radius:50%; border:1px solid rgba(0,180,255,0.4); background:rgba(0,80,160,0.25); color:#7dd3fc; display:grid; place-items:center; cursor:pointer; flex-shrink:0; transition: all 0.25s; }
   .icon-btn:hover { background:rgba(0,140,255,0.35); color:#dbeeff; }
+  .icon-btn.recording { background:rgba(255,60,60,0.35); border-color:rgba(255,80,80,0.7); color:#ffdede; animation: recPulse 1.2s infinite; }
+  @keyframes recPulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
   .icon-btn svg { width:20px; height:20px; }
   .settings-toggle { position:fixed; top:24px; right:24px; z-index:20; }
   .settings-panel { position:fixed; top:80px; right:24px; width:340px; max-height:80vh; overflow-y:auto; background:rgba(0,20,45,0.95); border:1px solid rgba(0,180,255,0.4); border-radius:14px; padding:20px; z-index:20; display:none; }
@@ -46,6 +48,9 @@
 
 <div class="input-bar">
   <input id="userInput" type="text" placeholder="Ask Jarvis anything..." autocomplete="off"/>
+  <button class="icon-btn" id="micBtn" title="Mic">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+  </button>
   <button class="icon-btn" id="sendBtn" title="Send">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
   </button>
@@ -65,8 +70,12 @@
     <option value="nvidia/nemotron-3-ultra-550b-a55b:free">NVIDIA Nemotron (Free)</option>
     <option value="poolside/laguna-m.1:free">Poolside Laguna (Free)</option>
   </select>
-  <label>VOICE (Edge browser mein Urdu built-in hai)</label>
-  <select id="voiceSelect"></select>
+  <label>VOICE LANGUAGE</label>
+  <select id="voiceLangSelect">
+    <option value="ur">Urdu (اردو)</option>
+    <option value="hi">Hindi (हिन्दी)</option>
+    <option value="en">English</option>
+  </select>
   <button id="saveSettings">SAVE</button>
   <button id="testVoice" style="background:rgba(0,200,150,0.25);">TEST VOICE</button>
 </div>
@@ -138,7 +147,6 @@ addEventListener('mousemove', e=>{ mx=(e.clientX/innerWidth)*2-1; my=(e.clientY/
 
 const clock = new THREE.Clock();
 let jarvisState = 'idle';
-
 function animate(){
   requestAnimationFrame(animate);
   const t = clock.getElapsedTime();
@@ -158,9 +166,10 @@ function animate(){
 animate();
 addEventListener('resize', ()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 
-// ===== JARVIS BRAIN =====
+// ===== JARVIS =====
 const chatEl = document.getElementById('chat');
 const inputEl = document.getElementById('userInput');
+const micBtn = document.getElementById('micBtn');
 const sendBtn = document.getElementById('sendBtn');
 const statusDot = document.getElementById('statusDot');
 const statusText = document.getElementById('statusText');
@@ -168,57 +177,36 @@ const settingsToggle = document.getElementById('settingsToggle');
 const settingsPanel = document.getElementById('settingsPanel');
 const apiKeyInput = document.getElementById('apiKey');
 const modelSelect = document.getElementById('modelSelect');
-const voiceSelect = document.getElementById('voiceSelect');
+const voiceLangSelect = document.getElementById('voiceLangSelect');
 const saveBtn = document.getElementById('saveSettings');
 const testVoiceBtn = document.getElementById('testVoice');
 
 const settings = {
   apiKey: localStorage.getItem('jarvis_apiKey') || '',
   model: localStorage.getItem('jarvis_model') || 'openrouter/free',
-  voice: localStorage.getItem('jarvis_voice') || ''
+  voiceLang: localStorage.getItem('jarvis_voiceLang') || 'ur'
 };
 apiKeyInput.value = settings.apiKey;
 if (settings.model) modelSelect.value = settings.model;
+voiceLangSelect.value = settings.voiceLang;
 
 saveBtn.addEventListener('click', ()=>{
   settings.apiKey = apiKeyInput.value.trim();
   settings.model = modelSelect.value;
-  settings.voice = voiceSelect.value;
+  settings.voiceLang = voiceLangSelect.value;
   localStorage.setItem('jarvis_apiKey', settings.apiKey);
   localStorage.setItem('jarvis_model', settings.model);
-  localStorage.setItem('jarvis_voice', settings.voice);
+  localStorage.setItem('jarvis_voiceLang', settings.voiceLang);
   settingsPanel.classList.remove('open');
   addMessage('jarvis', 'Saved. Ready.');
 });
 
-testVoiceBtn.addEventListener('click', ()=>{
-  speak('Assalam o alaikum. Main Jarvis hoon.');
-});
+testVoiceBtn.addEventListener('click', ()=> speak('Assalam o alaikum. Main Jarvis hoon. Aap kaise hain?'));
 
 settingsToggle.addEventListener('click', ()=> settingsPanel.classList.toggle('open'));
 
-let voices = [];
-function loadVoices(){
-  voices = speechSynthesis.getVoices();
-  voiceSelect.innerHTML = '';
-  // Prioritize Urdu voices
-  const urdu = voices.filter(v => v.lang.toLowerCase().startsWith('ur'));
-  const other = voices.filter(v => v.lang.startsWith('hi') || v.lang.startsWith('en'));
-  [...urdu, ...other].forEach(v => {
-    const o = document.createElement('option');
-    o.value = v.name;
-    o.textContent = `${v.name} (${v.lang})`;
-    voiceSelect.appendChild(o);
-  });
-  if (settings.voice) voiceSelect.value = settings.voice;
-}
-speechSynthesis.onvoiceschanged = loadVoices;
-loadVoices();
-setTimeout(loadVoices, 500);
-setTimeout(loadVoices, 1500);
-
 const history = [{ role: 'system', content:
-  'You are JARVIS, an advanced AI assistant. Calm, intelligent. Keep responses short and natural (voice-first). ' +
+  'You are JARVIS, an advanced AI assistant. Calm, intelligent, slightly witty. Keep responses short and natural. ' +
   'IMPORTANT: If user speaks Roman Urdu, reply in Roman Urdu. If Urdu script, reply in Urdu script.'
 }];
 
@@ -238,42 +226,88 @@ function setState(s){
   else statusText.textContent='SYSTEM ONLINE';
 }
 
-// ===== SPEAK — uses browser speechSynthesis (Edge has Urdu built-in) =====
-function speak(text){
-  if (!window.speechSynthesis) return;
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  const chosen = voices.find(v => v.name === settings.voice);
-  if (chosen) u.voice = chosen;
-  u.rate = 1.0;
-  u.pitch = 1.0;
-  u.onstart = ()=> setState('speaking');
-  u.onend = ()=> setState('idle');
-  u.onerror = ()=> setState('idle');
-  speechSynthesis.speak(u);
+// ===== VOICE — Google Translate TTS via corsproxy.io =====
+let currentAudio = null;
+
+async function googleTTS(text, lang) {
+  // Chunk for 200 char limit
+  const chunks = [];
+  let rem = text.trim();
+  while (rem.length > 0) {
+    let c = rem.substring(0, 180);
+    if (rem.length > 180) {
+      const ls = c.lastIndexOf(' ');
+      if (ls > 100) c = c.substring(0, ls);
+    }
+    chunks.push(c.trim());
+    rem = rem.substring(c.length).trim();
+  }
+
+  for (const chunk of chunks) {
+    if (!chunk) continue;
+    const enc = encodeURIComponent(chunk);
+    const gUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${enc}&tl=${lang}&client=tw-ob`;
+    const pUrl = `https://corsproxy.io/?url=${encodeURIComponent(gUrl)}`;
+
+    const res = await fetch(pUrl);
+    if (!res.ok) throw new Error(`TTS ${res.status}`);
+    const blob = await res.blob();
+    if (blob.size < 100) throw new Error('Empty audio');
+
+    const url = URL.createObjectURL(blob);
+    await new Promise((resolve, reject) => {
+      if (currentAudio) currentAudio.pause();
+      currentAudio = new Audio(url);
+      currentAudio.onended = () => { URL.revokeObjectURL(url); resolve(); };
+      currentAudio.onerror = () => { URL.revokeObjectURL(url); reject(new Error('play fail')); };
+      currentAudio.play().catch(reject);
+    });
+  }
+}
+
+async function speak(text) {
+  setState('speaking');
+  try {
+    await googleTTS(text, settings.voiceLang);
+    setState('idle');
+    return;
+  } catch (e) {
+    console.warn('Google TTS failed:', e.message);
+  }
+  // Fallback: browser TTS
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 1.0;
+    u.onend = () => setState('idle');
+    u.onerror = () => setState('idle');
+    speechSynthesis.speak(u);
+  } catch(e) {
+    setState('idle');
+  }
 }
 
 // ===== OPENROUTER =====
 async function askJarvis(userText){
-  if (!settings.apiKey){ addMessage('jarvis','Add your OpenRouter API key in settings.'); return; }
+  if (!settings.apiKey){ addMessage('jarvis','Add OpenRouter key in settings.'); return; }
   history.push({ role:'user', content:userText });
   setState('thinking');
   try {
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method:'POST',
-      headers:{ 'Authorization': `Bearer ${settings.apiKey}`, 'Content-Type':'application/json', 'HTTP-Referer':'http://localhost', 'X-Title':'JARVIS' },
+      headers:{ 'Authorization': `Bearer ${settings.apiKey}`, 'Content-Type':'application/json', 'HTTP-Referer': location.origin, 'X-Title':'JARVIS' },
       body: JSON.stringify({ model: settings.model, messages: history, temperature:0.7, max_tokens:500 })
     });
     if (!res.ok){
       const t = await res.text();
       console.error('OpenRouter:', res.status, t);
-      throw new Error(res.status === 404 ? 'Model not free. Pick another.' : res.status === 401 ? 'API key invalid.' : res.status === 429 ? 'Rate limit. Wait.' : `Error ${res.status}`);
+      throw new Error(res.status===404?'Model not free. Pick another.':res.status===401?'Key invalid.':res.status===429?'Rate limit.':'Error '+res.status);
     }
     const data = await res.json();
     const reply = data.choices?.[0]?.message?.content?.trim() || '(no reply)';
     history.push({ role:'assistant', content:reply });
     addMessage('jarvis', reply);
-    speak(reply);
+    await speak(reply);
   } catch (e){
     console.error(e);
     setState('idle');
@@ -288,6 +322,26 @@ function send(){
 }
 sendBtn.addEventListener('click', send);
 inputEl.addEventListener('keydown', e=>{ if (e.key==='Enter') send(); });
+
+// ===== MIC =====
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, recording = false;
+if (SR) {
+  rec = new SR();
+  rec.continuous = false;
+  rec.interimResults = false;
+  rec.lang = 'ur-PK';
+  rec.onstart = ()=>{ recording=true; micBtn.classList.add('recording'); statusText.textContent='LISTENING'; };
+  rec.onresult = (e)=>{ inputEl.value = e.results[0][0].transcript; send(); };
+  rec.onend = ()=>{ recording=false; micBtn.classList.remove('recording'); setState('idle'); };
+  rec.onerror = ()=>{ recording=false; micBtn.classList.remove('recording'); setState('idle'); };
+  micBtn.addEventListener('click', ()=>{
+    if (recording) rec.stop();
+    else { if (currentAudio) currentAudio.pause(); speechSynthesis.cancel(); try{rec.start();}catch(e){} }
+  });
+} else {
+  micBtn.addEventListener('click', ()=> addMessage('jarvis','Mic not supported. Use Chrome/Edge.'));
+}
 
 setTimeout(()=> addMessage('jarvis','Systems online. What can I do for you?'), 600);
 </script>
