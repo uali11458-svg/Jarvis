@@ -78,6 +78,14 @@
     <option value="">Auto (best match)</option>
   </select>
 
+  <h4>PERSONALITY</h4>
+  <label>MOOD CHUNO</label>
+  <select id="personalitySelect">
+    <option value="friendly">Friendly — dost jaisa, casual</option>
+    <option value="formal">Formal — proper, respectful butler</option>
+    <option value="savage">Savage — movie wala taana maarne wala JARVIS</option>
+  </select>
+
   <h4>WAKE WORD</h4>
   <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
     <input type="checkbox" id="wakeWordToggle" style="width:auto;"/> "Hey Jarvis" bolte hi sunna shuru kar de
@@ -162,6 +170,7 @@ addEventListener('mousemove', e=>{ mx=(e.clientX/innerWidth)*2-1; my=(e.clientY/
 
 const clock = new THREE.Clock();
 let jarvisState = 'idle';
+let voiceLevel = 0; // spikes on each spoken word, decays each frame — drives voice-reactive glow
 function animate(){
   requestAnimationFrame(animate);
   const t = clock.getElapsedTime();
@@ -173,9 +182,12 @@ function animate(){
   particles.rotation.y += 0.0008; particles.rotation.x += 0.0004;
   tRX += (my*0.3-tRX)*0.04; tRY += (mx*0.4-tRY)*0.04;
   jarvis.rotation.z = -tRY*0.35;
-  const pulse = jarvisState==='speaking'?1+Math.sin(t*12)*0.025 : jarvisState==='thinking'?1+Math.sin(t*6)*0.015 : 1+Math.sin(t*1.5)*0.008;
+  voiceLevel *= 0.88; // decay
+  const pulse = jarvisState==='speaking'?1+Math.sin(t*12)*0.025+voiceLevel*0.14 : jarvisState==='thinking'?1+Math.sin(t*6)*0.015 : 1+Math.sin(t*1.5)*0.008;
   coreSphere.scale.setScalar(pulse);
-  glowMat.opacity = jarvisState==='speaking'?0.10+Math.sin(t*12)*0.04 : 0.05;
+  glowMat.opacity = jarvisState==='speaking'?0.10+Math.sin(t*12)*0.04+voiceLevel*0.35 : 0.05;
+  wireframe.material.opacity = jarvisState==='speaking' ? 0.35+voiceLevel*0.4 : 0.35;
+  ringGroup.scale.setScalar(1 + voiceLevel*0.03);
   renderer.render(scene, camera);
 }
 animate();
@@ -195,6 +207,7 @@ const settingsPanel = document.getElementById('settingsPanel');
 const apiKeyInput = document.getElementById('apiKey');
 const voiceSelect = document.getElementById('voiceSelect');
 const wakeWordToggle = document.getElementById('wakeWordToggle');
+const personalitySelect = document.getElementById('personalitySelect');
 const saveBtn = document.getElementById('saveSettings');
 const testVoiceBtn = document.getElementById('testVoice');
 const toastEl = document.getElementById('toast');
@@ -208,20 +221,24 @@ function showToast(msg) {
 const settings = {
   apiKey: localStorage.getItem('jarvis_apiKey') || '',
   voice: localStorage.getItem('jarvis_voice') || '',
-  wakeWord: localStorage.getItem('jarvis_wakeWord') === '1'
+  wakeWord: localStorage.getItem('jarvis_wakeWord') === '1',
+  personality: localStorage.getItem('jarvis_personality') || 'friendly'
 };
 
 apiKeyInput.value = settings.apiKey;
 voiceSelect.value = settings.voice;
 wakeWordToggle.checked = settings.wakeWord;
+personalitySelect.value = settings.personality;
 
 saveBtn.addEventListener('click', ()=>{
   settings.apiKey = apiKeyInput.value.trim();
   settings.voice = voiceSelect.value;
   settings.wakeWord = wakeWordToggle.checked;
+  settings.personality = personalitySelect.value;
   localStorage.setItem('jarvis_apiKey', settings.apiKey);
   localStorage.setItem('jarvis_voice', settings.voice);
   localStorage.setItem('jarvis_wakeWord', settings.wakeWord ? '1' : '0');
+  localStorage.setItem('jarvis_personality', settings.personality);
   settingsPanel.classList.remove('open');
   showToast('Saved!');
   addMessage('jarvis', 'Saved. Ab test karo.');
@@ -233,22 +250,30 @@ testVoiceBtn.addEventListener('click', ()=> speak('السلام علیکم۔ م�
 settingsToggle.addEventListener('click', ()=> settingsPanel.classList.toggle('open'));
 
 // ============ MEMORY (remembers past chats across sessions) ============
-const SYSTEM_PROMPT = {
-  role: 'system', content:
-  'You are JARVIS, an AI assistant. Keep responses short (voice-first). ' +
-  'If user speaks Roman Urdu, reply in Roman Urdu. If Urdu script, reply in Urdu script. ' +
-  'You have tools to open websites, search Google, set reminders, copy text, save notes as files, ' +
-  'and get the current date/time — use them naturally when the user asks for these things. ' +
-  'You have memory of past conversations with this user (shown below in history) — use it naturally, ' +
-  'the way a friend who remembers previous chats would, without explicitly announcing "I remember".'
+const PERSONALITY_STYLES = {
+  formal: 'Tone: Formal, respectful, professional — like a proper butler/assistant. Use "aap", polite language, no jokes or slang.',
+  friendly: 'Tone: Warm, casual, friendly dost jaisa. Use "tum", relaxed language, light humor is fine.',
+  savage: 'Tone: Witty, sarcastic, playfully savage — like the movie JARVIS teasing Tony Stark. Tease and roast the user lightly, sharp one-liners, but stay genuinely helpful underneath the sarcasm and never actually mean, hurtful, or offensive.'
 };
+function buildSystemPrompt() {
+  return {
+    role: 'system', content:
+    'You are JARVIS, an AI assistant. Keep responses short (voice-first). ' +
+    'If user speaks Roman Urdu, reply in Roman Urdu. If Urdu script, reply in Urdu script. ' +
+    'You have tools to open websites, search Google, set reminders, copy text, save notes as files, ' +
+    'and get the current date/time — use them naturally when the user asks for these things. ' +
+    'You have memory of past conversations with this user (shown below in history) — use it naturally, ' +
+    'the way a friend who remembers previous chats would, without explicitly announcing "I remember". ' +
+    (PERSONALITY_STYLES[settings.personality] || PERSONALITY_STYLES.friendly)
+  };
+}
 const MAX_STORED_MESSAGES = 30; // rolling window so localStorage doesn't grow forever
 
 function loadHistory() {
   try {
     const saved = JSON.parse(localStorage.getItem('jarvis_history') || '[]');
-    return [SYSTEM_PROMPT, ...saved];
-  } catch (e) { return [SYSTEM_PROMPT]; }
+    return [buildSystemPrompt(), ...saved];
+  } catch (e) { return [buildSystemPrompt()]; }
 }
 function saveHistory() {
   try {
@@ -338,6 +363,7 @@ async function speak(text) {
   u.rate = 0.95;
   let started = false;
   u.onstart = () => { started = true; };
+  u.onboundary = () => { voiceLevel = 1; };
   u.onend = () => setState('idle');
   u.onerror = () => setState('idle');
   speechSynthesis.speak(u);
@@ -449,6 +475,7 @@ function executeTool(name, args) {
 // ============ GROQ BRAIN ============
 async function askJarvis(userText) {
   if (!settings.apiKey) { addMessage('jarvis', 'Groq key daalo settings mein.'); return; }
+  history[0] = buildSystemPrompt();
   history.push({ role: 'user', content: userText });
   setState('thinking');
   try {
