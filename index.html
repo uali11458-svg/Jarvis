@@ -36,7 +36,6 @@
   .settings-panel input, .settings-panel select { width:100%; background:rgba(0,30,60,0.8); border:1px solid rgba(0,150,255,0.3); border-radius:8px; padding:9px 12px; color:#dbeeff; font-size:13px; outline:none; }
   .settings-panel button { width:100%; margin-top:16px; padding:10px; border-radius:8px; border:1px solid rgba(0,180,255,0.5); background:rgba(0,120,255,0.25); color:#bfe9ff; font-size:12px; letter-spacing:2px; cursor:pointer; }
   .settings-panel button:hover { background:rgba(0,160,255,0.4); }
-  .settings-panel .hint { font-size:10px; color:#4a7ea4; margin-top:8px; line-height:1.5; }
   .toast { position:fixed; bottom:110px; left:50%; transform:translateX(-50%); background:rgba(0,200,150,0.9); color:#000; padding:8px 20px; border-radius:20px; font-size:13px; font-weight:600; z-index:50; opacity:0; transition:opacity 0.3s; pointer-events:none; }
   .toast.show { opacity:1; }
 </style>
@@ -64,21 +63,13 @@
 <div class="settings-panel" id="settingsPanel">
   <h3>CONFIGURATION</h3>
 
-  <h4>BRAIN — GitHub Models (via Cloudflare Worker)</h4>
-  <label>GITHUB PERSONAL ACCESS TOKEN</label>
-  <input type="password" id="githubToken" placeholder="ghp_..."/>
-  <label>MODEL</label>
-  <select id="modelSelect">
-    <option value="openai/gpt-4.1">GPT-4.1 (Most Intelligent — 90.2% MMLU)</option>
-    <option value="openai/gpt-4o">GPT-4o (Fast & Smart)</option>
-    <option value="openai/o3">OpenAI o3 (Reasoning)</option>
-    <option value="deepseek/deepseek-r1">DeepSeek R1 (Reasoning)</option>
-    <option value="meta/llama-3.3-70b-instruct">Llama 3.3 70B</option>
-    <option value="mistral/mistral-large-2411">Mistral Large</option>
-  </select>
+  <h4>BRAIN — Cerebras</h4>
+  <label>CEREBRAS API KEY</label>
+  <input type="password" id="apiKey" placeholder="csk-..."/>
+  <div style="font-size:10px; color:#4a7ea4; margin-top:4px;">Free key: cloud.cerebras.ai → API Keys → Create</div>
 
   <h4>VOICE — Browser Voice</h4>
-  <label>AWAZ CHUNO</label>
+  <label>AWAZ CHUNO (Male/Female jo bhi available ho)</label>
   <select id="voiceSelect">
     <option value="">Auto (best match)</option>
   </select>
@@ -86,13 +77,11 @@
   <button id="saveSettings">SAVE</button>
   <button id="testVoice" style="background:rgba(0,200,150,0.25);">TEST VOICE</button>
 
-  <div class="hint">
-    Token: <a href="https://github.com/settings/tokens" target="_blank" style="color:#7dd3fc;">github.com/settings/tokens</a> → Generate new token (classic) → <b>models:read</b> scope tick karo.<br>
-    Free tier: 15 requests/min, 150 requests/day. Koi credit card nahi.
+  <div style="font-size:10px; color:#4a7ea4; margin-top:8px; line-height:1.5;">
+    Ye tumhare browser/device mein jitni bhi awazein installed hain unki list hai. Agar Urdu/Hindi mein koi male awaz nahi dikh rahi, to apne phone/PC ki Language Settings mein Urdu ya Hindi TTS voice pack install karo — phir yahan dikhne lagegi.
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script type="importmap">
 {
   "imports": {
@@ -191,8 +180,7 @@ const statusDot = document.getElementById('statusDot');
 const statusText = document.getElementById('statusText');
 const settingsToggle = document.getElementById('settingsToggle');
 const settingsPanel = document.getElementById('settingsPanel');
-const githubTokenInput = document.getElementById('githubToken');
-const modelSelect = document.getElementById('modelSelect');
+const apiKeyInput = document.getElementById('apiKey');
 const voiceSelect = document.getElementById('voiceSelect');
 const saveBtn = document.getElementById('saveSettings');
 const testVoiceBtn = document.getElementById('testVoice');
@@ -205,21 +193,17 @@ function showToast(msg) {
 }
 
 const settings = {
-  githubToken: localStorage.getItem('jarvis_githubToken') || '',
-  model: localStorage.getItem('jarvis_model') || 'openai/gpt-4.1',
+  apiKey: localStorage.getItem('jarvis_apiKey') || '',
   voice: localStorage.getItem('jarvis_voice') || ''
 };
 
-githubTokenInput.value = settings.githubToken;
-modelSelect.value = settings.model;
+apiKeyInput.value = settings.apiKey;
 voiceSelect.value = settings.voice;
 
 saveBtn.addEventListener('click', ()=>{
-  settings.githubToken = githubTokenInput.value.trim();
-  settings.model = modelSelect.value;
+  settings.apiKey = apiKeyInput.value.trim();
   settings.voice = voiceSelect.value;
-  localStorage.setItem('jarvis_githubToken', settings.githubToken);
-  localStorage.setItem('jarvis_model', settings.model);
+  localStorage.setItem('jarvis_apiKey', settings.apiKey);
   localStorage.setItem('jarvis_voice', settings.voice);
   settingsPanel.classList.remove('open');
   showToast('Saved!');
@@ -251,98 +235,7 @@ function setState(s) {
   else statusText.textContent = 'SYSTEM ONLINE';
 }
 
-// ============ SYSTEM COMMANDS ============
-function handleSystemCommand(text) {
-  const t = text.toLowerCase().trim();
-
-  const sites = {
-    'youtube': 'https://youtube.com',
-    'google': 'https://google.com',
-    'gmail': 'https://mail.google.com',
-    'whatsapp': 'https://web.whatsapp.com',
-    'facebook': 'https://facebook.com',
-    'instagram': 'https://instagram.com',
-    'twitter': 'https://twitter.com',
-    'chatgpt': 'https://chat.openai.com',
-    'openrouter': 'https://openrouter.ai',
-    'maps': 'https://maps.google.com',
-    'wikipedia': 'https://wikipedia.org',
-    'github': 'https://github.com',
-    'vercel': 'https://vercel.com',
-    'netflix': 'https://netflix.com',
-    'tiktok': 'https://tiktok.com'
-  };
-
-  for (const [name, url] of Object.entries(sites)) {
-    if (t.includes(name) && (t.includes('khol') || t.includes('open') || t.includes('chalu'))) {
-      window.open(url, '_blank');
-      return `Opening ${name.charAt(0).toUpperCase() + name.slice(1)}...`;
-    }
-  }
-
-  for (const [name, url] of Object.entries(sites)) {
-    if (t.includes(name) && (t.includes('search') || t.includes('dhundo') || t.includes('dhoondo'))) {
-      const q = text.replace(new RegExp(name, 'gi'), '')
-                    .replace(/pe|par|search|karo|kro|dhundo|dhoondo|kar|do/gi, '').trim();
-      if (q) {
-        const searchUrl = name === 'youtube' ? `${url}/results?search_query=${encodeURIComponent(q)}`
-                        : `${url}/search?q=${encodeURIComponent(q)}`;
-        window.open(searchUrl, '_blank');
-        return `${name.charAt(0).toUpperCase() + name.slice(1)} pe "${q}" search kar raha hoon...`;
-      }
-    }
-  }
-
-  if ((t.includes('search') || t.includes('dhundo') || t.includes('dhoondo')) &&
-      (t.includes('google') || t.includes('internet') || t.includes('web'))) {
-    const q = text.replace(/google|internet|web|pe|par|search|karo|kro|dhundo|dhoondo/gi, '').trim();
-    if (q) {
-      window.open(`https://google.com/search?q=${encodeURIComponent(q)}`, '_blank');
-      return `Google pe "${q}" search kar raha hoon...`;
-    }
-  }
-
-  if ((t.includes('time') || t.includes('waqt')) && (t.includes('kya') || t.includes('batao'))) {
-    const now = new Date();
-    const time = now.toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', hour12: true });
-    return `Abhi ${time} hua hai.`;
-  }
-
-  if ((t.includes('date') || t.includes('tareekh') || t.includes('din')) &&
-      (t.includes('kya') || t.includes('batao') || t.includes('aaj'))) {
-    const now = new Date();
-    const date = now.toLocaleDateString('en-PK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    return `Aaj ${date} hai.`;
-  }
-
-  if (t.includes('fullscreen') || t.includes('full screen') || t.includes('poori screen')) {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(()=>{});
-      return 'Fullscreen mode on.';
-    } else {
-      document.exitFullscreen();
-      return 'Fullscreen mode off.';
-    }
-  }
-
-  if (t.includes('reload') || t.includes('refresh') || t.includes('dobara load')) {
-    setTimeout(() => location.reload(), 1500);
-    return 'Page reload kar raha hoon...';
-  }
-
-  if ((t.includes('clear') && t.includes('chat')) || (t.includes('chat') && t.includes('saaf'))) {
-    chatEl.innerHTML = '';
-    return 'Chat clear kar di.';
-  }
-
-  if (t.includes('help') || t.includes('madad') || t.includes('kya kar sakte')) {
-    return 'Main ye kar sakta hoon: "YouTube kholo", "Google pe X search karo", "Time kya hua", "Aaj ki date", "Fullscreen karo", "Chat clear karo", "Page reload karo".';
-  }
-
-  return null;
-}
-
-// ============ BROWSER TTS ============
+// ============ BROWSER TTS (reliable, no network call) ============
 let voicesReadyPromise = null;
 let speechUnlocked = false;
 function unlockSpeech() {
@@ -392,7 +285,7 @@ async function speak(text) {
   if (!window.speechSynthesis) { addMessage('jarvis', 'Is browser mein awaz support nahi hai.'); setState('idle'); return; }
   setState('speaking');
   const vs = await getVoicesAsync();
-  if (vs.length === 0) { addMessage('jarvis', 'Is browser/device mein koi bhi awaz install nahi hai.'); setState('idle'); return; }
+  if (vs.length === 0) { addMessage('jarvis', 'Is browser/device mein koi bhi awaz install nahi hai. Chrome ya Edge browser try karo.'); setState('idle'); return; }
   const chosen = settings.voice ? vs.find(v => v.voiceURI === settings.voice) : null;
   const ur = chosen || pickUrduVoice(vs);
   if (!ur) addMessage('jarvis', 'Is device mein Urdu/Hindi awaz install nahi hai, default awaz bol rahi hai.');
@@ -412,69 +305,34 @@ async function speak(text) {
   }, 1500);
 }
 
-// ============ GITHUB MODELS API (via Cloudflare Worker) ============
-async function callGitHubModels(userText) {
-  if (!settings.githubToken) throw new Error('GitHub token missing');
-
-  const workerUrl = 'https://jarvis-proxy.matrixstudios27.workers.dev/inference/chat/completions';
-
-  const body = {
-    model: settings.model,
-    messages: history,
-    temperature: 0.7,
-    max_tokens: 500
-  };
-
-  console.log('Calling Cloudflare Worker...');
-  const res = await fetch(workerUrl, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${settings.githubToken}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2026-03-10'
-    },
-    body: JSON.stringify(body)
-  });
-
-  if (res.status === 401) throw new Error('GitHub token invalid. models:read scope check karo.');
-  if (res.status === 429) throw new Error('rate limit');
-  if (!res.ok) {
-    const t = await res.text();
-    console.error('Worker error:', res.status, t);
-    throw new Error(`HTTP ${res.status}`);
-  }
-
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content?.trim() || '(no reply)';
-}
-
+// ============ CEREBRAS BRAIN ============
 async function askJarvis(userText) {
-  const sysReply = handleSystemCommand(userText);
-  if (sysReply) {
-    addMessage('jarvis', sysReply);
-    speak(sysReply);
-    return;
-  }
-
-  if (!settings.githubToken) { addMessage('jarvis', 'Settings mein GitHub token daalo.'); return; }
-
+  if (!settings.apiKey) { addMessage('jarvis', 'Cerebras key daalo settings mein.'); return; }
   history.push({ role: 'user', content: userText });
   setState('thinking');
-
   try {
-    const reply = await callGitHubModels(userText);
+    const res = await fetch('https://api.cerebras.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${settings.apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ model: 'qwen-3-235b-a22b-instruct-2507', messages: history, temperature: 0.7, max_tokens: 500 })
+    });
+    if (!res.ok) {
+      const t = await res.text();
+      console.error('Cerebras:', res.status, t);
+      throw new Error(res.status === 401 ? 'Cerebras key invalid' : res.status === 429 ? 'Rate limit' : 'Error ' + res.status);
+    }
+    const data = await res.json();
+    const reply = data.choices?.[0]?.message?.content?.trim() || '(no reply)';
     history.push({ role: 'assistant', content: reply });
     addMessage('jarvis', reply);
     await speak(reply);
   } catch (e) {
-    console.error('GitHub Models error:', e);
+    console.error(e);
     setState('idle');
-    if (e.message === 'rate limit') {
-      addMessage('jarvis', 'GitHub Models ka rate limit (15/min, 150/day) khatam ho gaya. Thodi der baad try karo.');
-    } else {
-      addMessage('jarvis', `Error: ${e.message}`);
-    }
+    addMessage('jarvis', e.message);
   }
 }
 
@@ -506,7 +364,7 @@ if (SR) {
   micBtn.addEventListener('click', () => addMessage('jarvis', 'Mic support nahi. Chrome ya Edge use karo.'));
 }
 
-setTimeout(() => addMessage('jarvis', 'Systems online. GitHub token daalo settings mein.'), 800);
+setTimeout(() => addMessage('jarvis', 'Systems online. Kaise hain aap?'), 800);
 </script>
 </body>
 </html>
