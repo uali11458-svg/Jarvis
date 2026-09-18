@@ -50,6 +50,10 @@
 
 <div class="input-bar">
   <input id="userInput" type="text" placeholder="Ask Jarvis anything..." autocomplete="off"/>
+  <input type="file" id="imageInput" accept="image/*" style="display:none"/>
+  <button class="icon-btn" id="imageBtn" title="Send Image">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+  </button>
   <button class="icon-btn" id="micBtn" title="Mic">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
   </button>
@@ -73,6 +77,12 @@
   <select id="voiceSelect">
     <option value="">Auto (best match)</option>
   </select>
+
+  <h4>WAKE WORD</h4>
+  <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+    <input type="checkbox" id="wakeWordToggle" style="width:auto;"/> "Hey Jarvis" bolte hi sunna shuru kar de
+  </label>
+  <div style="font-size:10px; color:#4a7ea4; margin-top:4px;">Tab khula rehna chahiye. Mic permission chahiye hogi.</div>
 
   <button id="saveSettings">SAVE</button>
   <button id="testVoice" style="background:rgba(0,200,150,0.25);">TEST VOICE</button>
@@ -176,12 +186,15 @@ const chatEl = document.getElementById('chat');
 const inputEl = document.getElementById('userInput');
 const micBtn = document.getElementById('micBtn');
 const sendBtn = document.getElementById('sendBtn');
+const imageBtn = document.getElementById('imageBtn');
+const imageInput = document.getElementById('imageInput');
 const statusDot = document.getElementById('statusDot');
 const statusText = document.getElementById('statusText');
 const settingsToggle = document.getElementById('settingsToggle');
 const settingsPanel = document.getElementById('settingsPanel');
 const apiKeyInput = document.getElementById('apiKey');
 const voiceSelect = document.getElementById('voiceSelect');
+const wakeWordToggle = document.getElementById('wakeWordToggle');
 const saveBtn = document.getElementById('saveSettings');
 const testVoiceBtn = document.getElementById('testVoice');
 const toastEl = document.getElementById('toast');
@@ -194,32 +207,60 @@ function showToast(msg) {
 
 const settings = {
   apiKey: localStorage.getItem('jarvis_apiKey') || '',
-  voice: localStorage.getItem('jarvis_voice') || ''
+  voice: localStorage.getItem('jarvis_voice') || '',
+  wakeWord: localStorage.getItem('jarvis_wakeWord') === '1'
 };
 
 apiKeyInput.value = settings.apiKey;
 voiceSelect.value = settings.voice;
+wakeWordToggle.checked = settings.wakeWord;
 
 saveBtn.addEventListener('click', ()=>{
   settings.apiKey = apiKeyInput.value.trim();
   settings.voice = voiceSelect.value;
+  settings.wakeWord = wakeWordToggle.checked;
   localStorage.setItem('jarvis_apiKey', settings.apiKey);
   localStorage.setItem('jarvis_voice', settings.voice);
+  localStorage.setItem('jarvis_wakeWord', settings.wakeWord ? '1' : '0');
   settingsPanel.classList.remove('open');
   showToast('Saved!');
   addMessage('jarvis', 'Saved. Ab test karo.');
+  updateWakeWordListener();
 });
 
 testVoiceBtn.addEventListener('click', ()=> speak('السلام علیکم۔ میں جارویس ہوں۔'));
 
 settingsToggle.addEventListener('click', ()=> settingsPanel.classList.toggle('open'));
 
-const history = [{ role: 'system', content:
+// ============ MEMORY (remembers past chats across sessions) ============
+const SYSTEM_PROMPT = {
+  role: 'system', content:
   'You are JARVIS, an AI assistant. Keep responses short (voice-first). ' +
   'If user speaks Roman Urdu, reply in Roman Urdu. If Urdu script, reply in Urdu script. ' +
   'You have tools to open websites, search Google, set reminders, copy text, save notes as files, ' +
-  'and get the current date/time — use them naturally when the user asks for these things.'
-}];
+  'and get the current date/time — use them naturally when the user asks for these things. ' +
+  'You have memory of past conversations with this user (shown below in history) — use it naturally, ' +
+  'the way a friend who remembers previous chats would, without explicitly announcing "I remember".'
+};
+const MAX_STORED_MESSAGES = 30; // rolling window so localStorage doesn't grow forever
+
+function loadHistory() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('jarvis_history') || '[]');
+    return [SYSTEM_PROMPT, ...saved];
+  } catch (e) { return [SYSTEM_PROMPT]; }
+}
+function saveHistory() {
+  try {
+    // don't persist tool_calls/tool messages (they reference IDs from the live session only)
+    const plain = history.filter(m => m.role === 'user' || m.role === 'assistant')
+                          .filter(m => typeof m.content === 'string' && m.content)
+                          .slice(-MAX_STORED_MESSAGES);
+    localStorage.setItem('jarvis_history', JSON.stringify(plain));
+  } catch (e) {}
+}
+
+const history = loadHistory();
 
 function addMessage(role, text) {
   const el = document.createElement('div');
@@ -454,6 +495,7 @@ async function askJarvis(userText) {
     if (reply) {
       addMessage('jarvis', reply);
       await speak(reply);
+      saveHistory();
     } else {
       setState('idle');
     }
@@ -472,6 +514,59 @@ function send() {
 sendBtn.addEventListener('click', send);
 inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
 
+// ============ IMAGE UNDERSTANDING (vision) ============
+imageBtn.addEventListener('click', () => imageInput.click());
+imageInput.addEventListener('change', async () => {
+  const file = imageInput.files[0];
+  imageInput.value = '';
+  if (!file) return;
+  if (!settings.apiKey) { addMessage('jarvis', 'Groq key daalo settings mein.'); return; }
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const dataUrl = reader.result;
+    addMessage('user', '📷 [Photo bheji]');
+    setState('thinking');
+    try {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${settings.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'meta-llama/llama-4-maverick-17b-128e-instruct',
+          messages: [
+            { role: 'system', content: 'You describe images naturally in Roman Urdu, short and conversational, voice-first style.' },
+            { role: 'user', content: [
+              { type: 'text', text: 'Is image mein kya hai? Roman Urdu mein batao, short mein.' },
+              { type: 'image_url', image_url: { url: dataUrl } }
+            ]}
+          ],
+          temperature: 0.7,
+          max_tokens: 400
+        })
+      });
+      if (!res.ok) {
+        const t = await res.text();
+        console.error('Vision:', res.status, t);
+        throw new Error(res.status === 401 ? 'Groq key invalid' : res.status === 429 ? 'Rate limit' : 'Error ' + res.status);
+      }
+      const data = await res.json();
+      const reply = data.choices?.[0]?.message?.content?.trim() || '(no reply)';
+      history.push({ role: 'user', content: '[Bheji hui image ke baare mein]' });
+      history.push({ role: 'assistant', content: reply });
+      addMessage('jarvis', reply);
+      await speak(reply);
+      saveHistory();
+    } catch (e) {
+      console.error(e);
+      setState('idle');
+      addMessage('jarvis', e.message);
+    }
+  };
+  reader.readAsDataURL(file);
+});
+
 // ============ MIC ============
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 let rec = null, recording = false;
@@ -482,17 +577,57 @@ if (SR) {
   rec.lang = 'en-US';
   rec.onstart = () => { recording = true; micBtn.classList.add('recording'); statusText.textContent = 'LISTENING'; };
   rec.onresult = (e) => { inputEl.value = e.results[0][0].transcript; send(); };
-  rec.onend = () => { recording = false; micBtn.classList.remove('recording'); setState('idle'); };
-  rec.onerror = () => { recording = false; micBtn.classList.remove('recording'); setState('idle'); };
+  rec.onend = () => { recording = false; micBtn.classList.remove('recording'); setState('idle'); if (settings.wakeWord) setTimeout(startWakeListener, 400); };
+  rec.onerror = () => { recording = false; micBtn.classList.remove('recording'); setState('idle'); if (settings.wakeWord) setTimeout(startWakeListener, 400); };
   micBtn.addEventListener('click', () => {
     if (recording) rec.stop();
-    else { speechSynthesis.cancel(); try { rec.start(); } catch(e) {} }
+    else { speechSynthesis.cancel(); stopWakeListener(); try { rec.start(); } catch(e) {} }
   });
 } else {
   micBtn.addEventListener('click', () => addMessage('jarvis', 'Mic support nahi. Chrome ya Edge use karo.'));
 }
 
+// ============ WAKE WORD ("Hey Jarvis") ============
+let wakeRec = null, wakeActive = false;
+function startWakeListener() {
+  if (!SR || !settings.wakeWord || wakeActive || recording) return;
+  try {
+    wakeRec = new SR();
+    wakeRec.continuous = true;
+    wakeRec.interimResults = true;
+    wakeRec.lang = 'en-US';
+    wakeRec.onresult = (e) => {
+      const last = e.results[e.results.length - 1];
+      const text = (last[0].transcript || '').toLowerCase();
+      if (text.includes('jarvis')) {
+        stopWakeListener();
+        speechSynthesis.cancel();
+        try { rec.start(); } catch(err) {}
+      }
+    };
+    wakeRec.onend = () => { wakeActive = false; if (settings.wakeWord && !recording) setTimeout(startWakeListener, 600); };
+    wakeRec.onerror = () => { wakeActive = false; };
+    wakeRec.start();
+    wakeActive = true;
+  } catch (e) { wakeActive = false; }
+}
+function stopWakeListener() {
+  if (wakeRec && wakeActive) { try { wakeRec.stop(); } catch(e) {} }
+  wakeActive = false;
+}
+function updateWakeWordListener() {
+  if (settings.wakeWord) startWakeListener();
+  else stopWakeListener();
+}
+document.addEventListener('click', () => { if (settings.wakeWord) startWakeListener(); }, { once: true });
+
+// ============ RESTORE OLD CHAT ON LOAD ============
+history.filter(m => m.role === 'user' || m.role === 'assistant').forEach(m => {
+  addMessage(m.role === 'user' ? 'user' : 'jarvis', m.content);
+});
+
 setTimeout(() => addMessage('jarvis', 'Systems online. Kaise hain aap?'), 800);
+if (settings.wakeWord) setTimeout(startWakeListener, 1200);
 </script>
 </body>
 </html>
