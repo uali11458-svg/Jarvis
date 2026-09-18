@@ -351,7 +351,7 @@ if (SR) {
   rec = new SR();
   rec.continuous = false;
   rec.interimResults = false;
-  rec.lang = 'ur-PK';
+  rec.lang = 'en-US';
   rec.onstart = () => { recording = true; micBtn.classList.add('recording'); statusText.textContent = 'LISTENING'; };
   rec.onresult = (e) => { inputEl.value = e.results[0][0].transcript; send(); };
   rec.onend = () => { recording = false; micBtn.classList.remove('recording'); setState('idle'); };
