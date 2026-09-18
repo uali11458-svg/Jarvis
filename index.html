@@ -216,7 +216,9 @@ settingsToggle.addEventListener('click', ()=> settingsPanel.classList.toggle('op
 
 const history = [{ role: 'system', content:
   'You are JARVIS, an AI assistant. Keep responses short (voice-first). ' +
-  'If user speaks Roman Urdu, reply in Roman Urdu. If Urdu script, reply in Urdu script.'
+  'If user speaks Roman Urdu, reply in Roman Urdu. If Urdu script, reply in Urdu script. ' +
+  'You have tools to open websites, search Google, set reminders, copy text, save notes as files, ' +
+  'and get the current date/time — use them naturally when the user asks for these things.'
 }];
 
 function addMessage(role, text) {
@@ -244,6 +246,7 @@ function unlockSpeech() {
   const u = new SpeechSynthesisUtterance('');
   u.volume = 0;
   speechSynthesis.speak(u);
+  if (window.Notification && Notification.permission === 'default') Notification.requestPermission();
 }
 document.addEventListener('click', unlockSpeech, { once: true });
 document.addEventListener('touchstart', unlockSpeech, { once: true });
@@ -305,30 +308,155 @@ async function speak(text) {
   }, 1500);
 }
 
+// ============ ACTIONS / TOOLS (browser-safe agent abilities) ============
+const jarvisTools = [
+  { type: 'function', function: {
+    name: 'open_website',
+    description: 'Naya tab mein ek specific website kholta hai',
+    parameters: { type: 'object', properties: {
+      url: { type: 'string', description: 'Poora URL, jaise https://youtube.com' }
+    }, required: ['url'] }
+  }},
+  { type: 'function', function: {
+    name: 'web_search',
+    description: 'Google pe kuch search karke naya tab kholta hai',
+    parameters: { type: 'object', properties: {
+      query: { type: 'string' }
+    }, required: ['query'] }
+  }},
+  { type: 'function', function: {
+    name: 'set_reminder',
+    description: 'Kuch minute baad user ko ek reminder/notification deta hai. Tab is browser mein khula rehna chahiye.',
+    parameters: { type: 'object', properties: {
+      minutes: { type: 'number', description: 'Kitne minute baad remind karna hai' },
+      message: { type: 'string', description: 'Reminder ka message' }
+    }, required: ['minutes', 'message'] }
+  }},
+  { type: 'function', function: {
+    name: 'copy_to_clipboard',
+    description: 'Diya hua text user ke clipboard mein copy kar deta hai',
+    parameters: { type: 'object', properties: {
+      text: { type: 'string' }
+    }, required: ['text'] }
+  }},
+  { type: 'function', function: {
+    name: 'save_note',
+    description: 'Ek text (note, list, letter, wagera) file ke roop mein download karwata hai',
+    parameters: { type: 'object', properties: {
+      filename: { type: 'string' },
+      content: { type: 'string' }
+    }, required: ['filename', 'content'] }
+  }},
+  { type: 'function', function: {
+    name: 'get_datetime',
+    description: 'Abhi ka exact date aur time deta hai',
+    parameters: { type: 'object', properties: {} }
+  }}
+];
+
+function executeTool(name, args) {
+  try {
+    switch (name) {
+      case 'open_website': {
+        let url = args.url || '';
+        if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+        window.open(url, '_blank');
+        return `Opened ${url}`;
+      }
+      case 'web_search': {
+        window.open('https://www.google.com/search?q=' + encodeURIComponent(args.query || ''), '_blank');
+        return `Searched Google for "${args.query}"`;
+      }
+      case 'set_reminder': {
+        const mins = Number(args.minutes) || 1;
+        const msg = args.message || 'Reminder!';
+        setTimeout(() => {
+          if (window.Notification && Notification.permission === 'granted') {
+            new Notification('JARVIS Reminder', { body: msg });
+          }
+          addMessage('jarvis', `⏰ ${msg}`);
+          speak(msg);
+        }, mins * 60 * 1000);
+        return `Reminder set for ${mins} minute(s) from now`;
+      }
+      case 'copy_to_clipboard': {
+        if (navigator.clipboard) navigator.clipboard.writeText(args.text || '').catch(()=>{});
+        return `Copied to clipboard`;
+      }
+      case 'save_note': {
+        const name = (args.filename || 'note').replace(/[^a-z0-9_\-.]/gi, '_');
+        const finalName = name.endsWith('.txt') ? name : name + '.txt';
+        const blob = new Blob([args.content || ''], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = finalName;
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+        return `Saved file ${finalName}`;
+      }
+      case 'get_datetime': {
+        return new Date().toString();
+      }
+      default:
+        return 'Unknown tool: ' + name;
+    }
+  } catch (e) {
+    return 'Tool error: ' + e.message;
+  }
+}
+
 // ============ GROQ BRAIN ============
 async function askJarvis(userText) {
   if (!settings.apiKey) { addMessage('jarvis', 'Groq key daalo settings mein.'); return; }
   history.push({ role: 'user', content: userText });
   setState('thinking');
   try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${settings.apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ model: 'openai/gpt-oss-120b', messages: history, temperature: 0.7, max_tokens: 500 })
-    });
-    if (!res.ok) {
-      const t = await res.text();
-      console.error('Groq:', res.status, t);
-      throw new Error(res.status === 401 ? 'Groq key invalid' : res.status === 429 ? 'Rate limit' : 'Error ' + res.status);
+    let reply = null;
+    for (let step = 0; step < 3; step++) {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${settings.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'openai/gpt-oss-120b',
+          messages: history,
+          tools: jarvisTools,
+          temperature: 0.7,
+          max_tokens: 500
+        })
+      });
+      if (!res.ok) {
+        const t = await res.text();
+        console.error('Groq:', res.status, t);
+        throw new Error(res.status === 401 ? 'Groq key invalid' : res.status === 429 ? 'Rate limit' : 'Error ' + res.status);
+      }
+      const data = await res.json();
+      const msg = data.choices?.[0]?.message;
+      if (!msg) break;
+
+      if (msg.tool_calls && msg.tool_calls.length) {
+        history.push({ role: 'assistant', content: msg.content || '', tool_calls: msg.tool_calls });
+        for (const tc of msg.tool_calls) {
+          let args = {};
+          try { args = JSON.parse(tc.function.arguments || '{}'); } catch(e) {}
+          const result = executeTool(tc.function.name, args);
+          history.push({ role: 'tool', tool_call_id: tc.id, content: String(result) });
+        }
+        continue; // let the model see tool results and respond again
+      }
+
+      reply = (msg.content || '').trim() || '(no reply)';
+      history.push({ role: 'assistant', content: reply });
+      break;
     }
-    const data = await res.json();
-    const reply = data.choices?.[0]?.message?.content?.trim() || '(no reply)';
-    history.push({ role: 'assistant', content: reply });
-    addMessage('jarvis', reply);
-    await speak(reply);
+    if (reply) {
+      addMessage('jarvis', reply);
+      await speak(reply);
+    } else {
+      setState('idle');
+    }
   } catch (e) {
     console.error(e);
     setState('idle');
