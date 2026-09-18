@@ -63,10 +63,10 @@
 <div class="settings-panel" id="settingsPanel">
   <h3>CONFIGURATION</h3>
 
-  <h4>BRAIN — Cerebras</h4>
-  <label>CEREBRAS API KEY</label>
-  <input type="password" id="apiKey" placeholder="csk-..."/>
-  <div style="font-size:10px; color:#4a7ea4; margin-top:4px;">Free key: cloud.cerebras.ai → API Keys → Create</div>
+  <h4>BRAIN — Groq</h4>
+  <label>GROQ API KEY</label>
+  <input type="password" id="apiKey" placeholder="gsk_..."/>
+  <div style="font-size:10px; color:#4a7ea4; margin-top:4px;">Free key: console.groq.com → API Keys → Create</div>
 
   <h4>VOICE — Browser Voice</h4>
   <label>AWAZ CHUNO (Male/Female jo bhi available ho)</label>
@@ -305,24 +305,24 @@ async function speak(text) {
   }, 1500);
 }
 
-// ============ CEREBRAS BRAIN ============
+// ============ GROQ BRAIN ============
 async function askJarvis(userText) {
-  if (!settings.apiKey) { addMessage('jarvis', 'Cerebras key daalo settings mein.'); return; }
+  if (!settings.apiKey) { addMessage('jarvis', 'Groq key daalo settings mein.'); return; }
   history.push({ role: 'user', content: userText });
   setState('thinking');
   try {
-    const res = await fetch('https://api.cerebras.ai/v1/chat/completions', {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${settings.apiKey}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ model: 'gpt-oss-120b', messages: history, temperature: 0.7, max_tokens: 500 })
+      body: JSON.stringify({ model: 'openai/gpt-oss-120b', messages: history, temperature: 0.7, max_tokens: 500 })
     });
     if (!res.ok) {
       const t = await res.text();
-      console.error('Cerebras:', res.status, t);
-      throw new Error(res.status === 401 ? 'Cerebras key invalid' : res.status === 429 ? 'Rate limit' : 'Error ' + res.status);
+      console.error('Groq:', res.status, t);
+      throw new Error(res.status === 401 ? 'Groq key invalid' : res.status === 429 ? 'Rate limit' : 'Error ' + res.status);
     }
     const data = await res.json();
     const reply = data.choices?.[0]?.message?.content?.trim() || '(no reply)';
