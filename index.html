@@ -86,6 +86,16 @@
     <option value="">Auto (best match)</option>
   </select>
 
+  <h4>VOICE — ElevenLabs (Premium, natural)</h4>
+  <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+    <input type="checkbox" id="elevenToggle" style="width:auto;"/> ElevenLabs ki natural awaz use karo
+  </label>
+  <label>ELEVENLABS API KEY</label>
+  <input type="password" id="elevenKey" placeholder="sk_..."/>
+  <label>VOICE ID</label>
+  <input type="text" id="elevenVoiceId" placeholder="21m00Tcm4TlvDq8ikWAM (default: Rachel)"/>
+  <div style="font-size:10px; color:#4a7ea4; margin-top:4px;">Free: elevenlabs.io → sign up → Profile se API key lo (10,000 characters/month free). Voice ID "Voices" tab mein har awaz ke "..." menu mein milegi.</div>
+
   <h4>PERSONALITY</h4>
   <label>MOOD CHUNO</label>
   <select id="personalitySelect">
@@ -98,6 +108,12 @@
   <label>YOUTUBE API KEY</label>
   <input type="password" id="ytKey" placeholder="AIza..."/>
   <div style="font-size:10px; color:#4a7ea4; margin-top:4px;">Free: console.cloud.google.com → naya project → "YouTube Data API v3" enable karo → Credentials → Create API Key</div>
+
+  <h4>INTERRUPT</h4>
+  <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+    <input type="checkbox" id="interruptToggle" style="width:auto;"/> Jarvis bolte waqt beech mein bol ke rok sako
+  </label>
+  <div style="font-size:10px; color:#4a7ea4; margin-top:4px;">Headphones use karo agar ho sake — warna Jarvis kabhi kabhi apni hi awaz sunke khud ko rok sakta hai.</div>
 
   <h4>WAKE WORD</h4>
   <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
@@ -222,6 +238,10 @@ const voiceSelect = document.getElementById('voiceSelect');
 const wakeWordToggle = document.getElementById('wakeWordToggle');
 const personalitySelect = document.getElementById('personalitySelect');
 const ytKeyInput = document.getElementById('ytKey');
+const elevenToggle = document.getElementById('elevenToggle');
+const elevenKeyInput = document.getElementById('elevenKey');
+const elevenVoiceIdInput = document.getElementById('elevenVoiceId');
+const interruptToggle = document.getElementById('interruptToggle');
 const saveBtn = document.getElementById('saveSettings');
 const testVoiceBtn = document.getElementById('testVoice');
 const toastEl = document.getElementById('toast');
@@ -237,7 +257,11 @@ const settings = {
   voice: localStorage.getItem('jarvis_voice') || '',
   wakeWord: localStorage.getItem('jarvis_wakeWord') === '1',
   personality: localStorage.getItem('jarvis_personality') || 'friendly',
-  ytKey: localStorage.getItem('jarvis_ytKey') || ''
+  ytKey: localStorage.getItem('jarvis_ytKey') || '',
+  elevenOn: localStorage.getItem('jarvis_elevenOn') === '1',
+  elevenKey: localStorage.getItem('jarvis_elevenKey') || '',
+  elevenVoiceId: localStorage.getItem('jarvis_elevenVoiceId') || '21m00Tcm4TlvDq8ikWAM',
+  interrupt: localStorage.getItem('jarvis_interrupt') === '1'
 };
 
 apiKeyInput.value = settings.apiKey;
@@ -245,6 +269,10 @@ voiceSelect.value = settings.voice;
 wakeWordToggle.checked = settings.wakeWord;
 personalitySelect.value = settings.personality;
 ytKeyInput.value = settings.ytKey;
+elevenToggle.checked = settings.elevenOn;
+elevenKeyInput.value = settings.elevenKey;
+elevenVoiceIdInput.value = settings.elevenVoiceId;
+interruptToggle.checked = settings.interrupt;
 
 saveBtn.addEventListener('click', ()=>{
   settings.apiKey = apiKeyInput.value.trim();
@@ -252,11 +280,19 @@ saveBtn.addEventListener('click', ()=>{
   settings.wakeWord = wakeWordToggle.checked;
   settings.personality = personalitySelect.value;
   settings.ytKey = ytKeyInput.value.trim();
+  settings.elevenOn = elevenToggle.checked;
+  settings.elevenKey = elevenKeyInput.value.trim();
+  settings.elevenVoiceId = elevenVoiceIdInput.value.trim() || '21m00Tcm4TlvDq8ikWAM';
+  settings.interrupt = interruptToggle.checked;
   localStorage.setItem('jarvis_apiKey', settings.apiKey);
   localStorage.setItem('jarvis_voice', settings.voice);
   localStorage.setItem('jarvis_wakeWord', settings.wakeWord ? '1' : '0');
   localStorage.setItem('jarvis_personality', settings.personality);
   localStorage.setItem('jarvis_ytKey', settings.ytKey);
+  localStorage.setItem('jarvis_elevenOn', settings.elevenOn ? '1' : '0');
+  localStorage.setItem('jarvis_elevenKey', settings.elevenKey);
+  localStorage.setItem('jarvis_elevenVoiceId', settings.elevenVoiceId);
+  localStorage.setItem('jarvis_interrupt', settings.interrupt ? '1' : '0');
   settingsPanel.classList.remove('open');
   showToast('Saved!');
   addMessage('jarvis', 'Saved. Ab test karo.');
@@ -332,9 +368,9 @@ function addLinkMessage(url, label) {
 function setState(s) {
   jarvisState = s;
   statusDot.classList.remove('thinking','speaking');
-  if (s === 'thinking') { statusDot.classList.add('thinking'); statusText.textContent = 'PROCESSING'; }
-  else if (s === 'speaking') { statusDot.classList.add('speaking'); statusText.textContent = 'SPEAKING'; }
-  else statusText.textContent = 'SYSTEM ONLINE';
+  if (s === 'thinking') { statusDot.classList.add('thinking'); statusText.textContent = 'PROCESSING'; stopInterruptListener(); }
+  else if (s === 'speaking') { statusDot.classList.add('speaking'); statusText.textContent = 'SPEAKING'; if (settings.interrupt) setTimeout(startInterruptListener, 400); }
+  else { statusText.textContent = 'SYSTEM ONLINE'; stopInterruptListener(); }
 }
 
 // ============ BROWSER TTS (reliable, no network call) ============
@@ -392,10 +428,68 @@ function cleanForSpeech(text) {
     .trim();
 }
 
-async function speak(text) {
+let currentElevenAudio = null;
+let elevenAudioCtx = null, elevenRAF = null;
+function stopAllSpeech() {
   speechSynthesis.cancel();
+  if (currentElevenAudio) { try { currentElevenAudio.pause(); } catch(e){} currentElevenAudio = null; }
+  if (elevenRAF) { cancelAnimationFrame(elevenRAF); elevenRAF = null; }
+  voiceLevel = 0;
+}
+
+async function speakElevenLabs(cleaned) {
+  setState('speaking');
+  try {
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${settings.elevenVoiceId}`, {
+      method: 'POST',
+      headers: { 'xi-api-key': settings.elevenKey, 'Content-Type': 'application/json', 'Accept': 'audio/mpeg' },
+      body: JSON.stringify({ text: cleaned, model_id: 'eleven_multilingual_v2', voice_settings: { stability: 0.5, similarity_boost: 0.75 } })
+    });
+    if (!res.ok) {
+      const t = await res.text();
+      let detail = t; try { detail = JSON.parse(t)?.detail?.message || t; } catch(e) {}
+      throw new Error(`ElevenLabs error ${res.status}: ${detail}`);
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    currentElevenAudio = audio;
+
+    // real audio-reactive globe (actual amplitude, not a guess)
+    try {
+      if (!elevenAudioCtx) elevenAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const source = elevenAudioCtx.createMediaElementSource(audio);
+      const analyser = elevenAudioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      source.connect(analyser);
+      analyser.connect(elevenAudioCtx.destination);
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      const tick = () => {
+        analyser.getByteFrequencyData(data);
+        const avg = data.reduce((a,b)=>a+b,0) / data.length;
+        voiceLevel = Math.min(1, avg / 80);
+        elevenRAF = requestAnimationFrame(tick);
+      };
+      tick();
+    } catch (e) { /* analyser unsupported, playback still works */ }
+
+    audio.onended = () => { if (elevenRAF) cancelAnimationFrame(elevenRAF); voiceLevel = 0; URL.revokeObjectURL(url); currentElevenAudio = null; setState('idle'); };
+    audio.onerror = () => { if (elevenRAF) cancelAnimationFrame(elevenRAF); voiceLevel = 0; currentElevenAudio = null; setState('idle'); };
+    await audio.play();
+  } catch (e) {
+    console.error(e);
+    addMessage('jarvis', e.message);
+    setState('idle');
+  }
+}
+
+async function speak(text) {
+  stopAllSpeech();
   const cleaned = cleanForSpeech(text);
   if (!cleaned) return;
+
+  if (settings.elevenOn && settings.elevenKey) { await speakElevenLabs(cleaned); return; }
+
   if (!window.speechSynthesis) { addMessage('jarvis', 'Is browser mein awaz support nahi hai.'); setState('idle'); return; }
   setState('speaking');
   const vs = await getVoicesAsync();
@@ -762,7 +856,7 @@ if (SR) {
   rec.onerror = () => { recording = false; micBtn.classList.remove('recording'); setState('idle'); if (settings.wakeWord) setTimeout(startWakeListener, 400); };
   micBtn.addEventListener('click', () => {
     if (recording) rec.stop();
-    else { speechSynthesis.cancel(); stopWakeListener(); try { rec.start(); } catch(e) {} }
+    else { stopAllSpeech(); stopWakeListener(); try { rec.start(); } catch(e) {} }
   });
 } else {
   micBtn.addEventListener('click', () => addMessage('jarvis', 'Mic support nahi. Chrome ya Edge use karo.'));
@@ -782,7 +876,7 @@ function startWakeListener() {
       const text = (last[0].transcript || '').toLowerCase();
       if (text.includes('jarvis')) {
         stopWakeListener();
-        speechSynthesis.cancel();
+        stopAllSpeech();
         try { rec.start(); } catch(err) {}
       }
     };
@@ -801,6 +895,36 @@ function updateWakeWordListener() {
   else stopWakeListener();
 }
 document.addEventListener('click', () => { if (settings.wakeWord) startWakeListener(); }, { once: true });
+
+// ============ INTERRUPT (barge-in while Jarvis is speaking) ============
+let interruptRec = null, interruptActive = false;
+function startInterruptListener() {
+  if (!SR || !settings.interrupt || interruptActive || recording) return;
+  try {
+    interruptRec = new SR();
+    interruptRec.continuous = true;
+    interruptRec.interimResults = true;
+    interruptRec.lang = 'en-US';
+    interruptRec.onresult = (e) => {
+      const last = e.results[e.results.length - 1];
+      const text = (last[0].transcript || '').trim();
+      if (text.length > 2) {
+        stopInterruptListener();
+        stopAllSpeech();
+        setState('idle');
+        try { rec.start(); } catch(err) {}
+      }
+    };
+    interruptRec.onend = () => { interruptActive = false; if (settings.interrupt && jarvisState === 'speaking' && !recording) setTimeout(startInterruptListener, 300); };
+    interruptRec.onerror = () => { interruptActive = false; };
+    interruptRec.start();
+    interruptActive = true;
+  } catch (e) { interruptActive = false; }
+}
+function stopInterruptListener() {
+  if (interruptRec && interruptActive) { try { interruptRec.stop(); } catch(e) {} }
+  interruptActive = false;
+}
 
 // ============ RESTORE OLD CHAT ON LOAD ============
 history.filter(m => m.role === 'user' || m.role === 'assistant').forEach(m => {
