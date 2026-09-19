@@ -262,6 +262,7 @@ function buildSystemPrompt() {
     'If user speaks Roman Urdu, reply in Roman Urdu. If Urdu script, reply in Urdu script. ' +
     'You have tools to open websites, search Google, set reminders, copy text, save notes as files, ' +
     'and get the current date/time — use them naturally when the user asks for these things. ' +
+    'Do not use emojis, markdown formatting, or bullet symbols in your replies — your text is spoken aloud by a voice engine, so write plain natural sentences only. ' +
     'You have memory of past conversations with this user (shown below in history) — use it naturally, ' +
     'the way a friend who remembers previous chats would, without explicitly announcing "I remember". ' +
     (PERSONALITY_STYLES[settings.personality] || PERSONALITY_STYLES.friendly)
@@ -291,6 +292,20 @@ function addMessage(role, text) {
   const el = document.createElement('div');
   el.className = `msg ${role}`;
   el.textContent = text;
+  chatEl.appendChild(el);
+  chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+function addLinkMessage(url, label) {
+  const el = document.createElement('div');
+  el.className = 'msg jarvis';
+  el.appendChild(document.createTextNode('🔗 '));
+  const a = document.createElement('a');
+  a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+  a.textContent = label || url;
+  a.style.color = '#4fd1ff';
+  a.style.textDecoration = 'underline';
+  el.appendChild(a);
   chatEl.appendChild(el);
   chatEl.scrollTop = chatEl.scrollHeight;
 }
@@ -349,8 +364,19 @@ async function populateVoiceList() {
 }
 populateVoiceList();
 
+function cleanForSpeech(text) {
+  return text
+    .replace(/[\u{1F1E6}-\u{1F1FF}\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}\u{FE0F}]/gu, '')
+    .replace(/[*_~`#>|]/g, '')
+    .replace(/[•●▪️]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 async function speak(text) {
   speechSynthesis.cancel();
+  const cleaned = cleanForSpeech(text);
+  if (!cleaned) return;
   if (!window.speechSynthesis) { addMessage('jarvis', 'Is browser mein awaz support nahi hai.'); setState('idle'); return; }
   setState('speaking');
   const vs = await getVoicesAsync();
@@ -358,7 +384,7 @@ async function speak(text) {
   const chosen = settings.voice ? vs.find(v => v.voiceURI === settings.voice) : null;
   const ur = chosen || pickUrduVoice(vs);
   if (!ur) addMessage('jarvis', 'Is device mein Urdu/Hindi awaz install nahi hai, default awaz bol rahi hai.');
-  const u = new SpeechSynthesisUtterance(text);
+  const u = new SpeechSynthesisUtterance(cleaned);
   if (ur) { u.voice = ur; u.lang = ur.lang; } else { u.lang = 'ur-PK'; }
   u.rate = 0.95;
   let started = false;
@@ -427,12 +453,15 @@ function executeTool(name, args) {
       case 'open_website': {
         let url = args.url || '';
         if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-        window.open(url, '_blank');
-        return `Opened ${url}`;
+        const w = window.open(url, '_blank');
+        addLinkMessage(url, url);
+        return w ? `Opened ${url}` : `Could not auto-open (popup blocked). Shown as a clickable link in chat for the user to tap — tell the user to tap the link.`;
       }
       case 'web_search': {
-        window.open('https://www.google.com/search?q=' + encodeURIComponent(args.query || ''), '_blank');
-        return `Searched Google for "${args.query}"`;
+        const url = 'https://www.google.com/search?q=' + encodeURIComponent(args.query || '');
+        const w = window.open(url, '_blank');
+        addLinkMessage(url, `Google: ${args.query}`);
+        return w ? `Searched Google for "${args.query}"` : `Could not auto-open (popup blocked). Shown as a clickable link in chat for the user to tap — tell the user to tap the link.`;
       }
       case 'set_reminder': {
         const mins = Number(args.minutes) || 1;
@@ -498,7 +527,9 @@ async function askJarvis(userText) {
       if (!res.ok) {
         const t = await res.text();
         console.error('Groq:', res.status, t);
-        throw new Error(res.status === 401 ? 'Groq key invalid' : res.status === 429 ? 'Rate limit' : 'Error ' + res.status);
+        let detail = t;
+        try { detail = JSON.parse(t)?.error?.message || t; } catch(e) {}
+        throw new Error(`Groq error ${res.status}: ${detail}`);
       }
       const data = await res.json();
       const msg = data.choices?.[0]?.message;
@@ -570,13 +601,15 @@ imageInput.addEventListener('change', async () => {
             ]}
           ],
           temperature: 0.7,
-          max_tokens: 400
+          max_completion_tokens: 400
         })
       });
       if (!res.ok) {
         const t = await res.text();
         console.error('Vision:', res.status, t);
-        throw new Error(res.status === 401 ? 'Groq key invalid' : res.status === 429 ? 'Rate limit' : 'Error ' + res.status);
+        let detail = t;
+        try { detail = JSON.parse(t)?.error?.message || t; } catch(e) {}
+        throw new Error(`Vision error ${res.status}: ${detail}`);
       }
       const data = await res.json();
       const reply = data.choices?.[0]?.message?.content?.trim() || '(no reply)';
