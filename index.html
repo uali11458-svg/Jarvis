@@ -434,9 +434,14 @@ window.onYouTubeIframeAPIReady = function() {
   ytApiReady = true;
   ytPlayer = new YT.Player('yt-player', {
     height: '360', width: '100%', videoId: '',
-    playerVars: { autoplay: 1, rel: 0 },
+    playerVars: { autoplay: 1, rel: 0, origin: window.location.origin, enablejsapi: 1 },
     events: {
-      onReady: () => { if (ytPendingVideoId) { ytPlayer.loadVideoById(ytPendingVideoId); ytPendingVideoId = null; } }
+      onReady: () => { if (ytPendingVideoId) { ytPlayer.loadVideoById(ytPendingVideoId); ytPendingVideoId = null; } },
+      onError: (e) => {
+        if (e.data === 101 || e.data === 150) { ytTryNextCandidate(); return; }
+        const codes = { 2:'Video ID galat hai', 5:'Player mein error aaya', 100:'Video nahi mila ya private hai' };
+        addMessage('jarvis', 'YouTube error: ' + (codes[e.data] || ('code ' + e.data)));
+      }
     }
   });
 };
@@ -452,9 +457,10 @@ function ytLoad(videoId) {
   else ytPendingVideoId = videoId;
 }
 
+let ytCandidates = [];
 async function ytSearchAndPlay(query) {
   if (!settings.ytKey) throw new Error('YouTube API key missing — settings mein daalo');
-  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&q=${encodeURIComponent(query)}&key=${settings.ytKey}`;
+  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=${encodeURIComponent(query)}&key=${settings.ytKey}`;
   const res = await fetch(url);
   if (!res.ok) {
     const t = await res.text();
@@ -462,12 +468,17 @@ async function ytSearchAndPlay(query) {
     throw new Error(`YouTube search error ${res.status}: ${detail}`);
   }
   const data = await res.json();
-  const item = data.items?.[0];
-  if (!item) return { ok: false, msg: 'Koi video nahi mila' };
-  const videoId = item.id.videoId;
-  const title = item.snippet?.title || '';
-  ytLoad(videoId);
-  return { ok: true, videoId, title };
+  ytCandidates = (data.items || []).map(it => ({ videoId: it.id.videoId, title: it.snippet?.title || '' }));
+  if (!ytCandidates.length) return { ok: false, msg: 'Koi video nahi mila' };
+  const first = ytCandidates.shift();
+  ytLoad(first.videoId);
+  return { ok: true, videoId: first.videoId, title: first.title };
+}
+function ytTryNextCandidate() {
+  if (!ytCandidates.length) { addMessage('jarvis', 'Koi bhi result embed nahi ho pa raha.'); return; }
+  const next = ytCandidates.shift();
+  ytLoad(next.videoId);
+  addMessage('jarvis', `Ye video embed nahi hua, agla try kar raha hoon: ${next.title}`);
 }
 
 const jarvisTools = [
