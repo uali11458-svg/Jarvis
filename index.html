@@ -38,9 +38,17 @@
   .settings-panel button:hover { background:rgba(0,160,255,0.4); }
   .toast { position:fixed; bottom:110px; left:50%; transform:translateX(-50%); background:rgba(0,200,150,0.9); color:#000; padding:8px 20px; border-radius:20px; font-size:13px; font-weight:600; z-index:50; opacity:0; transition:opacity 0.3s; pointer-events:none; }
   .toast.show { opacity:1; }
+  .yt-panel { position:fixed; top:170px; left:50%; transform:translateX(-50%); width:min(640px,88vw); z-index:11; display:none; border:1px solid rgba(0,180,255,0.4); border-radius:14px; overflow:hidden; background:#000; box-shadow:0 0 30px rgba(0,150,255,0.3); }
+  .yt-panel.open { display:block; }
+  .yt-panel .yt-close { position:absolute; top:6px; right:6px; z-index:2; width:28px; height:28px; border-radius:50%; background:rgba(0,0,0,0.6); color:#fff; border:none; cursor:pointer; font-size:14px; }
 </style>
 </head>
 <body>
+
+<div class="yt-panel" id="ytPanel">
+  <button class="yt-close" id="ytClose">✕</button>
+  <div id="yt-player"></div>
+</div>
 
 <canvas id="globe"></canvas>
 <div class="header"><h1>JARVIS</h1><div class="sub">JUST A RATHER VERY INTELLIGENT SYSTEM</div></div>
@@ -85,6 +93,11 @@
     <option value="formal">Formal — proper, respectful butler</option>
     <option value="savage">Savage — movie wala taana maarne wala JARVIS</option>
   </select>
+
+  <h4>YOUTUBE CONTROL</h4>
+  <label>YOUTUBE API KEY</label>
+  <input type="password" id="ytKey" placeholder="AIza..."/>
+  <div style="font-size:10px; color:#4a7ea4; margin-top:4px;">Free: console.cloud.google.com → naya project → "YouTube Data API v3" enable karo → Credentials → Create API Key</div>
 
   <h4>WAKE WORD</h4>
   <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
@@ -208,6 +221,7 @@ const apiKeyInput = document.getElementById('apiKey');
 const voiceSelect = document.getElementById('voiceSelect');
 const wakeWordToggle = document.getElementById('wakeWordToggle');
 const personalitySelect = document.getElementById('personalitySelect');
+const ytKeyInput = document.getElementById('ytKey');
 const saveBtn = document.getElementById('saveSettings');
 const testVoiceBtn = document.getElementById('testVoice');
 const toastEl = document.getElementById('toast');
@@ -222,23 +236,27 @@ const settings = {
   apiKey: localStorage.getItem('jarvis_apiKey') || '',
   voice: localStorage.getItem('jarvis_voice') || '',
   wakeWord: localStorage.getItem('jarvis_wakeWord') === '1',
-  personality: localStorage.getItem('jarvis_personality') || 'friendly'
+  personality: localStorage.getItem('jarvis_personality') || 'friendly',
+  ytKey: localStorage.getItem('jarvis_ytKey') || ''
 };
 
 apiKeyInput.value = settings.apiKey;
 voiceSelect.value = settings.voice;
 wakeWordToggle.checked = settings.wakeWord;
 personalitySelect.value = settings.personality;
+ytKeyInput.value = settings.ytKey;
 
 saveBtn.addEventListener('click', ()=>{
   settings.apiKey = apiKeyInput.value.trim();
   settings.voice = voiceSelect.value;
   settings.wakeWord = wakeWordToggle.checked;
   settings.personality = personalitySelect.value;
+  settings.ytKey = ytKeyInput.value.trim();
   localStorage.setItem('jarvis_apiKey', settings.apiKey);
   localStorage.setItem('jarvis_voice', settings.voice);
   localStorage.setItem('jarvis_wakeWord', settings.wakeWord ? '1' : '0');
   localStorage.setItem('jarvis_personality', settings.personality);
+  localStorage.setItem('jarvis_ytKey', settings.ytKey);
   settingsPanel.classList.remove('open');
   showToast('Saved!');
   addMessage('jarvis', 'Saved. Ab test karo.');
@@ -263,6 +281,7 @@ function buildSystemPrompt() {
     'You have tools to open websites, search Google, set reminders, copy text, save notes as files, ' +
     'and get the current date/time — use them naturally when the user asks for these things. ' +
     'Do not use emojis, markdown formatting, or bullet symbols in your replies — your text is spoken aloud by a voice engine, so write plain natural sentences only. ' +
+    'You can also search YouTube and play the first result directly inside the app, and control it (pause, play, seek forward/backward) once a video is playing — use these tools when the user asks. ' +
     'You have memory of past conversations with this user (shown below in history) — use it naturally, ' +
     'the way a friend who remembers previous chats would, without explicitly announcing "I remember". ' +
     (PERSONALITY_STYLES[settings.personality] || PERSONALITY_STYLES.friendly)
@@ -402,6 +421,55 @@ async function speak(text) {
 }
 
 // ============ ACTIONS / TOOLS (browser-safe agent abilities) ============
+// ============ YOUTUBE PLAYER (embedded, controllable) ============
+const ytPanel = document.getElementById('ytPanel');
+const ytClose = document.getElementById('ytClose');
+let ytPlayer = null, ytApiReady = false, ytPendingVideoId = null;
+
+const ytScript = document.createElement('script');
+ytScript.src = 'https://www.youtube.com/iframe_api';
+document.head.appendChild(ytScript);
+
+window.onYouTubeIframeAPIReady = function() {
+  ytApiReady = true;
+  ytPlayer = new YT.Player('yt-player', {
+    height: '360', width: '100%', videoId: '',
+    playerVars: { autoplay: 1, rel: 0 },
+    events: {
+      onReady: () => { if (ytPendingVideoId) { ytPlayer.loadVideoById(ytPendingVideoId); ytPendingVideoId = null; } }
+    }
+  });
+};
+
+ytClose.addEventListener('click', () => {
+  ytPanel.classList.remove('open');
+  if (ytPlayer && ytPlayer.stopVideo) ytPlayer.stopVideo();
+});
+
+function ytLoad(videoId) {
+  ytPanel.classList.add('open');
+  if (ytApiReady && ytPlayer && ytPlayer.loadVideoById) ytPlayer.loadVideoById(videoId);
+  else ytPendingVideoId = videoId;
+}
+
+async function ytSearchAndPlay(query) {
+  if (!settings.ytKey) throw new Error('YouTube API key missing — settings mein daalo');
+  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&q=${encodeURIComponent(query)}&key=${settings.ytKey}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    const t = await res.text();
+    let detail = t; try { detail = JSON.parse(t)?.error?.message || t; } catch(e) {}
+    throw new Error(`YouTube search error ${res.status}: ${detail}`);
+  }
+  const data = await res.json();
+  const item = data.items?.[0];
+  if (!item) return { ok: false, msg: 'Koi video nahi mila' };
+  const videoId = item.id.videoId;
+  const title = item.snippet?.title || '';
+  ytLoad(videoId);
+  return { ok: true, videoId, title };
+}
+
 const jarvisTools = [
   { type: 'function', function: {
     name: 'open_website',
@@ -444,10 +512,33 @@ const jarvisTools = [
     name: 'get_datetime',
     description: 'Abhi ka exact date aur time deta hai',
     parameters: { type: 'object', properties: {} }
+  }},
+  { type: 'function', function: {
+    name: 'youtube_search_play',
+    description: 'YouTube pe kuch search karke pehla result seedha in-app video player mein play karta hai',
+    parameters: { type: 'object', properties: {
+      query: { type: 'string', description: 'Kya search karna hai' }
+    }, required: ['query'] }
+  }},
+  { type: 'function', function: {
+    name: 'youtube_seek',
+    description: 'Currently khule hue YouTube video ko aage ya peeche seek karta hai',
+    parameters: { type: 'object', properties: {
+      seconds: { type: 'number', description: 'Kitne seconds seek karna hai' },
+      direction: { type: 'string', enum: ['forward', 'backward'] }
+    }, required: ['seconds', 'direction'] }
+  }},
+  { type: 'function', function: {
+    name: 'youtube_control',
+    description: 'Currently khule hue YouTube video ko pause/play/stop karta hai',
+    parameters: { type: 'object', properties: {
+      action: { type: 'string', enum: ['pause', 'play', 'stop'] }
+    }, required: ['action'] }
   }}
 ];
 
 function executeTool(name, args) {
+  return (async () => {
   try {
     switch (name) {
       case 'open_website': {
@@ -493,12 +584,31 @@ function executeTool(name, args) {
       case 'get_datetime': {
         return new Date().toString();
       }
+      case 'youtube_search_play': {
+        const r = await ytSearchAndPlay(args.query || '');
+        return r.ok ? `Playing "${r.title}"` : r.msg;
+      }
+      case 'youtube_seek': {
+        if (!ytPlayer || !ytPlayer.getCurrentTime) return 'Koi video khula hua nahi hai';
+        const cur = ytPlayer.getCurrentTime();
+        const delta = (args.direction === 'backward' ? -1 : 1) * (Number(args.seconds) || 10);
+        ytPlayer.seekTo(Math.max(0, cur + delta), true);
+        return `Seeked ${args.direction} by ${args.seconds}s`;
+      }
+      case 'youtube_control': {
+        if (!ytPlayer) return 'Koi video khula hua nahi hai';
+        if (args.action === 'pause') ytPlayer.pauseVideo();
+        else if (args.action === 'play') ytPlayer.playVideo();
+        else if (args.action === 'stop') { ytPlayer.stopVideo(); ytPanel.classList.remove('open'); }
+        return `Video ${args.action}`;
+      }
       default:
         return 'Unknown tool: ' + name;
     }
   } catch (e) {
     return 'Tool error: ' + e.message;
   }
+  })();
 }
 
 // ============ GROQ BRAIN ============
@@ -540,7 +650,7 @@ async function askJarvis(userText) {
         for (const tc of msg.tool_calls) {
           let args = {};
           try { args = JSON.parse(tc.function.arguments || '{}'); } catch(e) {}
-          const result = executeTool(tc.function.name, args);
+          const result = await executeTool(tc.function.name, args);
           history.push({ role: 'tool', tool_call_id: tc.id, content: String(result) });
         }
         continue; // let the model see tool results and respond again
