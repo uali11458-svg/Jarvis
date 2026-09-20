@@ -760,9 +760,9 @@ const jarvisTools = [
   }},
   { type: 'function', function: {
     name: 'find_places',
-    description: 'Restaurants, dukaanein, ya koi bhi jagah nearby (ya kisi city mein) search karta hai',
+    description: 'Restaurants, dukaanein, ya koi bhi jagah search karta hai. User ki device GPS location automatically use hoti hai "near me" ke liye — kabhi bhi user se area/location mat pucho, seedha ye tool call karo.',
     parameters: { type: 'object', properties: {
-      query: { type: 'string', description: 'Jaise "achay restaurants", "petrol pump", "pharmacy near me"' }
+      query: { type: 'string', description: 'Jaise "achay restaurants", "petrol pump", "pharmacy" — user ne jo bhi maanga ho, koi city/area khud mat jodo' }
     }, required: ['query'] }
   }},
   { type: 'function', function: {
@@ -893,7 +893,7 @@ function executeTool(name, args) {
         if (!settings.placesKey) return 'Google Places key missing — settings mein daalo';
         let bias = {};
         try {
-          const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 3000 }));
+          const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 6000 }));
           bias = { locationBias: { circle: { center: { latitude: pos.coords.latitude, longitude: pos.coords.longitude }, radius: 8000.0 } } };
         } catch(e) {}
         const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
