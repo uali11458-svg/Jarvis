@@ -1001,48 +1001,58 @@ sendBtn.addEventListener('click', send);
 inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
 
 // ============ IMAGE / SCREEN UNDERSTANDING (vision) ============
+const VISION_MODELS = ['qwen/qwen3.6-27b', 'meta-llama/llama-4-maverick-17b-128e-instruct', 'meta-llama/llama-4-scout-17b-16e-instruct'];
+
 async function analyzeImage(dataUrl, promptText) {
   if (!settings.apiKey) { addMessage('jarvis', 'Groq key daalo settings mein.'); return; }
   setState('thinking');
-  try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${settings.apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'qwen/qwen3.6-27b',
-        messages: [
-          { role: 'system', content: 'You describe images/screenshots naturally in Roman Urdu, short and conversational, voice-first style. If it looks like an error message or code, explain what it means and how to fix it.' },
-          { role: 'user', content: [
-            { type: 'text', text: promptText },
-            { type: 'image_url', image_url: { url: dataUrl } }
-          ]}
-        ],
-        temperature: 0.7,
-        max_completion_tokens: 400
-      })
-    });
-    if (!res.ok) {
-      const t = await res.text();
-      console.error('Vision:', res.status, t);
-      let detail = t;
-      try { detail = JSON.parse(t)?.error?.message || t; } catch(e) {}
-      throw new Error(`Vision error ${res.status}: ${detail}`);
+  let lastError = null;
+  for (const model of VISION_MODELS) {
+    try {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${settings.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: 'You describe images/screenshots naturally in Roman Urdu, short and conversational, voice-first style. If it looks like an error message or code, explain what it means and how to fix it.' },
+            { role: 'user', content: [
+              { type: 'text', text: promptText },
+              { type: 'image_url', image_url: { url: dataUrl } }
+            ]}
+          ],
+          temperature: 0.7,
+          max_completion_tokens: 400
+        })
+      });
+      if (!res.ok) {
+        const t = await res.text();
+        console.error('Vision:', model, res.status, t);
+        let detail = t;
+        try { detail = JSON.parse(t)?.error?.message || t; } catch(e) {}
+        lastError = new Error(`Vision error ${res.status}: ${detail}`);
+        if (res.status === 404) continue; // try next model in the fallback chain
+        throw lastError;
+      }
+      const data = await res.json();
+      const reply = data.choices?.[0]?.message?.content?.trim() || '(no reply)';
+      history.push({ role: 'user', content: '[Bheji hui image/screenshot ke baare mein]' });
+      history.push({ role: 'assistant', content: reply });
+      addMessage('jarvis', reply);
+      await speak(reply);
+      saveHistory();
+      return;
+    } catch (e) {
+      lastError = e;
+      if (!String(e.message).includes('404')) break;
     }
-    const data = await res.json();
-    const reply = data.choices?.[0]?.message?.content?.trim() || '(no reply)';
-    history.push({ role: 'user', content: '[Bheji hui image/screenshot ke baare mein]' });
-    history.push({ role: 'assistant', content: reply });
-    addMessage('jarvis', reply);
-    await speak(reply);
-    saveHistory();
-  } catch (e) {
-    console.error(e);
-    setState('idle');
-    addMessage('jarvis', e.message);
   }
+  console.error(lastError);
+  setState('idle');
+  addMessage('jarvis', lastError ? lastError.message : 'Vision fail ho gayi, sab models try kar liye.');
 }
 
 imageBtn.addEventListener('click', () => imageInput.click());
