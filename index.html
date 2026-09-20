@@ -136,6 +136,11 @@
   <input type="password" id="placesKey" placeholder="AIza..."/>
   <div style="font-size:10px; color:#4a7ea4; margin-top:4px;">console.cloud.google.com (wahi project jo YouTube ke liye use kiya) → "Places API (New)" enable karo → wahi ya nayi key.</div>
 
+  <h4>VISION — Gemini (photo/screen samajhne ke liye)</h4>
+  <label>GEMINI API KEY</label>
+  <input type="password" id="geminiKey" placeholder="AIza..."/>
+  <div style="font-size:10px; color:#4a7ea4; margin-top:4px;">Free: aistudio.google.com/apikey → "Create API key". Ye Groq se alag hai, sirf photo/screen samajhne ke liye.</div>
+
   <h4>GOOGLE CALENDAR</h4>
   <label>GOOGLE OAUTH CLIENT ID</label>
   <input type="text" id="googleClientId" placeholder="xxxx.apps.googleusercontent.com"/>
@@ -277,6 +282,7 @@ const ytKeyInput = document.getElementById('ytKey');
 const weatherKeyInput = document.getElementById('weatherKey');
 const newsKeyInput = document.getElementById('newsKey');
 const placesKeyInput = document.getElementById('placesKey');
+const geminiKeyInput = document.getElementById('geminiKey');
 const googleClientIdInput = document.getElementById('googleClientId');
 const googleConnectBtn = document.getElementById('googleConnectBtn');
 const googleStatusEl = document.getElementById('googleStatus');
@@ -308,6 +314,7 @@ const settings = {
   newsKey: localStorage.getItem('jarvis_newsKey') || '',
   placesKey: localStorage.getItem('jarvis_placesKey') || '',
   googleClientId: localStorage.getItem('jarvis_googleClientId') || '',
+  geminiKey: localStorage.getItem('jarvis_geminiKey') || '',
 };
 
 apiKeyInput.value = settings.apiKey;
@@ -323,6 +330,7 @@ weatherKeyInput.value = settings.weatherKey;
 newsKeyInput.value = settings.newsKey;
 placesKeyInput.value = settings.placesKey;
 googleClientIdInput.value = settings.googleClientId;
+geminiKeyInput.value = settings.geminiKey;
 
 saveBtn.addEventListener('click', ()=>{
   settings.apiKey = apiKeyInput.value.trim();
@@ -338,6 +346,7 @@ saveBtn.addEventListener('click', ()=>{
   settings.newsKey = newsKeyInput.value.trim();
   settings.placesKey = placesKeyInput.value.trim();
   settings.googleClientId = googleClientIdInput.value.trim();
+  settings.geminiKey = geminiKeyInput.value.trim();
   localStorage.setItem('jarvis_apiKey', settings.apiKey);
   localStorage.setItem('jarvis_voice', settings.voice);
   localStorage.setItem('jarvis_wakeWord', settings.wakeWord ? '1' : '0');
@@ -351,6 +360,7 @@ saveBtn.addEventListener('click', ()=>{
   localStorage.setItem('jarvis_newsKey', settings.newsKey);
   localStorage.setItem('jarvis_placesKey', settings.placesKey);
   localStorage.setItem('jarvis_googleClientId', settings.googleClientId);
+  localStorage.setItem('jarvis_geminiKey', settings.geminiKey);
   settingsPanel.classList.remove('open');
   showToast('Saved!');
   addMessage('jarvis', 'Saved. Ab test karo.');
@@ -1001,58 +1011,42 @@ sendBtn.addEventListener('click', send);
 inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
 
 // ============ IMAGE / SCREEN UNDERSTANDING (vision) ============
-const VISION_MODELS = ['qwen/qwen3.6-27b', 'meta-llama/llama-4-maverick-17b-128e-instruct', 'meta-llama/llama-4-scout-17b-16e-instruct'];
-
 async function analyzeImage(dataUrl, promptText) {
-  if (!settings.apiKey) { addMessage('jarvis', 'Groq key daalo settings mein.'); return; }
+  if (!settings.geminiKey) { addMessage('jarvis', 'Gemini key daalo settings mein (VISION section) — Groq is account pe photo/screen samajhne ke liye access nahi deta.'); return; }
   setState('thinking');
-  let lastError = null;
-  for (const model of VISION_MODELS) {
-    try {
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${settings.apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model,
-          messages: [
-            { role: 'system', content: 'You describe images/screenshots naturally in Roman Urdu, short and conversational, voice-first style. If it looks like an error message or code, explain what it means and how to fix it.' },
-            { role: 'user', content: [
-              { type: 'text', text: promptText },
-              { type: 'image_url', image_url: { url: dataUrl } }
-            ]}
-          ],
-          temperature: 0.7,
-          max_completion_tokens: 400
-        })
-      });
-      if (!res.ok) {
-        const t = await res.text();
-        console.error('Vision:', model, res.status, t);
-        let detail = t;
-        try { detail = JSON.parse(t)?.error?.message || t; } catch(e) {}
-        lastError = new Error(`Vision error ${res.status}: ${detail}`);
-        if (res.status === 404) continue; // try next model in the fallback chain
-        throw lastError;
-      }
-      const data = await res.json();
-      const reply = data.choices?.[0]?.message?.content?.trim() || '(no reply)';
-      history.push({ role: 'user', content: '[Bheji hui image/screenshot ke baare mein]' });
-      history.push({ role: 'assistant', content: reply });
-      addMessage('jarvis', reply);
-      await speak(reply);
-      saveHistory();
-      return;
-    } catch (e) {
-      lastError = e;
-      if (!String(e.message).includes('404')) break;
+  try {
+    const base64 = dataUrl.split(',')[1];
+    const mimeMatch = dataUrl.match(/^data:(image\/[a-z]+);base64,/);
+    const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${settings.geminiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [
+          { text: promptText + ' Roman Urdu mein, short mein jawab do. Agar error ya code dikhe to explain karo kya masla hai aur kaise theek karein.' },
+          { inline_data: { mime_type: mimeType, data: base64 } }
+        ]}]
+      })
+    });
+    if (!res.ok) {
+      const t = await res.text();
+      console.error('Gemini Vision:', res.status, t);
+      let detail = t;
+      try { detail = JSON.parse(t)?.error?.message || t; } catch(e) {}
+      throw new Error(`Vision error ${res.status}: ${detail}`);
     }
+    const data = await res.json();
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '(no reply)';
+    history.push({ role: 'user', content: '[Bheji hui image/screenshot ke baare mein]' });
+    history.push({ role: 'assistant', content: reply });
+    addMessage('jarvis', reply);
+    await speak(reply);
+    saveHistory();
+  } catch (e) {
+    console.error(e);
+    setState('idle');
+    addMessage('jarvis', e.message);
   }
-  console.error(lastError);
-  setState('idle');
-  addMessage('jarvis', lastError ? lastError.message : 'Vision fail ho gayi, sab models try kar liye.');
 }
 
 imageBtn.addEventListener('click', () => imageInput.click());
