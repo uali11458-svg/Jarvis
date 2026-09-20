@@ -152,6 +152,7 @@
 
   <button id="saveSettings">SAVE</button>
   <button id="testVoice" style="background:rgba(0,200,150,0.25);">TEST VOICE</button>
+  <button id="clearMemory" style="background:rgba(255,80,80,0.25);">CLEAR MEMORY / CHAT</button>
 
   <div style="font-size:10px; color:#4a7ea4; margin-top:8px; line-height:1.5;">
     Ye tumhare browser/device mein jitni bhi awazein installed hain unki list hai. Agar Urdu/Hindi mein koi male awaz nahi dikh rahi, to apne phone/PC ki Language Settings mein Urdu ya Hindi TTS voice pack install karo — phir yahan dikhne lagegi.
@@ -361,6 +362,16 @@ saveBtn.addEventListener('click', ()=>{
 });
 
 testVoiceBtn.addEventListener('click', ()=> speak('السلام علیکم۔ میں جارویس ہوں۔'));
+
+document.getElementById('clearMemory').addEventListener('click', () => {
+  localStorage.removeItem('jarvis_history');
+  history.length = 0;
+  history.push(buildSystemPrompt());
+  chatEl.innerHTML = '';
+  settingsPanel.classList.remove('open');
+  showToast('Memory cleared!');
+  addMessage('jarvis', 'Sab yaad saaf ho gayi. Fresh start!');
+});
 
 settingsToggle.addEventListener('click', ()=> settingsPanel.classList.toggle('open'));
 
