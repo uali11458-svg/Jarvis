@@ -124,19 +124,12 @@
   <input type="password" id="placesKey" placeholder="AIza..."/>
   <div style="font-size:10px; color:#4a7ea4; margin-top:4px;">console.cloud.google.com (wahi project jo YouTube ke liye use kiya) → "Places API (New)" enable karo → wahi ya nayi key.</div>
 
-  <h4>GOOGLE CALENDAR + GMAIL</h4>
+  <h4>GOOGLE CALENDAR</h4>
   <label>GOOGLE OAUTH CLIENT ID</label>
   <input type="text" id="googleClientId" placeholder="xxxx.apps.googleusercontent.com"/>
   <button id="googleConnectBtn" style="background:rgba(255,180,0,0.2); margin-top:6px;">CONNECT GOOGLE ACCOUNT</button>
   <div id="googleStatus" style="font-size:11px; color:#4fd1ff; margin-top:4px;">Not connected</div>
   <div style="font-size:10px; color:#4a7ea4; margin-top:4px;">console.cloud.google.com → OAuth consent screen (External, Testing, apna email test user mein add karo) → Credentials → OAuth Client ID → "Web application" → Authorized JavaScript origins mein apna Vercel URL daalo.</div>
-
-  <h4>NOTION</h4>
-  <label>NOTION INTEGRATION TOKEN</label>
-  <input type="password" id="notionKey" placeholder="ntn_..."/>
-  <label>NOTION DATABASE ID</label>
-  <input type="text" id="notionDbId" placeholder="database id (URL se)"/>
-  <div style="font-size:10px; color:#4a7ea4; margin-top:4px;">notion.so/my-integrations → naya integration banao, token copy karo. Apni Notion database kholo → "..." menu → "Connections" → apna integration add karo → database ki URL se ID copy karo (32-character part). Zaroori: database ki title column ka naam "Name" hona chahiye.</div>
 
   <h4>INTERRUPT</h4>
   <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
@@ -274,8 +267,6 @@ const placesKeyInput = document.getElementById('placesKey');
 const googleClientIdInput = document.getElementById('googleClientId');
 const googleConnectBtn = document.getElementById('googleConnectBtn');
 const googleStatusEl = document.getElementById('googleStatus');
-const notionKeyInput = document.getElementById('notionKey');
-const notionDbIdInput = document.getElementById('notionDbId');
 const elevenToggle = document.getElementById('elevenToggle');
 const elevenKeyInput = document.getElementById('elevenKey');
 const elevenVoiceIdInput = document.getElementById('elevenVoiceId');
@@ -304,8 +295,6 @@ const settings = {
   newsKey: localStorage.getItem('jarvis_newsKey') || '',
   placesKey: localStorage.getItem('jarvis_placesKey') || '',
   googleClientId: localStorage.getItem('jarvis_googleClientId') || '',
-  notionKey: localStorage.getItem('jarvis_notionKey') || '',
-  notionDbId: localStorage.getItem('jarvis_notionDbId') || ''
 };
 
 apiKeyInput.value = settings.apiKey;
@@ -321,8 +310,6 @@ weatherKeyInput.value = settings.weatherKey;
 newsKeyInput.value = settings.newsKey;
 placesKeyInput.value = settings.placesKey;
 googleClientIdInput.value = settings.googleClientId;
-notionKeyInput.value = settings.notionKey;
-notionDbIdInput.value = settings.notionDbId;
 
 saveBtn.addEventListener('click', ()=>{
   settings.apiKey = apiKeyInput.value.trim();
@@ -338,8 +325,6 @@ saveBtn.addEventListener('click', ()=>{
   settings.newsKey = newsKeyInput.value.trim();
   settings.placesKey = placesKeyInput.value.trim();
   settings.googleClientId = googleClientIdInput.value.trim();
-  settings.notionKey = notionKeyInput.value.trim();
-  settings.notionDbId = notionDbIdInput.value.trim();
   localStorage.setItem('jarvis_apiKey', settings.apiKey);
   localStorage.setItem('jarvis_voice', settings.voice);
   localStorage.setItem('jarvis_wakeWord', settings.wakeWord ? '1' : '0');
@@ -353,8 +338,6 @@ saveBtn.addEventListener('click', ()=>{
   localStorage.setItem('jarvis_newsKey', settings.newsKey);
   localStorage.setItem('jarvis_placesKey', settings.placesKey);
   localStorage.setItem('jarvis_googleClientId', settings.googleClientId);
-  localStorage.setItem('jarvis_notionKey', settings.notionKey);
-  localStorage.setItem('jarvis_notionDbId', settings.notionDbId);
   settingsPanel.classList.remove('open');
   showToast('Saved!');
   addMessage('jarvis', 'Saved. Ab test karo.');
@@ -390,7 +373,7 @@ function buildSystemPrompt() {
     'and get the current date/time — use them naturally when the user asks for these things. ' +
     'Do not use emojis, markdown formatting, or bullet symbols in your replies — your text is spoken aloud by a voice engine, so write plain natural sentences only. ' +
     'You can also search YouTube and play the first result directly inside the app, and control it (pause, play, seek forward/backward) once a video is playing — use these tools when the user asks. ' +
-    'You can also check real weather, get news headlines, find nearby places, manage Google Calendar events, read/draft Gmail emails, and create Notion notes — use these tools naturally when relevant. ' +
+    'You can also check real weather, get news headlines, find nearby places, and manage Google Calendar events — use these tools naturally when relevant. ' +
     'You have memory of past conversations with this user (shown below in history) — use it naturally, ' +
     'the way a friend who remembers previous chats would, without explicitly announcing "I remember". ' +
     (PERSONALITY_STYLES[settings.personality] || PERSONALITY_STYLES.friendly)
@@ -648,7 +631,7 @@ function ytTryNextCandidate() {
   addMessage('jarvis', `Ye video embed nahi hua, agla try kar raha hoon: ${next.title}`);
 }
 
-// ============ GOOGLE OAUTH (Calendar + Gmail) ============
+// ============ GOOGLE OAUTH (Calendar) ============
 const gisScript = document.createElement('script');
 gisScript.src = 'https://accounts.google.com/gsi/client';
 document.head.appendChild(gisScript);
@@ -669,7 +652,7 @@ googleConnectBtn.addEventListener('click', () => {
   if (!googleTokenClient) {
     googleTokenClient = google.accounts.oauth2.initTokenClient({
       client_id: clientId,
-      scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.compose',
+      scope: 'https://www.googleapis.com/auth/calendar',
       callback: (resp) => {
         if (resp.access_token) {
           googleAccessToken = resp.access_token;
@@ -792,30 +775,6 @@ const jarvisTools = [
       maxResults: { type: 'number', description: 'Kitne events dikhane hain, default 5' }
     } }
   }},
-  { type: 'function', function: {
-    name: 'gmail_read_recent',
-    description: 'Gmail ke recent emails ke subject aur sender padhta hai',
-    parameters: { type: 'object', properties: {
-      count: { type: 'number', description: 'Kitne emails padhne hain, default 5' }
-    } }
-  }},
-  { type: 'function', function: {
-    name: 'gmail_create_draft',
-    description: 'Ek email ka draft banata hai Gmail mein (send nahi karta, sirf draft)',
-    parameters: { type: 'object', properties: {
-      to: { type: 'string' },
-      subject: { type: 'string' },
-      body: { type: 'string' }
-    }, required: ['to', 'subject', 'body'] }
-  }},
-  { type: 'function', function: {
-    name: 'notion_create_note',
-    description: 'Notion database mein ek naya note/task page banata hai',
-    parameters: { type: 'object', properties: {
-      title: { type: 'string' },
-      content: { type: 'string' }
-    }, required: ['title', 'content'] }
-  }}
 ];
 
 function executeTool(name, args) {
@@ -934,49 +893,6 @@ function executeTool(name, args) {
         const d = await res.json();
         const list = (d.items||[]).map((e,i)=>`${i+1}. ${e.summary} (${e.start?.dateTime || e.start?.date})`).join('. ');
         return list || 'Koi upcoming event nahi hai';
-      }
-      case 'gmail_read_recent': {
-        const count = args.count || 5;
-        const listRes = await googleFetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=${count}`);
-        if (!listRes.ok) { const t = await listRes.text(); let d=t; try{d=JSON.parse(t)?.error?.message||t;}catch(e){} return `Gmail error ${listRes.status}: ${d}`; }
-        const listData = await listRes.json();
-        const ids = (listData.messages || []).map(m => m.id);
-        const results = [];
-        for (const id of ids) {
-          const mRes = await googleFetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject`);
-          if (!mRes.ok) continue;
-          const m = await mRes.json();
-          const headers = m.payload?.headers || [];
-          const subject = headers.find(h => h.name === 'Subject')?.value || '(no subject)';
-          const from = headers.find(h => h.name === 'From')?.value || '';
-          results.push(`${subject} — from ${from}`);
-        }
-        return results.length ? results.map((r,i)=>`${i+1}. ${r}`).join('. ') : 'Koi email nahi mila';
-      }
-      case 'gmail_create_draft': {
-        const rawMsg = `To: ${args.to}\r\nSubject: ${args.subject}\r\n\r\n${args.body}`;
-        const encoded = btoa(unescape(encodeURIComponent(rawMsg))).replace(/\+/g,'-').replace(/\//g,'_');
-        const res = await googleFetch('https://gmail.googleapis.com/gmail/v1/users/me/drafts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: { raw: encoded } })
-        });
-        if (!res.ok) { const t = await res.text(); let d=t; try{d=JSON.parse(t)?.error?.message||t;}catch(e){} return `Gmail error ${res.status}: ${d}`; }
-        return `Draft "${args.subject}" ban gaya Gmail mein`;
-      }
-      case 'notion_create_note': {
-        if (!settings.notionKey || !settings.notionDbId) return 'Notion token/database ID missing — settings mein daalo';
-        const res = await fetch('https://api.notion.com/v1/pages', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${settings.notionKey}`, 'Content-Type': 'application/json', 'Notion-Version': '2022-06-28' },
-          body: JSON.stringify({
-            parent: { database_id: settings.notionDbId },
-            properties: { Name: { title: [{ text: { content: args.title } }] } },
-            children: [{ object: 'block', type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content: args.content || '' } }] } }]
-          })
-        });
-        if (!res.ok) { const t = await res.text(); let d=t; try{d=JSON.parse(t)?.message||t;}catch(e){} return `Notion error ${res.status}: ${d}`; }
-        return `Note "${args.title}" Notion mein ban gaya`;
       }
       default:
         return 'Unknown tool: ' + name;
