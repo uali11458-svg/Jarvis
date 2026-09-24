@@ -403,13 +403,18 @@ const PERSONALITY_STYLES = {
 function buildSystemPrompt() {
   return {
     role: 'system', content:
-    'You are JARVIS, an AI assistant. Keep responses short (voice-first). ' +
+    'You are JARVIS, an advanced AI voice assistant built into a custom web app. Keep responses short (voice-first). ' +
     'If user speaks Roman Urdu, reply in Roman Urdu. If Urdu script, reply in Urdu script. ' +
-    'You have tools to open websites, search Google, set reminders, copy text, save notes as files, ' +
-    'and get the current date/time — use them naturally when the user asks for these things. ' +
     'Do not use emojis, markdown formatting, or bullet symbols in your replies — your text is spoken aloud by a voice engine, so write plain natural sentences only. ' +
-    'You can also search YouTube and play the first result directly inside the app, and control it (pause, play, seek forward/backward) once a video is playing — use these tools when the user asks. ' +
-    'You can also check real weather, get news headlines, find nearby places, and manage Google Calendar events — use these tools naturally when relevant. ' +
+    'If the user asks what you can do / your features / your capabilities, describe ALL of the following naturally in your own words (don\'t just list tool names): ' +
+    'you can open websites and search Google (shown as a tap-able link since popups get blocked), set timed reminders, copy text to clipboard, save notes as downloadable files, tell the date/time; ' +
+    'you can search YouTube and play videos directly inside the app, and control playback — pause, play, stop, seek forward/backward, change volume, and change playback speed; ' +
+    'you can check real-time weather, get news headlines, find nearby places like restaurants using the user\'s location, and manage their Google Calendar (add/list events); ' +
+    'you can see and describe photos the user uploads, and understand screenshots/screen-shares (great for explaining errors or what is on screen); ' +
+    'you remember past conversations with this user across sessions; you have a wake word ("Hey Jarvis") for hands-free listening; you can be interrupted mid-sentence by voice; ' +
+    'you have multiple personality modes (friendly, formal, savage) the user can switch between; you support a premium natural ElevenLabs voice in addition to the default browser voice; ' +
+    'and there is a QR code button so the user can open this same assistant instantly on their phone. ' +
+    'Use the relevant tools naturally whenever the user asks for any of these things — don\'t just talk about them, actually do them. ' +
     'You have memory of past conversations with this user (shown below in history) — use it naturally, ' +
     'the way a friend who remembers previous chats would, without explicitly announcing "I remember". ' +
     (PERSONALITY_STYLES[settings.personality] || PERSONALITY_STYLES.friendly)
@@ -768,6 +773,20 @@ const jarvisTools = [
     }, required: ['seconds', 'direction'] }
   }},
   { type: 'function', function: {
+    name: 'youtube_set_volume',
+    description: 'Currently khule hue YouTube video ki awaz halki/tez karta hai',
+    parameters: { type: 'object', properties: {
+      volume: { type: 'number', description: '0 se 100 tak, jaise 20 (halki) ya 100 (poori)' }
+    }, required: ['volume'] }
+  }},
+  { type: 'function', function: {
+    name: 'youtube_set_speed',
+    description: 'Currently khule hue YouTube video ki playback speed change karta hai',
+    parameters: { type: 'object', properties: {
+      speed: { type: 'number', description: 'Jaise 0.5 (slow), 1 (normal), 1.5, 2 (fast)' }
+    }, required: ['speed'] }
+  }},
+  { type: 'function', function: {
     name: 'youtube_control',
     description: 'Currently khule hue YouTube video ko pause/play/stop karta hai',
     parameters: { type: 'object', properties: {
@@ -870,6 +889,18 @@ function executeTool(name, args) {
         const delta = (args.direction === 'backward' ? -1 : 1) * (Number(args.seconds) || 10);
         ytPlayer.seekTo(Math.max(0, cur + delta), true);
         return `Seeked ${args.direction} by ${args.seconds}s`;
+      }
+      case 'youtube_set_volume': {
+        if (!ytPlayer || !ytPlayer.setVolume) return 'Koi video khula hua nahi hai';
+        const vol = Math.max(0, Math.min(100, Number(args.volume) || 50));
+        ytPlayer.setVolume(vol);
+        if (ytPlayer.isMuted && ytPlayer.isMuted()) ytPlayer.unMute();
+        return `Volume set to ${vol}`;
+      }
+      case 'youtube_set_speed': {
+        if (!ytPlayer || !ytPlayer.setPlaybackRate) return 'Koi video khula hua nahi hai';
+        ytPlayer.setPlaybackRate(Number(args.speed) || 1);
+        return `Playback speed set to ${args.speed}x`;
       }
       case 'youtube_control': {
         if (!ytPlayer) return 'Koi video khula hua nahi hai';
